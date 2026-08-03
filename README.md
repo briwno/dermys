@@ -1,7 +1,5 @@
 # 🎨 Dermys
 
-> O hub que conecta a arte da pele a quem quer ser riscado.
-
 O **Dermys** é uma plataforma multiplataforma (Web, iOS e Android) desenvolvida para unificar e simplificar o ecossistema da tatuagem, aproximando clientes, tatuadores e estúdios em um único lugar.
 
 ---
