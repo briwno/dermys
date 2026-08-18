@@ -86,7 +86,7 @@ export function DashboardArtista({ perfil, onLogout }: PropsDashboardArtista) {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#070707',
+    backgroundColor: '#050505',
   },
   content: {
     paddingHorizontal: 18,
@@ -100,21 +100,23 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   hiText: {
-    color: '#93a0b4',
+    color: '#8a8a8a',
     fontSize: 11,
     textTransform: 'uppercase',
-    letterSpacing: 1,
+    letterSpacing: 1.2,
     fontWeight: '700',
   },
   title: {
-    color: '#B7FD58',
-    fontSize: 24,
+    color: '#f3c21a',
+    fontSize: 26,
     fontWeight: '900',
     fontStyle: 'italic',
+    letterSpacing: -0.7,
   },
   subtitle: {
     color: '#d1d5db',
     fontSize: 13,
+    marginTop: 2,
   },
   logoutButton: {
     borderWidth: 1,
@@ -122,14 +124,14 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 8,
     paddingHorizontal: 12,
-    backgroundColor: '#111',
+    backgroundColor: '#121212',
   },
   logoutText: {
     color: '#fff',
-    fontSize: 11,
+    fontSize: 10,
     textTransform: 'uppercase',
     fontWeight: '800',
-    letterSpacing: 1,
+    letterSpacing: 1.1,
   },
   kpiGrid: {
     flexDirection: 'row',
@@ -140,7 +142,7 @@ const styles = StyleSheet.create({
     width: '48.5%',
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#222',
+    borderColor: '#1d1d1d',
     backgroundColor: '#101010',
     paddingVertical: 14,
     paddingHorizontal: 12,
@@ -148,7 +150,7 @@ const styles = StyleSheet.create({
   },
   kpiLabel: {
     color: '#9ca3af',
-    fontSize: 11,
+    fontSize: 10,
     textTransform: 'uppercase',
     letterSpacing: 0.8,
     fontWeight: '700',
@@ -161,7 +163,7 @@ const styles = StyleSheet.create({
   section: {
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#222',
+    borderColor: '#1d1d1d',
     backgroundColor: '#101010',
     padding: 12,
     gap: 10,
@@ -170,6 +172,8 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
   },
   actionRow: {
     flexDirection: 'row',
@@ -179,7 +183,7 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 44,
     borderRadius: 10,
-    backgroundColor: '#191919',
+    backgroundColor: '#1a1a1a',
     borderWidth: 1,
     borderColor: '#2b2b2b',
     justifyContent: 'center',
@@ -187,7 +191,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
   },
   actionText: {
-    color: '#B7FD58',
+    color: '#f3c21a',
     textTransform: 'uppercase',
     fontWeight: '800',
     fontSize: 10,
@@ -218,7 +222,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
   },
   slotText: {
-    color: '#B7FD58',
+    color: '#f3c21a',
     fontWeight: '900',
     fontSize: 13,
   },

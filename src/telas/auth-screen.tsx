@@ -13,6 +13,7 @@ import {
   View,
 } from 'react-native';
 
+import { Logo } from '@/components/logo';
 import { USAR_MOCK_AUTH } from '@/constants/feature-flags';
 import { supabase } from '@/services/supabase';
 import type { PerfilUsuario, TipoPerfil } from '@/types/auth';
@@ -589,12 +590,11 @@ export function TelaAutenticacao({ onComplete }: PropsTelaAutenticacao) {
   const renderBoasVindas = () => (
     <View style={styles.sectionCenter}>
       <View style={styles.brandWrap}>
-        <View style={styles.logoCircle}>
-          <Text style={styles.logoText}>D</Text>
-        </View>
+        <Logo size={210} />
+
         <View style={styles.brandTextWrap}>
-          <Text style={styles.brandTitle}>Dermys</Text>
-          <Text style={styles.brandSubTitle}>Arte Incontestável</Text>
+          <Text style={styles.brandTitle}>DERMYS</Text>
+          <Text style={styles.brandSubTitle}>ARTE INCONTESTÁVEL</Text>
         </View>
       </View>
 
@@ -779,42 +779,40 @@ export function TelaAutenticacao({ onComplete }: PropsTelaAutenticacao) {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#070707' },
+  safeArea: { flex: 1, backgroundColor: '#050505' },
   scrollContent: { flexGrow: 1, paddingHorizontal: 24, paddingVertical: 20, justifyContent: 'center' },
-  sectionCenter: { gap: 42 },
+  sectionCenter: { gap: 30 },
   sectionStack: { gap: 24 },
-  brandWrap: { alignItems: 'center', gap: 16 },
-  logoCircle: { width: 140, height: 140, borderRadius: 999, backgroundColor: '#111', borderWidth: 1, borderColor: '#222', alignItems: 'center', justifyContent: 'center' },
-  logoText: { fontSize: 72, color: '#B7FD58', fontWeight: '900' },
+  brandWrap: { alignItems: 'center', gap: 18 },
   brandTextWrap: { alignItems: 'center', gap: 2 },
-  brandTitle: { color: '#B7FD58', fontSize: 48, fontWeight: '900', textTransform: 'uppercase', fontStyle: 'italic', letterSpacing: -1.5 },
-  brandSubTitle: { color: '#666', textTransform: 'uppercase', fontSize: 10, fontWeight: '900', letterSpacing: 4 },
+  brandTitle: { color: '#f3c21a', fontSize: 52, fontWeight: '900', textTransform: 'uppercase', letterSpacing: -2, lineHeight: 52 },
+  brandSubTitle: { color: '#f5f5f5', textTransform: 'uppercase', fontSize: 12, fontWeight: '800', letterSpacing: 2.2 },
   headerWrap: { gap: 8 },
-  screenTitle: { color: '#B7FD58', fontSize: 32, fontWeight: '900', textTransform: 'uppercase', fontStyle: 'italic', letterSpacing: -1 },
-  screenMeta: { color: '#666', textTransform: 'uppercase', fontSize: 10, fontWeight: '900', letterSpacing: 2.5 },
+  screenTitle: { color: '#f3c21a', fontSize: 32, fontWeight: '900', textTransform: 'uppercase', fontStyle: 'italic', letterSpacing: -1 },
+  screenMeta: { color: '#777', textTransform: 'uppercase', fontSize: 10, fontWeight: '900', letterSpacing: 2.5 },
   actionsWrap: { gap: 14 },
   rowButtons: { flexDirection: 'row', gap: 12 },
   growOne: { flex: 1 },
   growTwo: { flex: 2 },
-  buttonBase: { minHeight: 56, borderRadius: 14, justifyContent: 'center', alignItems: 'center', flexDirection: 'row', gap: 8, paddingHorizontal: 16 },
-  buttonGhost: { backgroundColor: '#131313', borderWidth: 1, borderColor: '#282828' },
-  buttonPrimary: { backgroundColor: '#B7FD58' },
+  buttonBase: { minHeight: 60, borderRadius: 16, justifyContent: 'center', alignItems: 'center', flexDirection: 'row', gap: 8, paddingHorizontal: 16 },
+  buttonGhost: { backgroundColor: '#1d1d1d', borderWidth: 1, borderColor: '#2d2d2d' },
+  buttonPrimary: { backgroundColor: '#f3c21a' },
   buttonGoogle: { backgroundColor: '#fff' },
   buttonDisabled: { opacity: 0.55 },
-  buttonTextBase: { fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1.3, fontSize: 12 },
+  buttonTextBase: { fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1.3, fontSize: 18 },
   buttonTextLight: { color: '#fff' },
   buttonTextDark: { color: '#111' },
   cardList: { gap: 12 },
   roleCard: { borderRadius: 24, borderWidth: 2, padding: 18, gap: 10 },
   roleCardIdle: { borderColor: '#202020', backgroundColor: '#101010' },
-  roleCardActive: { borderColor: '#B7FD58', backgroundColor: '#121b08' },
+  roleCardActive: { borderColor: '#f3c21a', backgroundColor: '#16130a' },
   roleHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   roleIcon: { fontSize: 30, fontWeight: '900', minWidth: 24 },
   roleIconIdle: { color: '#666' },
-  roleIconActive: { color: '#B7FD58' },
+  roleIconActive: { color: '#f3c21a' },
   roleDot: { width: 22, height: 22, borderRadius: 11, borderWidth: 2 },
   roleDotOff: { borderColor: '#333' },
-  roleDotOn: { borderColor: '#B7FD58', backgroundColor: '#B7FD58' },
+  roleDotOn: { borderColor: '#f3c21a', backgroundColor: '#f3c21a' },
   roleTitle: { color: '#fff', fontWeight: '900', fontSize: 20, textTransform: 'uppercase', fontStyle: 'italic' },
   roleDescription: { color: '#8a8a8a', fontSize: 12, fontWeight: '600' },
   errorBanner: { borderRadius: 14, borderWidth: 1, borderColor: '#6d1f1f', backgroundColor: '#2c1010', padding: 12 },
