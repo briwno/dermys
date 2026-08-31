@@ -1,9 +1,22 @@
-import * as Linking from 'expo-linking';
+import { Logo } from '@/components/logo';
+import { iniciarLoginGoogle } from '@/services/auth-oauth';
+import { supabase } from '@/services/supabase';
+import { normalizarPerfil, type PerfilUsuario, type TipoPerfil } from '@/types/auth';
 import * as WebBrowser from 'expo-web-browser';
-import { type ReactNode, useMemo, useState } from 'react';
+import {
+  AlignLeft,
+  Building,
+  Compass,
+  Lock,
+  Mail,
+  MapPin,
+  Palette,
+  Phone,
+  User,
+} from 'lucide-react-native';
+import React, { useMemo, useState, type ReactNode } from 'react';
 import {
   ActivityIndicator,
-  Platform,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -12,17 +25,36 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-
-import { Logo } from '@/components/logo';
-import { USAR_MOCK_AUTH } from '@/constants/feature-flags';
-import { supabase } from '@/services/supabase';
-import type { PerfilUsuario, TipoPerfil } from '@/types/auth';
+import Svg, { Path } from 'react-native-svg';
 
 if (typeof window !== 'undefined') {
   WebBrowser.maybeCompleteAuthSession();
 }
 
-type EtapaAutenticacao = 'boasVindas' | 'perfil' | 'login' | 'cadastro';
+function GoogleIcon({ size = 20 }: { size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <Path
+        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+        fill="#4285F4"
+      />
+      <Path
+        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+        fill="#34A853"
+      />
+      <Path
+        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+        fill="#FBBC05"
+      />
+      <Path
+        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+        fill="#EA4335"
+      />
+    </Svg>
+  );
+}
+
+type EtapaAutenticacao = 'boasVindas' | 'perfil' | 'login' | 'cadastro' | 'completarPerfil';
 type ModoAutenticacao = 'login' | 'cadastro';
 
 interface PropsTelaAutenticacao {
@@ -49,267 +81,6 @@ const FORMULARIO_INICIAL: FormularioCadastro = {
   biografia: '',
 };
 
-interface RegistroMock extends PerfilUsuario {
-  senha: string;
-}
-
-const USUARIOS_MOCK: RegistroMock[] = [
-  {
-    uid: 'mock-client-1',
-    email: 'cliente@dermys.app',
-    senha: '123456',
-    displayName: 'Cliente Demo',
-    nomeExibicao: 'Cliente Demo',
-    role: 'cliente',
-    tipoPerfil: 'cliente',
-    phoneNumber: '11999999999',
-    telefone: '11999999999',
-    createdAt: new Date().toISOString(),
-    criadoEm: new Date().toISOString(),
-  },
-  {
-    uid: 'mock-artist-1',
-    email: 'artista@dermys.app',
-    senha: '123456',
-    displayName: 'Tatuador Demo',
-    nomeExibicao: 'Tatuador Demo',
-    role: 'artista',
-    tipoPerfil: 'artista',
-    phoneNumber: '11988888888',
-    telefone: '11988888888',
-    studioName: 'Studio Demo',
-    nomeEstudio: 'Studio Demo',
-    studioAddress: 'Rua Exemplo, 123',
-    enderecoEstudio: 'Rua Exemplo, 123',
-    bio: 'Especialista em fine line.',
-    biografia: 'Especialista em fine line.',
-    createdAt: new Date().toISOString(),
-    criadoEm: new Date().toISOString(),
-  },
-];
-
-let bancoUsuariosMock: RegistroMock[] = [...USUARIOS_MOCK];
-
-function normalizarEmail(valor: string): string {
-  return valor.trim().toLowerCase();
-}
-
-function esperar(ms: number): Promise<void> {
-  return new Promise((resolver) => {
-    setTimeout(resolver, ms);
-  });
-}
-
-function obterValorTexto(valor: string | undefined, valorAlternativo: string | undefined, valorPadrao: string): string {
-  if (typeof valor === 'string' && valor.trim().length > 0) {
-    return valor;
-  }
-
-  if (typeof valorAlternativo === 'string' && valorAlternativo.trim().length > 0) {
-    return valorAlternativo;
-  }
-
-  if (typeof valorPadrao === 'string' && valorPadrao.trim().length > 0) {
-    return valorPadrao;
-  }
-
-  return '';
-}
-
-function ehTipoPerfilValido(valor: string | undefined): valor is TipoPerfil {
-  if (valor === 'cliente') {
-    return true;
-  }
-
-  if (valor === 'artista') {
-    return true;
-  }
-
-  return false;
-}
-
-function resolverTipoPerfil(padrao: Partial<PerfilUsuario>, perfilSelecionado: TipoPerfil): TipoPerfil {
-  if (ehTipoPerfilValido(padrao.role)) {
-    return padrao.role;
-  }
-
-  if (ehTipoPerfilValido(padrao.tipoPerfil)) {
-    return padrao.tipoPerfil;
-  }
-
-  return perfilSelecionado;
-}
-
-function criarPerfilBase(padrao: Partial<PerfilUsuario>, formulario: FormularioCadastro, perfilSelecionado: TipoPerfil): PerfilUsuario {
-  const nomeExibicao = obterValorTexto(padrao.displayName, padrao.nomeExibicao, obterValorTexto(formulario.nomeCompleto, undefined, 'Usuário'));
-  const tipoPerfil = resolverTipoPerfil(padrao, perfilSelecionado);
-
-  const emailPerfil = obterValorTexto(padrao.email, undefined, formulario.email.trim());
-  const telefonePerfil = obterValorTexto(padrao.phoneNumber, padrao.telefone, formulario.telefone);
-  const fotoPerfil = obterValorTexto(padrao.photoURL, padrao.fotoUrl, '');
-  const dataCriacao = obterValorTexto(padrao.createdAt, undefined, new Date().toISOString());
-  const nomeEstudioPerfil = obterValorTexto(padrao.studioName, padrao.nomeEstudio, formulario.nomeEstudio);
-  const enderecoEstudioPerfil = obterValorTexto(padrao.studioAddress, padrao.enderecoEstudio, formulario.enderecoEstudio);
-  const biografiaPerfil = obterValorTexto(padrao.bio, padrao.biografia, formulario.biografia);
-
-  return {
-    uid: padrao.uid,
-    email: emailPerfil,
-    displayName: nomeExibicao,
-    nomeExibicao,
-    role: tipoPerfil,
-    tipoPerfil,
-    phoneNumber: telefonePerfil,
-    telefone: telefonePerfil,
-    photoURL: fotoPerfil,
-    fotoUrl: fotoPerfil,
-    createdAt: dataCriacao,
-    criadoEm: dataCriacao,
-    studioName: nomeEstudioPerfil,
-    nomeEstudio: nomeEstudioPerfil,
-    studioAddress: enderecoEstudioPerfil,
-    enderecoEstudio: enderecoEstudioPerfil,
-    bio: biografiaPerfil,
-    biografia: biografiaPerfil,
-  };
-}
-
-function converterParaPerfil(registro: RegistroMock): PerfilUsuario {
-  const { senha, ...perfil } = registro;
-  void senha;
-
-  let perfilPadrao: TipoPerfil = 'cliente';
-  if (ehTipoPerfilValido(perfil.role)) {
-    perfilPadrao = perfil.role;
-  }
-
-  return criarPerfilBase(perfil, FORMULARIO_INICIAL, perfilPadrao);
-}
-
-async function buscarPerfilMockPorId(uid: string): Promise<PerfilUsuario | null> {
-  const usuario = bancoUsuariosMock.find((item) => item.uid === uid);
-  return usuario ? converterParaPerfil(usuario) : null;
-}
-
-async function salvarPerfilMock(perfil: PerfilUsuario, senha: string): Promise<void> {
-  const indice = bancoUsuariosMock.findIndex((item) => item.uid === perfil.uid);
-  const proximoRegistro: RegistroMock = { ...perfil, senha };
-
-  if (indice >= 0) {
-    bancoUsuariosMock[indice] = proximoRegistro;
-    return;
-  }
-
-  bancoUsuariosMock = [...bancoUsuariosMock, proximoRegistro];
-}
-
-async function registrarMock(input: { email: string; senha: string; profile: PerfilUsuario }): Promise<PerfilUsuario> {
-  await esperar(350);
-  const email = normalizarEmail(input.email);
-  const jaExiste = bancoUsuariosMock.some((item) => normalizarEmail(item.email) === email);
-
-  if (jaExiste) {
-    throw new Error('already registered');
-  }
-
-  await salvarPerfilMock({ ...input.profile, email }, input.senha);
-  const uidPerfil = typeof input.profile.uid === 'string' ? input.profile.uid : '';
-  const salvo = await buscarPerfilMockPorId(uidPerfil);
-
-  if (!salvo) {
-    throw new Error('Falha ao salvar perfil mock.');
-  }
-
-  return salvo;
-}
-
-async function loginMock(emailInput: string, senhaInput: string): Promise<PerfilUsuario> {
-  await esperar(300);
-  const email = normalizarEmail(emailInput);
-
-  const usuario = bancoUsuariosMock.find((item) => normalizarEmail(item.email) === email);
-  if (!usuario) {
-    throw new Error('invalid login credentials');
-  }
-
-  if (usuario.senha !== senhaInput) {
-    throw new Error('invalid login credentials');
-  }
-
-  return converterParaPerfil(usuario);
-}
-
-async function loginGoogleMock(tipoPerfil: TipoPerfil): Promise<PerfilUsuario> {
-  await esperar(250);
-
-  const existente = bancoUsuariosMock.find((item) => item.role === tipoPerfil);
-  if (existente) {
-    return converterParaPerfil(existente);
-  }
-
-  const uid = `mock-google-${Date.now()}`;
-  const perfil: PerfilUsuario = {
-    uid,
-    email: `google-${uid}@dermys.mock`,
-    displayName: tipoPerfil === 'artista' ? 'Google Artist Mock' : 'Google Client Mock',
-    nomeExibicao: tipoPerfil === 'artista' ? 'Google Artist Mock' : 'Google Client Mock',
-    role: tipoPerfil,
-    tipoPerfil,
-    phoneNumber: '',
-    telefone: '',
-    photoURL: '',
-    fotoUrl: '',
-    createdAt: new Date().toISOString(),
-    criadoEm: new Date().toISOString(),
-  };
-
-  await salvarPerfilMock(perfil, 'google-oauth');
-  return perfil;
-}
-
-function normalizarErroSupabase(mensagem: string): string {
-  const valor = mensagem.toLowerCase();
-
-  if (valor.includes('already registered')) {
-    return 'Este e-mail já está em uso.';
-  }
-
-  if (valor.includes('already exists')) {
-    return 'Este e-mail já está em uso.';
-  }
-
-  if (valor.includes('invalid login credentials')) {
-    return 'E-mail ou senha incorretos.';
-  }
-
-  if (valor.includes('email not confirmed')) {
-    return 'Confirme seu e-mail para continuar.';
-  }
-
-  if (valor.includes('password should be at least')) {
-    return 'A senha deve ter pelo menos 6 caracteres.';
-  }
-
-  return 'Ocorreu um erro. Tente novamente.';
-}
-
-async function buscarPerfilPorId(uid: string): Promise<PerfilUsuario | null> {
-  if (USAR_MOCK_AUTH) {
-    return buscarPerfilMockPorId(uid);
-  }
-
-  const { data, error } = await supabase.from('users').select('*').eq('uid', uid).single();
-
-  if (error) {
-    if (error.code === 'PGRST116') {
-      return null;
-    }
-    throw error;
-  }
-
-  return data as PerfilUsuario;
-}
-
 export function TelaAutenticacao({ onComplete }: PropsTelaAutenticacao) {
   const [etapa, setEtapa] = useState<EtapaAutenticacao>('boasVindas');
   const [modo, setModo] = useState<ModoAutenticacao>('cadastro');
@@ -317,8 +88,13 @@ export function TelaAutenticacao({ onComplete }: PropsTelaAutenticacao) {
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [formulario, setFormulario] = useState<FormularioCadastro>(FORMULARIO_INICIAL);
+  const [userIdAtivo, setUserIdAtivo] = useState<string>('');
+  const [userFotoUrl, setUserFotoUrl] = useState<string>('');
 
-  const titulo = useMemo(() => (etapa === 'login' ? 'Entrar' : 'Cadastro'), [etapa]);
+  const titulo = useMemo(() => {
+    if (etapa === 'completarPerfil') return 'Complete seu Perfil';
+    return etapa === 'login' ? 'Entrar' : 'Cadastro';
+  }, [etapa]);
 
   const selecionarModo = (modoSelecionado: ModoAutenticacao) => {
     setModo(modoSelecionado);
@@ -326,173 +102,130 @@ export function TelaAutenticacao({ onComplete }: PropsTelaAutenticacao) {
     setErro(null);
   };
 
-  const seguirParaPerfil = () => {
+  const seguirParaFormulario = () => {
     setEtapa(modo === 'login' ? 'login' : 'cadastro');
     setErro(null);
   };
 
-  const tratarErroAutenticacao = (mensagem: string) => {
-    setErro(normalizarErroSupabase(mensagem));
+  // Salva no banco de dados Supabase garantindo colunas corretas
+  const salvarPerfilNoBanco = async (id: string, email: string, fotoUrl?: string) => {
+    const nomeFinal = formulario.nomeCompleto.trim() || email.split('@')[0] || 'Usuário';
+
+    const payloadDB = {
+      id,
+      email: email.trim().toLowerCase(),
+      nome_exibicao: nomeFinal,
+      tipo_perfil: tipoPerfil,
+      telefone: formulario.telefone.trim() || null,
+      foto_url: fotoUrl || userFotoUrl || null,
+      nome_estudio: tipoPerfil === 'artista' ? (formulario.nomeEstudio.trim() || 'Estúdio Particular') : null,
+      endereco_estudio: tipoPerfil === 'artista' ? (formulario.enderecoEstudio.trim() || null) : null,
+      biografia: tipoPerfil === 'artista' ? (formulario.biografia.trim() || null) : null,
+      atualizado_em: new Date().toISOString(),
+    };
+
+    const { data: salvo, error: errUpsert } = await supabase
+      .from('profiles')
+      .upsert(payloadDB, { onConflict: 'id' })
+      .select('*')
+      .single();
+
+    if (errUpsert) throw errUpsert;
+    return normalizarPerfil(salvo || payloadDB);
   };
 
-  const salvarOuCarregarPerfil = async (fallback: Partial<PerfilUsuario>) => {
-    const uid = fallback.uid;
-    if (!uid) {
-      throw new Error('Sessão inválida.');
-    }
-
-    const perfilExistente = await buscarPerfilPorId(uid);
-    if (perfilExistente) {
-      onComplete(perfilExistente);
-      return;
-    }
-
-    const perfilData = criarPerfilBase(
-      {
-        ...fallback,
-        role: tipoPerfil,
-        tipoPerfil,
-      },
-      formulario,
-      tipoPerfil,
-    );
-
-    if (USAR_MOCK_AUTH) {
-      let senhaMock = '123456';
-      if (typeof formulario.senha === 'string' && formulario.senha.trim().length > 0) {
-        senhaMock = formulario.senha;
-      }
-
-      await salvarPerfilMock(perfilData, senhaMock);
-      onComplete(perfilData);
-      return;
-    }
-
-    const { error: erroUpsert } = await supabase.from('users').upsert(perfilData, { onConflict: 'uid' });
-    if (erroUpsert) {
-      throw erroUpsert;
-    }
-
-    onComplete(perfilData);
-  };
-
+  // Login com Google
   const handleGoogleSignIn = async () => {
     setCarregando(true);
     setErro(null);
 
     try {
-      if (USAR_MOCK_AUTH) {
-        const perfil = await loginGoogleMock(tipoPerfil);
-        onComplete(perfil);
-        return;
-      }
-
-      const redirectTo = Linking.createURL('/');
-
-      const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo,
-          skipBrowserRedirect: true,
-        },
-      });
-
-      if (oauthError) {
-        throw oauthError;
-      }
-
-      if (!data?.url) {
-        throw new Error('Não foi possível iniciar o login com Google.');
-      }
-
-      if (Platform.OS === 'web') {
-        await Linking.openURL(data.url);
-        return;
-      }
-
-      const authResult = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
-
-      if (authResult.type !== 'success') {
-        setErro('Login com Google cancelado.');
-        return;
-      }
-
-      const parsed = Linking.parse(authResult.url);
-      const code = parsed.queryParams?.code;
-
-      if (typeof code !== 'string') {
-        throw new Error('Código de autenticação inválido.');
-      }
-
-      if (code.length === 0) {
-        throw new Error('Código de autenticação inválido.');
-      }
-
-      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-      if (exchangeError) {
-        throw exchangeError;
-      }
-
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-
-      if (userError) {
-        throw userError;
-      }
-
+      const user = await iniciarLoginGoogle();
       if (!user) {
-        throw new Error('Não foi possível recuperar o usuário autenticado.');
+        // Redirecionamento em andamento no browser
+        return;
       }
 
-      let emailUsuario = formulario.email;
-      if (typeof user.email === 'string' && user.email.trim().length > 0) {
-        emailUsuario = user.email;
+      // Verifica se já existe perfil cadastrado com dados essenciais
+      const { data: profileExistente } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      const nomeGoogle = user.user_metadata?.full_name || user.user_metadata?.name || '';
+      const emailGoogle = user.email || '';
+      const fotoGoogle = user.user_metadata?.avatar_url || user.user_metadata?.picture || '';
+
+      // Se o perfil já existe e tem o tipo de perfil e nome definidos, loga direto!
+      if (profileExistente && profileExistente.tipo_perfil && profileExistente.nome_exibicao) {
+        onComplete(normalizarPerfil(profileExistente));
+        return;
       }
 
-      let nomeExibicaoUsuario = formulario.nomeCompleto;
-      if (typeof user.user_metadata?.full_name === 'string' && user.user_metadata.full_name.trim().length > 0) {
-        nomeExibicaoUsuario = user.user_metadata.full_name;
-      } else if (typeof user.user_metadata?.name === 'string' && user.user_metadata.name.trim().length > 0) {
-        nomeExibicaoUsuario = user.user_metadata.name;
+      // Se for novo cadastro ou faltar preenchimento, prepara os dados do Google e pede para completar
+      setUserIdAtivo(user.id);
+      setUserFotoUrl(fotoGoogle);
+      setFormulario((prev) => ({
+        ...prev,
+        nomeCompleto: profileExistente?.nome_exibicao || nomeGoogle || prev.nomeCompleto,
+        email: emailGoogle || prev.email,
+        telefone: profileExistente?.telefone || prev.telefone,
+        nomeEstudio: profileExistente?.nome_estudio || prev.nomeEstudio,
+        enderecoEstudio: profileExistente?.endereco_estudio || prev.enderecoEstudio,
+        biografia: profileExistente?.biografia || prev.biografia,
+      }));
+
+      if (profileExistente?.tipo_perfil === 'artista') {
+        setTipoPerfil('artista');
+      } else {
+        setTipoPerfil('cliente');
       }
 
-      let telefoneUsuario = formulario.telefone;
-      if (typeof user.phone === 'string' && user.phone.trim().length > 0) {
-        telefoneUsuario = user.phone;
-      }
-
-      await salvarOuCarregarPerfil({
-        uid: user.id,
-        email: emailUsuario,
-        displayName: nomeExibicaoUsuario,
-        phoneNumber: telefoneUsuario,
-        photoURL: user.user_metadata?.avatar_url,
-      });
-    } catch (err) {
-      const mensagem = err instanceof Error ? err.message : 'Erro desconhecido.';
-      tratarErroAutenticacao(mensagem);
+      setEtapa('completarPerfil');
+    } catch (err: any) {
+      setErro(err.message || 'Erro no login com Google.');
     } finally {
       setCarregando(false);
     }
   };
 
+  // Finalizar preenchimento do perfil
+  const handleFinalizarCompletarPerfil = async () => {
+    if (!formulario.nomeCompleto.trim()) {
+      setErro('Por favor, informe seu nome.');
+      return;
+    }
+
+    if (tipoPerfil === 'artista' && !formulario.nomeEstudio.trim()) {
+      setErro('Por favor, informe o nome do seu estúdio.');
+      return;
+    }
+
+    setCarregando(true);
+    setErro(null);
+
+    try {
+      const perfilSalvo = await salvarPerfilNoBanco(userIdAtivo, formulario.email, userFotoUrl);
+      onComplete(perfilSalvo);
+    } catch (err: any) {
+      setErro(err.message || 'Erro ao salvar perfil.');
+    } finally {
+      setCarregando(false);
+    }
+  };
+
+  // Enviar formulário de Login ou Cadastro tradicional
   const enviarFormulario = async () => {
     const emailFormatado = formulario.email.trim();
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if (!emailFormatado) {
+    if (!emailFormatado || !emailRegex.test(emailFormatado)) {
       setErro('Por favor, insira um e-mail válido.');
       return;
     }
 
-    if (!emailRegex.test(emailFormatado)) {
-      setErro('Por favor, insira um e-mail válido.');
-      return;
-    }
-
-    if (modo === 'cadastro' && formulario.senha.length < 6) {
+    if (formulario.senha.length < 6) {
       setErro('A senha deve ter pelo menos 6 caracteres.');
       return;
     }
@@ -502,86 +235,64 @@ export function TelaAutenticacao({ onComplete }: PropsTelaAutenticacao) {
 
     try {
       if (modo === 'cadastro') {
-        if (USAR_MOCK_AUTH) {
-          let nomeCompletoCadastro = 'Usuário';
-          if (typeof formulario.nomeCompleto === 'string' && formulario.nomeCompleto.trim().length > 0) {
-            nomeCompletoCadastro = formulario.nomeCompleto;
-          }
-
-          const perfilData = criarPerfilBase(
-            {
-              uid: `mock-${Date.now()}`,
-              email: emailFormatado,
-              displayName: nomeCompletoCadastro,
-              phoneNumber: formulario.telefone,
-              createdAt: new Date().toISOString(),
-            },
-            formulario,
-            tipoPerfil,
-          );
-
-          const perfil = await registrarMock({
-            email: emailFormatado,
-            senha: formulario.senha,
-            profile: perfilData,
-          });
-
-          onComplete(perfil);
-          return;
-        }
-
         const { data, error: erroCadastro } = await supabase.auth.signUp({
           email: emailFormatado,
           password: formulario.senha,
+          options: {
+            data: {
+              nome_exibicao: formulario.nomeCompleto,
+              full_name: formulario.nomeCompleto,
+              tipo_perfil: tipoPerfil,
+              telefone: formulario.telefone,
+            },
+          },
         });
 
-        if (erroCadastro) {
-          throw erroCadastro;
-        }
+        if (erroCadastro) throw erroCadastro;
+        if (!data.user) throw new Error('Usuário não retornado no cadastro.');
 
-        const usuario = data.user;
-        if (!usuario) {
-          throw new Error('Usuário não retornado no cadastro.');
-        }
-
-        await salvarOuCarregarPerfil({
-          uid: usuario.id,
-          email: emailFormatado,
-          displayName: formulario.nomeCompleto,
-          phoneNumber: formulario.telefone,
-        });
+        const perfilSalvo = await salvarPerfilNoBanco(data.user.id, emailFormatado);
+        onComplete(perfilSalvo);
       } else {
-        if (USAR_MOCK_AUTH) {
-          const perfil = await loginMock(emailFormatado, formulario.senha);
-          onComplete(perfil);
-          return;
-        }
-
+        // Modo Login
         const { data, error: erroLogin } = await supabase.auth.signInWithPassword({
           email: emailFormatado,
           password: formulario.senha,
         });
 
-        if (erroLogin) {
-          throw erroLogin;
-        }
+        if (erroLogin) throw erroLogin;
+        if (!data.user) throw new Error('Usuário não retornado no login.');
 
-        const usuario = data.user;
-        if (!usuario) {
-          throw new Error('Usuário não retornado no login.');
-        }
+        // Busca perfil no banco
+        const { data: dbProfile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
 
-        const perfil = await buscarPerfilPorId(usuario.id);
-        if (!perfil) {
-          setErro('Perfil não encontrado no banco de dados.');
+        if (dbProfile && dbProfile.tipo_perfil && dbProfile.nome_exibicao) {
+          onComplete(normalizarPerfil(dbProfile));
           return;
         }
 
-        onComplete(perfil);
+        // Se perfil estiver incompleto, abre tela de completar
+        setUserIdAtivo(data.user.id);
+        setFormulario((prev) => ({
+          ...prev,
+          nomeCompleto: dbProfile?.nome_exibicao || prev.nomeCompleto,
+          email: emailFormatado,
+          telefone: dbProfile?.telefone || prev.telefone,
+          nomeEstudio: dbProfile?.nome_estudio || prev.nomeEstudio,
+          enderecoEstudio: dbProfile?.endereco_estudio || prev.enderecoEstudio,
+          biografia: dbProfile?.biografia || prev.biografia,
+        }));
+        if (dbProfile?.tipo_perfil === 'artista') {
+          setTipoPerfil('artista');
+        }
+        setEtapa('completarPerfil');
       }
-    } catch (err) {
-      const mensagem = err instanceof Error ? err.message : 'Erro desconhecido.';
-      tratarErroAutenticacao(mensagem);
+    } catch (err: any) {
+      setErro(err.message || 'Ocorreu um erro.');
     } finally {
       setCarregando(false);
     }
@@ -590,7 +301,7 @@ export function TelaAutenticacao({ onComplete }: PropsTelaAutenticacao) {
   const renderBoasVindas = () => (
     <View style={styles.sectionCenter}>
       <View style={styles.brandWrap}>
-        <Logo size={210} />
+        <Logo size={200} color="#f3c21a" />
 
         <View style={styles.brandTextWrap}>
           <Text style={styles.brandTitle}>DERMYS</Text>
@@ -606,6 +317,24 @@ export function TelaAutenticacao({ onComplete }: PropsTelaAutenticacao) {
         <TouchableOpacity style={[styles.buttonBase, styles.buttonPrimary]} activeOpacity={0.85} onPress={() => selecionarModo('cadastro')}>
           <Text style={[styles.buttonTextBase, styles.buttonTextDark]}>Cadastrar</Text>
         </TouchableOpacity>
+
+        {/* Separador */}
+        <View style={styles.separatorWrap}>
+          <View style={styles.separatorLine} />
+          <Text style={styles.separatorText}>ou</Text>
+          <View style={styles.separatorLine} />
+        </View>
+
+        {/* Google Direto */}
+        <TouchableOpacity
+          onPress={handleGoogleSignIn}
+          disabled={carregando}
+          style={[styles.buttonBase, styles.buttonGoogle, carregando ? styles.buttonDisabled : null]}
+          activeOpacity={0.85}
+        >
+          <GoogleIcon size={20} />
+          <Text style={[styles.buttonTextBase, styles.buttonTextGoogle]}>Continuar com o Google</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -614,7 +343,7 @@ export function TelaAutenticacao({ onComplete }: PropsTelaAutenticacao) {
     <View style={styles.sectionStack}>
       <View style={styles.headerWrap}>
         <Text style={styles.screenTitle}>Quem é você?</Text>
-        <Text style={styles.screenMeta}>Selecione seu perfil</Text>
+        <Text style={styles.screenMeta}>Selecione seu perfil para continuar</Text>
       </View>
 
       <View style={styles.cardList}>
@@ -624,7 +353,7 @@ export function TelaAutenticacao({ onComplete }: PropsTelaAutenticacao) {
           onPress={() => setTipoPerfil('cliente')}
         >
           <View style={styles.roleHead}>
-            <Text style={[styles.roleIcon, tipoPerfil === 'cliente' ? styles.roleIconActive : styles.roleIconIdle]}>C</Text>
+            <Compass size={20} color={tipoPerfil === 'cliente' ? '#f3c21a' : '#6b7280'} />
             <View style={[styles.roleDot, tipoPerfil === 'cliente' ? styles.roleDotOn : styles.roleDotOff]} />
           </View>
           <Text style={styles.roleTitle}>Cliente</Text>
@@ -637,7 +366,7 @@ export function TelaAutenticacao({ onComplete }: PropsTelaAutenticacao) {
           onPress={() => setTipoPerfil('artista')}
         >
           <View style={styles.roleHead}>
-            <Text style={[styles.roleIcon, tipoPerfil === 'artista' ? styles.roleIconActive : styles.roleIconIdle]}>T</Text>
+            <Palette size={20} color={tipoPerfil === 'artista' ? '#f3c21a' : '#6b7280'} />
             <View style={[styles.roleDot, tipoPerfil === 'artista' ? styles.roleDotOn : styles.roleDotOff]} />
           </View>
           <Text style={styles.roleTitle}>Tatuador</Text>
@@ -650,7 +379,7 @@ export function TelaAutenticacao({ onComplete }: PropsTelaAutenticacao) {
           <Text style={[styles.buttonTextBase, styles.buttonTextLight]}>Voltar</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.buttonBase, styles.buttonPrimary, styles.growTwo]} onPress={seguirParaPerfil} activeOpacity={0.85}>
+        <TouchableOpacity style={[styles.buttonBase, styles.buttonPrimary, styles.growTwo]} onPress={seguirParaFormulario} activeOpacity={0.85}>
           <Text style={[styles.buttonTextBase, styles.buttonTextDark]}>Continuar</Text>
         </TouchableOpacity>
       </View>
@@ -660,30 +389,29 @@ export function TelaAutenticacao({ onComplete }: PropsTelaAutenticacao) {
   const renderInput = (
     chave: keyof FormularioCadastro,
     placeholder: string,
-    icone: string,
+    IconComp: React.ComponentType<{ size: number; color: string }>,
     opcoes?: {
       secure?: boolean;
       multiline?: boolean;
       keyboardType?: 'default' | 'email-address' | 'phone-pad';
       autoCapitalize?: 'none' | 'sentences' | 'words';
+      editable?: boolean;
     },
   ) => (
     <View style={styles.inputWrap}>
-      {!opcoes?.multiline && <Text style={styles.inputIconText}>{icone}</Text>}
+      {!opcoes?.multiline && (
+        <View style={styles.inputIcon}>
+          <IconComp size={18} color="#6f6f6f" />
+        </View>
+      )}
       <TextInput
         placeholder={placeholder}
         placeholderTextColor="#6f6f6f"
         value={formulario[chave]}
         secureTextEntry={opcoes?.secure}
         keyboardType={opcoes?.keyboardType}
-        autoCapitalize={
-          (() => {
-            if (typeof opcoes?.autoCapitalize === 'string' && opcoes.autoCapitalize.length > 0) {
-              return opcoes.autoCapitalize;
-            }
-            return 'none';
-          })()
-        }
+        editable={opcoes?.editable !== false}
+        autoCapitalize={opcoes?.autoCapitalize || 'none'}
         onChangeText={(texto) => setFormulario((anterior) => ({ ...anterior, [chave]: texto }))}
         style={[
           styles.input,
@@ -693,6 +421,76 @@ export function TelaAutenticacao({ onComplete }: PropsTelaAutenticacao) {
         multiline={opcoes?.multiline}
         textAlignVertical={opcoes?.multiline ? 'top' : 'center'}
       />
+    </View>
+  );
+
+  // Tela dedicada para completar dados quando cadastra pelo Google ou faltam dados
+  const renderCompletarPerfil = () => (
+    <View style={styles.sectionStack}>
+      <View style={styles.headerWrap}>
+        <Text style={styles.screenTitle}>Complete seu Perfil</Text>
+        <Text style={styles.screenMeta}>Confirme seus dados para acessar o Dermys</Text>
+      </View>
+
+      {erro ? (
+        <View style={styles.errorBanner}>
+          <Text style={styles.errorText}>{erro}</Text>
+        </View>
+      ) : null}
+
+      {/* Seleção do Perfil */}
+      <View style={styles.cardList}>
+        <TouchableOpacity
+          style={[styles.roleCard, tipoPerfil === 'cliente' ? styles.roleCardActive : styles.roleCardIdle]}
+          activeOpacity={0.85}
+          onPress={() => setTipoPerfil('cliente')}
+        >
+          <View style={styles.roleHead}>
+            <Compass size={18} color={tipoPerfil === 'cliente' ? '#f3c21a' : '#6b7280'} />
+            <Text style={styles.roleTitle}>Sou Cliente</Text>
+          </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.roleCard, tipoPerfil === 'artista' ? styles.roleCardActive : styles.roleCardIdle]}
+          activeOpacity={0.85}
+          onPress={() => setTipoPerfil('artista')}
+        >
+          <View style={styles.roleHead}>
+            <Palette size={18} color={tipoPerfil === 'artista' ? '#f3c21a' : '#6b7280'} />
+            <Text style={styles.roleTitle}>Sou Tatuador / Estúdio</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.inputStack}>
+        {renderInput('nomeCompleto', 'Seu Nome (pode editar)', User, { autoCapitalize: 'words' })}
+
+        {renderInput('email', 'E-mail', Mail, { editable: false })}
+
+        {renderInput('telefone', 'Telefone / WhatsApp', Phone, { keyboardType: 'phone-pad' })}
+
+        {tipoPerfil === 'artista' && (
+          <>
+            {renderInput('nomeEstudio', 'Nome do estúdio', Building, { autoCapitalize: 'words' })}
+            {renderInput('enderecoEstudio', 'Endereço / Cidade do estúdio', MapPin, { autoCapitalize: 'sentences' })}
+            {renderInput('biografia', 'Sua bio / especialidades', AlignLeft, { multiline: true, autoCapitalize: 'sentences' })}
+          </>
+        )}
+      </View>
+
+      <TouchableOpacity
+        onPress={handleFinalizarCompletarPerfil}
+        disabled={carregando}
+        style={[styles.buttonBase, styles.buttonPrimary, carregando ? styles.buttonDisabled : null]}
+        activeOpacity={0.85}
+      >
+        {carregando ? (
+          <ActivityIndicator color="#111" />
+        ) : (
+          <Text style={[styles.buttonTextBase, styles.buttonTextDark]}>Salvar e Acessar Dermys</Text>
+        )}
+      </TouchableOpacity>
     </View>
   );
 
@@ -710,19 +508,19 @@ export function TelaAutenticacao({ onComplete }: PropsTelaAutenticacao) {
       ) : null}
 
       <View style={styles.inputStack}>
-        {etapa === 'cadastro' ? renderInput('nomeCompleto', 'Nome completo', 'N', { autoCapitalize: 'words' }) : null}
+        {etapa === 'cadastro' ? renderInput('nomeCompleto', 'Nome completo', User, { autoCapitalize: 'words' }) : null}
 
-        {renderInput('email', 'E-mail', '@', { keyboardType: 'email-address', autoCapitalize: 'none' })}
+        {renderInput('email', 'E-mail', Mail, { keyboardType: 'email-address', autoCapitalize: 'none' })}
 
-        {etapa === 'cadastro' ? renderInput('telefone', 'Telefone', 'F', { keyboardType: 'phone-pad' }) : null}
+        {etapa === 'cadastro' ? renderInput('telefone', 'Telefone', Phone, { keyboardType: 'phone-pad' }) : null}
 
-        {etapa === 'cadastro' && tipoPerfil === 'artista' ? renderInput('nomeEstudio', 'Nome do estúdio', 'E', { autoCapitalize: 'words' }) : null}
+        {etapa === 'cadastro' && tipoPerfil === 'artista' ? renderInput('nomeEstudio', 'Nome do estúdio', Building, { autoCapitalize: 'words' }) : null}
 
-        {etapa === 'cadastro' && tipoPerfil === 'artista' ? renderInput('enderecoEstudio', 'Endereço do estúdio', 'L', { autoCapitalize: 'sentences' }) : null}
+        {etapa === 'cadastro' && tipoPerfil === 'artista' ? renderInput('enderecoEstudio', 'Endereço do estúdio', MapPin, { autoCapitalize: 'sentences' }) : null}
 
-        {etapa === 'cadastro' && tipoPerfil === 'artista' ? renderInput('biografia', 'Sua bio / descrição curta', 'B', { multiline: true, autoCapitalize: 'sentences' }) : null}
+        {etapa === 'cadastro' && tipoPerfil === 'artista' ? renderInput('biografia', 'Sua bio / descrição curta', AlignLeft, { multiline: true, autoCapitalize: 'sentences' }) : null}
 
-        {renderInput('senha', etapa === 'cadastro' ? 'Crie uma senha' : 'Sua senha', '*', { secure: true, autoCapitalize: 'none' })}
+        {renderInput('senha', etapa === 'cadastro' ? 'Crie uma senha' : 'Sua senha', Lock, { secure: true, autoCapitalize: 'none' })}
       </View>
 
       <View style={styles.actionsWrap}>
@@ -734,18 +532,22 @@ export function TelaAutenticacao({ onComplete }: PropsTelaAutenticacao) {
           )}
         </TouchableOpacity>
 
+        {/* Separador */}
         <View style={styles.separatorWrap}>
           <View style={styles.separatorLine} />
-          <Text style={styles.separatorText}>Ou</Text>
+          <Text style={styles.separatorText}>ou</Text>
           <View style={styles.separatorLine} />
         </View>
 
-        <TouchableOpacity onPress={handleGoogleSignIn} disabled={carregando} style={[styles.buttonBase, styles.buttonGoogle, carregando ? styles.buttonDisabled : null]} activeOpacity={0.85}>
-          <View style={styles.googleGlyphWrap}>
-            <Text style={styles.googleGlyph}>G</Text>
-          </View>
-          <Text style={[styles.buttonTextBase, styles.buttonTextDark]}>Google</Text>
-          <Text style={styles.chevron}>{'>'}</Text>
+        {/* Botão Google Auth */}
+        <TouchableOpacity
+          onPress={handleGoogleSignIn}
+          disabled={carregando}
+          style={[styles.buttonBase, styles.buttonGoogle, carregando ? styles.buttonDisabled : null]}
+          activeOpacity={0.85}
+        >
+          <GoogleIcon size={20} />
+          <Text style={[styles.buttonTextBase, styles.buttonTextGoogle]}>Continuar com o Google</Text>
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => setEtapa('perfil')} style={styles.backLink} activeOpacity={0.85}>
@@ -756,17 +558,14 @@ export function TelaAutenticacao({ onComplete }: PropsTelaAutenticacao) {
   );
 
   let conteudo: ReactNode = null;
-
   if (etapa === 'boasVindas') {
     conteudo = renderBoasVindas();
   } else if (etapa === 'perfil') {
     conteudo = renderPerfil();
+  } else if (etapa === 'completarPerfil') {
+    conteudo = renderCompletarPerfil();
   } else {
-    if (etapa === 'login') {
-      conteudo = renderAutenticacao();
-    } else if (etapa === 'cadastro') {
-      conteudo = renderAutenticacao();
-    }
+    conteudo = renderAutenticacao();
   }
 
   return (
@@ -781,54 +580,72 @@ export function TelaAutenticacao({ onComplete }: PropsTelaAutenticacao) {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#050505' },
   scrollContent: { flexGrow: 1, paddingHorizontal: 24, paddingVertical: 20, justifyContent: 'center' },
-  sectionCenter: { gap: 30 },
-  sectionStack: { gap: 24 },
-  brandWrap: { alignItems: 'center', gap: 18 },
+  sectionCenter: { gap: 24 },
+  sectionStack: { gap: 20 },
+  brandWrap: { alignItems: 'center', gap: 16 },
   brandTextWrap: { alignItems: 'center', gap: 2 },
   brandTitle: { color: '#f3c21a', fontSize: 52, fontWeight: '900', textTransform: 'uppercase', letterSpacing: -2, lineHeight: 52 },
   brandSubTitle: { color: '#f5f5f5', textTransform: 'uppercase', fontSize: 12, fontWeight: '800', letterSpacing: 2.2 },
-  headerWrap: { gap: 8 },
-  screenTitle: { color: '#f3c21a', fontSize: 32, fontWeight: '900', textTransform: 'uppercase', fontStyle: 'italic', letterSpacing: -1 },
+  headerWrap: { gap: 6 },
+  screenTitle: { color: '#f3c21a', fontSize: 28, fontWeight: '900', textTransform: 'uppercase', fontStyle: 'italic', letterSpacing: -1 },
   screenMeta: { color: '#777', textTransform: 'uppercase', fontSize: 10, fontWeight: '900', letterSpacing: 2.5 },
-  actionsWrap: { gap: 14 },
+  actionsWrap: { gap: 12 },
   rowButtons: { flexDirection: 'row', gap: 12 },
   growOne: { flex: 1 },
   growTwo: { flex: 2 },
-  buttonBase: { minHeight: 60, borderRadius: 16, justifyContent: 'center', alignItems: 'center', flexDirection: 'row', gap: 8, paddingHorizontal: 16 },
+  buttonBase: { minHeight: 56, borderRadius: 14, justifyContent: 'center', alignItems: 'center', flexDirection: 'row', gap: 10, paddingHorizontal: 16 },
   buttonGhost: { backgroundColor: '#1d1d1d', borderWidth: 1, borderColor: '#2d2d2d' },
   buttonPrimary: { backgroundColor: '#f3c21a' },
-  buttonGoogle: { backgroundColor: '#fff' },
-  buttonDisabled: { opacity: 0.55 },
-  buttonTextBase: { fontWeight: '900', textTransform: 'uppercase', letterSpacing: 1.3, fontSize: 18 },
-  buttonTextLight: { color: '#fff' },
+  buttonGoogle: { backgroundColor: '#ffffff' },
+  buttonDisabled: { opacity: 0.6 },
+  buttonTextBase: { fontSize: 14, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 0.8 },
   buttonTextDark: { color: '#111' },
-  cardList: { gap: 12 },
-  roleCard: { borderRadius: 24, borderWidth: 2, padding: 18, gap: 10 },
-  roleCardIdle: { borderColor: '#202020', backgroundColor: '#101010' },
-  roleCardActive: { borderColor: '#f3c21a', backgroundColor: '#16130a' },
+  buttonTextLight: { color: '#fff' },
+  buttonTextGoogle: { color: '#1f2937' },
+  separatorWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginVertical: 2,
+  },
+  separatorLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#222',
+  },
+  separatorText: {
+    color: '#666',
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
+  cardList: { gap: 10 },
+  roleCard: { borderRadius: 16, borderWidth: 1, padding: 14, gap: 4 },
+  roleCardIdle: { backgroundColor: '#101010', borderColor: '#222' },
+  roleCardActive: { backgroundColor: '#161616', borderColor: '#f3c21a' },
   roleHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  roleIcon: { fontSize: 30, fontWeight: '900', minWidth: 24 },
-  roleIconIdle: { color: '#666' },
-  roleIconActive: { color: '#f3c21a' },
-  roleDot: { width: 22, height: 22, borderRadius: 11, borderWidth: 2 },
-  roleDotOff: { borderColor: '#333' },
-  roleDotOn: { borderColor: '#f3c21a', backgroundColor: '#f3c21a' },
-  roleTitle: { color: '#fff', fontWeight: '900', fontSize: 20, textTransform: 'uppercase', fontStyle: 'italic' },
-  roleDescription: { color: '#8a8a8a', fontSize: 12, fontWeight: '600' },
-  errorBanner: { borderRadius: 14, borderWidth: 1, borderColor: '#6d1f1f', backgroundColor: '#2c1010', padding: 12 },
-  errorText: { color: '#ff8989', textAlign: 'center', textTransform: 'uppercase', fontSize: 11, fontWeight: '700', letterSpacing: 0.8 },
+  roleDot: { width: 10, height: 10, borderRadius: 5 },
+  roleDotOff: { backgroundColor: '#333' },
+  roleDotOn: { backgroundColor: '#f3c21a' },
+  roleTitle: { color: '#fff', fontSize: 16, fontWeight: '800' },
+  roleDescription: { color: '#888', fontSize: 11 },
   inputStack: { gap: 10 },
-  inputWrap: { position: 'relative' },
-  inputIconText: { position: 'absolute', left: 13, top: 16, zIndex: 2, color: '#737373', fontWeight: '800', width: 16, textAlign: 'center' },
-  input: { borderWidth: 1, borderColor: '#2b2b2b', borderRadius: 14, backgroundColor: '#111111', color: '#fff', minHeight: 54, paddingHorizontal: 14, fontSize: 14 },
-  inputWithIcon: { paddingLeft: 40 },
-  inputMultiline: { minHeight: 96, paddingTop: 12 },
-  separatorWrap: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 3 },
-  separatorLine: { flex: 1, height: 1, backgroundColor: '#1d1d1d' },
-  separatorText: { color: '#777', textTransform: 'uppercase', fontWeight: '800', fontSize: 10, letterSpacing: 2 },
-  googleGlyphWrap: { width: 20, height: 20, borderRadius: 10, backgroundColor: '#f1f5f9', alignItems: 'center', justifyContent: 'center' },
-  googleGlyph: { color: '#111', fontWeight: '900', fontSize: 12 },
-  chevron: { color: '#111', fontSize: 16, fontWeight: '900' },
-  backLink: { minHeight: 40, justifyContent: 'center', alignItems: 'center' },
-  backLinkText: { color: '#888', textTransform: 'uppercase', fontWeight: '900', fontSize: 10, letterSpacing: 2 },
+  inputWrap: { position: 'relative', justifyContent: 'center' },
+  inputIcon: { position: 'absolute', left: 16, zIndex: 2 },
+  input: {
+    minHeight: 52,
+    borderRadius: 12,
+    backgroundColor: '#111111',
+    borderWidth: 1,
+    borderColor: '#1f1f1f',
+    color: '#fff',
+    fontSize: 14,
+    paddingHorizontal: 16,
+  },
+  inputWithIcon: { paddingLeft: 46 },
+  inputMultiline: { minHeight: 74, paddingVertical: 12 },
+  errorBanner: { backgroundColor: 'rgba(239, 68, 68, 0.15)', borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.4)', borderRadius: 10, padding: 10 },
+  errorText: { color: '#ef4444', fontSize: 12, fontWeight: '700' },
+  backLink: { alignItems: 'center', paddingVertical: 6 },
+  backLinkText: { color: '#777', fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 },
 });

@@ -1,2 +1,2 @@
-// Troque para false para usar autenticacao real com Supabase.
-export const USAR_MOCK_AUTH = true;
+// Conectado diretamente com Supabase Auth & Google OAuth.
+export const USAR_MOCK_AUTH = false;

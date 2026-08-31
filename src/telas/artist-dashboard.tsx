@@ -1,83 +1,55 @@
-import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
-
+import type { BottomNavTab } from '@/components/bottom-nav';
+import { ArtistaAgendaTab } from '@/telas/artista/agenda-tab';
+import { ArtistaDashboardTab } from '@/telas/artista/dashboard-tab';
+import { ArtistaMensagensTab } from '@/telas/artista/mensagens-tab';
+import { ArtistaPerfilTab } from '@/telas/artista/perfil-tab';
 import type { PerfilUsuario } from '@/types/auth';
+import { LogOut } from 'lucide-react-native';
+import React from 'react';
+import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 interface PropsDashboardArtista {
   perfil: PerfilUsuario;
   onLogout: () => void;
+  activeTab?: BottomNavTab;
 }
 
-const KPI = [
-  { label: 'Agendamentos hoje', value: '4' },
-  { label: 'Briefings pendentes', value: '7' },
-  { label: 'Sinal em custódia', value: 'R$ 1.780' },
-  { label: 'Clientes ativos', value: '19' },
-];
+export function DashboardArtista({ perfil, onLogout, activeTab = 'dashboard' }: PropsDashboardArtista) {
+  const getTabTitle = () => {
+    switch (activeTab) {
+      case 'schedule':
+        return 'Agenda de Atendimentos';
+      case 'chat':
+        return 'Mensagens com Clientes';
+      case 'profile':
+        return 'Dados do Estúdio';
+      case 'dashboard':
+      default:
+        return 'Dashboard do tatuador';
+    }
+  };
 
-const PROXIMOS_ATENDIMENTOS = [
-  { id: '1', cliente: 'Marina C.', horario: '10:30', estilo: 'Fine Line Floral' },
-  { id: '2', cliente: 'Gustavo R.', horario: '13:00', estilo: 'Blackwork Manga' },
-  { id: '3', cliente: 'Bruna F.', horario: '16:15', estilo: 'Realismo Retrato' },
-];
-
-export function DashboardArtista({ perfil, onLogout }: PropsDashboardArtista) {
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Header */}
         <View style={styles.header}>
           <View>
             <Text style={styles.hiText}>Studio mode</Text>
-            <Text style={styles.title}>Dashboard do tatuador</Text>
-            <Text style={styles.subtitle}>{perfil.nomeExibicao}</Text>
+            <Text style={styles.title}>{getTabTitle()}</Text>
+            <Text style={styles.subtitle}>{perfil.nomeExibicao || 'Tatuador'}</Text>
           </View>
           <Pressable style={styles.logoutButton} onPress={onLogout}>
+            <LogOut size={14} color="#fff" />
             <Text style={styles.logoutText}>Sair</Text>
           </Pressable>
         </View>
 
-        <View style={styles.kpiGrid}>
-          {KPI.map((item) => (
-            <View key={item.label} style={styles.kpiCard}>
-              <Text style={styles.kpiLabel}>{item.label}</Text>
-              <Text style={styles.kpiValue}>{item.value}</Text>
-            </View>
-          ))}
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Atalhos rápidos</Text>
-          <View style={styles.actionRow}>
-            <Pressable style={styles.actionButton}>
-              <Text style={styles.actionText}>Novo agendamento</Text>
-            </Pressable>
-            <Pressable style={styles.actionButton}>
-              <Text style={styles.actionText}>Nova anamnese</Text>
-            </Pressable>
-          </View>
-          <View style={styles.actionRow}>
-            <Pressable style={styles.actionButton}>
-              <Text style={styles.actionText}>Controle de sinal</Text>
-            </Pressable>
-            <Pressable style={styles.actionButton}>
-              <Text style={styles.actionText}>Gerenciar portfólio</Text>
-            </Pressable>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Próximos atendimentos</Text>
-          <View style={styles.listWrap}>
-            {PROXIMOS_ATENDIMENTOS.map((item) => (
-              <View key={item.id} style={styles.itemRow}>
-                <View>
-                  <Text style={styles.clientText}>{item.cliente}</Text>
-                  <Text style={styles.itemStyle}>{item.estilo}</Text>
-                </View>
-                <Text style={styles.slotText}>{item.horario}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
+        {/* Conteúdo Dinâmico por Aba */}
+        {activeTab === 'dashboard' && <ArtistaDashboardTab perfil={perfil} />}
+        {activeTab === 'schedule' && <ArtistaAgendaTab />}
+        {activeTab === 'chat' && <ArtistaMensagensTab />}
+        {activeTab === 'profile' && <ArtistaPerfilTab perfil={perfil} />}
       </ScrollView>
     </SafeAreaView>
   );
@@ -98,6 +70,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
+    marginBottom: 4,
   },
   hiText: {
     color: '#8a8a8a',
@@ -108,7 +81,7 @@ const styles = StyleSheet.create({
   },
   title: {
     color: '#f3c21a',
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: '900',
     fontStyle: 'italic',
     letterSpacing: -0.7,
@@ -119,6 +92,9 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     borderWidth: 1,
     borderColor: '#2a2a2a',
     borderRadius: 12,
@@ -132,98 +108,5 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     fontWeight: '800',
     letterSpacing: 1.1,
-  },
-  kpiGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  kpiCard: {
-    width: '48.5%',
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#1d1d1d',
-    backgroundColor: '#101010',
-    paddingVertical: 14,
-    paddingHorizontal: 12,
-    gap: 8,
-  },
-  kpiLabel: {
-    color: '#9ca3af',
-    fontSize: 10,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    fontWeight: '700',
-  },
-  kpiValue: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: '900',
-  },
-  section: {
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#1d1d1d',
-    backgroundColor: '#101010',
-    padding: 12,
-    gap: 10,
-  },
-  sectionTitle: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  actionRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  actionButton: {
-    flex: 1,
-    minHeight: 44,
-    borderRadius: 10,
-    backgroundColor: '#1a1a1a',
-    borderWidth: 1,
-    borderColor: '#2b2b2b',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-  },
-  actionText: {
-    color: '#f3c21a',
-    textTransform: 'uppercase',
-    fontWeight: '800',
-    fontSize: 10,
-    textAlign: 'center',
-    letterSpacing: 0.6,
-  },
-  listWrap: {
-    gap: 8,
-  },
-  itemRow: {
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#2a2a2a',
-    backgroundColor: '#171717',
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  clientText: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  itemStyle: {
-    color: '#9ca3af',
-    fontSize: 11,
-  },
-  slotText: {
-    color: '#f3c21a',
-    fontWeight: '900',
-    fontSize: 13,
   },
 });

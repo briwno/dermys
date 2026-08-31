@@ -1,3 +1,5 @@
+import { Calendar, Home, LayoutGrid, MessageSquare, User } from 'lucide-react-native';
+import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 export type BottomNavTab = 'dashboard' | 'schedule' | 'home' | 'bookings' | 'chat' | 'profile';
@@ -9,25 +11,27 @@ interface BottomNavProps {
 }
 
 export function BottomNav({ activeTab, setActiveTab, role }: BottomNavProps) {
-  const tabs =
+  const tabs: { id: BottomNavTab; icon: React.ComponentType<{ size: number; color: string }>; label: string }[] =
     role === 'artista'
       ? [
-          { id: 'dashboard', icon: '◫', label: 'Dashboard' },
-          { id: 'schedule', icon: '🗓', label: 'Agenda' },
-          { id: 'chat', icon: '✉', label: 'Mensagens' },
-          { id: 'profile', icon: '◉', label: 'Perfil' },
+          { id: 'dashboard', icon: LayoutGrid, label: 'Dashboard' },
+          { id: 'schedule', icon: Calendar, label: 'Agenda' },
+          { id: 'chat', icon: MessageSquare, label: 'Mensagens' },
+          { id: 'profile', icon: User, label: 'Perfil' },
         ]
       : [
-          { id: 'home', icon: '⌂', label: 'Início' },
-          { id: 'bookings', icon: '🗓', label: 'Agendamentos' },
-          { id: 'chat', icon: '✉', label: 'Mensagens' },
-          { id: 'profile', icon: '◉', label: 'Perfil' },
+          { id: 'home', icon: Home, label: 'Início' },
+          { id: 'bookings', icon: Calendar, label: 'Agendamentos' },
+          { id: 'chat', icon: MessageSquare, label: 'Mensagens' },
+          { id: 'profile', icon: User, label: 'Perfil' },
         ];
 
   return (
     <View style={styles.navContainer}>
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
+        const IconComponent = tab.icon;
+        const iconColor = isActive ? '#f3c21a' : '#6b7280';
 
         return (
           <Pressable
@@ -36,7 +40,7 @@ export function BottomNav({ activeTab, setActiveTab, role }: BottomNavProps) {
             onPress={() => setActiveTab(tab.id)}
             android_ripple={{ color: '#2a2a2a' }}
           >
-            <Text style={[styles.tabIcon, isActive && styles.tabIconActive]}>{tab.icon}</Text>
+            <IconComponent size={20} color={iconColor} />
             <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>{tab.label}</Text>
           </Pressable>
         );
@@ -66,13 +70,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
-  },
-  tabIcon: {
-    fontSize: 22,
-    color: '#6b7280',
-  },
-  tabIconActive: {
-    color: '#f3c21a',
   },
   tabLabel: {
     fontSize: 9,

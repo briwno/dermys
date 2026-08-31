@@ -77,6 +77,6 @@ export const supabase = createClient(urlSupabase, chaveAnonSupabase, {
     storage: ehRuntimeServidor ? armazenamentoServidor : AsyncStorage,
     autoRefreshToken: !ehRuntimeServidor,
     persistSession: !ehRuntimeServidor,
-    detectSessionInUrl: false,
+    detectSessionInUrl: !ehRuntimeServidor,
   },
 });
