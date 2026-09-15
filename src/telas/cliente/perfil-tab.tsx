@@ -1,19 +1,25 @@
 import type { PerfilUsuario } from '@/types/auth';
 import { Mail, MapPin, Phone, User } from 'lucide-react-native';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 
 interface PropsPerfilTab {
   perfil: PerfilUsuario;
 }
 
 export function ClientePerfilTab({ perfil }: PropsPerfilTab) {
+  const foto = perfil.foto_url || perfil.fotoUrl || perfil.photoURL;
+
   return (
     <View style={styles.container}>
       <View style={styles.profileHeader}>
-        <View style={styles.avatar}>
-          <User size={32} color="#f3c21a" />
-        </View>
+        {foto ? (
+          <Image source={{ uri: foto }} style={styles.avatarImg} />
+        ) : (
+          <View style={styles.avatar}>
+            <User size={32} color="#f3c21a" />
+          </View>
+        )}
         <Text style={styles.name}>{perfil.nome_exibicao || perfil.nomeExibicao || 'Cliente'}</Text>
         <Text style={styles.email}>{perfil.email}</Text>
       </View>
@@ -57,6 +63,14 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: 'center',
     gap: 6,
+  },
+  avatarImg: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: 2,
+    borderColor: '#f3c21a',
+    marginBottom: 4,
   },
   avatar: {
     width: 60,

@@ -7,32 +7,65 @@ import { USAR_MOCK_AUTH } from '@/constants/feature-flags';
 import { processarRetornoOAuthUrl } from '@/services/auth-oauth';
 import { supabase } from '@/services/supabase';
 import { DashboardArtista } from '@/telas/artist-dashboard';
-import { TelaAutenticacao } from '@/telas/auth-screen';
+import { TelaAutenticacao, type SessaoAuthInfo } from '@/telas/auth-screen';
 import { DashboardCliente } from '@/telas/client-dashboard';
-import { normalizarPerfil, type PerfilUsuario } from '@/types/auth';
+import { normalizarPerfil, verificarStatusPerfil, type PerfilUsuario } from '@/types/auth';
 
 export default function TelaInicial() {
   const [perfil, setPerfil] = useState<PerfilUsuario | null>(null);
+  const [sessaoAuth, setSessaoAuth] = useState<SessaoAuthInfo | null>(null);
+  const [dadosIncompletos, setDadosIncompletos] = useState<Partial<PerfilUsuario> | null>(null);
   const [saindo, setSaindo] = useState(false);
   const [activeTab, setActiveTab] = useState<BottomNavTab>('home');
   const [inicializando, setInicializando] = useState(true);
 
-  const carregarPerfilUsuario = async (userId: string) => {
+  const carregarPerfilUsuario = async (userId: string, authUser?: any) => {
     try {
       const { data: dbProfile } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
-      if (dbProfile) {
+      const status = verificarStatusPerfil(dbProfile, dbProfile?.tipo_perfil);
+
+      if (dbProfile && status.completo) {
         const norm = normalizarPerfil(dbProfile);
         setPerfil(norm);
+        setSessaoAuth(null);
+        setDadosIncompletos(null);
         if (norm.tipo_perfil === 'artista' || norm.role === 'artista') {
           setActiveTab('dashboard');
+        } else {
+          setActiveTab('home');
         }
         return norm;
       }
+
+      // Perfil inexistente ou com campos obrigatórios pendentes
+      setPerfil(null);
+      setDadosIncompletos(dbProfile || null);
+
+      const emailFinal = authUser?.email || dbProfile?.email || '';
+      const nomeFinal =
+        authUser?.user_metadata?.full_name ||
+        authUser?.user_metadata?.name ||
+        dbProfile?.nome_exibicao ||
+        '';
+      const fotoFinal =
+        authUser?.user_metadata?.avatar_url ||
+        authUser?.user_metadata?.picture ||
+        dbProfile?.foto_url ||
+        '';
+
+      setSessaoAuth({
+        id: userId,
+        email: emailFinal,
+        nome: nomeFinal,
+        fotoUrl: fotoFinal,
+      });
+
+      return null;
     } catch {
       // silencioso
     }
@@ -48,7 +81,7 @@ export default function TelaInicial() {
         if (initialUrl && montado) {
           const user = await processarRetornoOAuthUrl(initialUrl);
           if (user) {
-            await carregarPerfilUsuario(user.id);
+            await carregarPerfilUsuario(user.id, user);
           }
         }
       } catch {
@@ -61,9 +94,11 @@ export default function TelaInicial() {
         if (!USAR_MOCK_AUTH) {
           await processarUrlInicial();
 
-          const { data: { session } } = await supabase.auth.getSession();
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
           if (session?.user && montado) {
-            await carregarPerfilUsuario(session.user.id);
+            await carregarPerfilUsuario(session.user.id, session.user);
           }
         }
       } catch {
@@ -81,7 +116,7 @@ export default function TelaInicial() {
         try {
           const user = await processarRetornoOAuthUrl(url);
           if (user && montado) {
-            await carregarPerfilUsuario(user.id);
+            await carregarPerfilUsuario(user.id, user);
           }
         } catch {
           // silencioso
@@ -89,11 +124,15 @@ export default function TelaInicial() {
       }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (evento, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (evento, session) => {
       if (session?.user && montado) {
-        await carregarPerfilUsuario(session.user.id);
+        await carregarPerfilUsuario(session.user.id, session.user);
       } else if (evento === 'SIGNED_OUT' && montado) {
         setPerfil(null);
+        setSessaoAuth(null);
+        setDadosIncompletos(null);
         setActiveTab('home');
       }
     });
@@ -108,6 +147,8 @@ export default function TelaInicial() {
   const handleLoginComplete = (dados: PerfilUsuario) => {
     const norm = normalizarPerfil(dados);
     setPerfil(norm);
+    setSessaoAuth(null);
+    setDadosIncompletos(null);
     if (norm.role === 'artista' || norm.tipoPerfil === 'artista') {
       setActiveTab('dashboard');
     } else {
@@ -123,6 +164,8 @@ export default function TelaInicial() {
         await supabase.auth.signOut();
       }
       setPerfil(null);
+      setSessaoAuth(null);
+      setDadosIncompletos(null);
       setActiveTab('home');
     } finally {
       setSaindo(false);
@@ -138,7 +181,14 @@ export default function TelaInicial() {
   }
 
   if (!perfil) {
-    return <TelaAutenticacao onComplete={handleLoginComplete} />;
+    return (
+      <TelaAutenticacao
+        onComplete={handleLoginComplete}
+        sessaoAuth={sessaoAuth}
+        dadosIncompletos={dadosIncompletos}
+        onLogout={encerrarSessao}
+      />
+    );
   }
 
   if (saindo) {
@@ -149,7 +199,8 @@ export default function TelaInicial() {
     );
   }
 
-  const tipoPerfilAtual = perfil.role === 'artista' || perfil.tipo_perfil === 'artista' ? 'artista' : 'cliente';
+  const tipoPerfilAtual =
+    perfil.role === 'artista' || perfil.tipo_perfil === 'artista' ? 'artista' : 'cliente';
 
   const renderDashboard = () => {
     if (tipoPerfilAtual === 'artista') {
