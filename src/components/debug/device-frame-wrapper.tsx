@@ -2,7 +2,6 @@ import React, { useEffect, useState, type ReactNode } from 'react';
 import {
   Dimensions,
   Platform,
-  Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -10,14 +9,9 @@ import {
 } from 'react-native';
 import {
   Battery,
-  ChevronDown,
   Maximize2,
-  Minimize2,
   Smartphone,
-  Sparkles,
   Wifi,
-  ZoomIn,
-  ZoomOut,
 } from 'lucide-react-native';
 import { useDebug } from './debug-context';
 import { MODELOS_DISPOSITIVOS, type ModeloDispositivo } from './types';
@@ -84,12 +78,11 @@ export function DeviceFrameWrapper({ children }: DeviceFrameWrapperProps) {
 
   return (
     <View style={styles.desktopCanvas}>
-      {/* Barra de Ferramentas Superior do Simulador */}
+      {/* Barra Superior do Simulador */}
       <View style={styles.topControlBar}>
-        <View style={styles.brandBadge}>
-          <Sparkles size={14} color="#f3c21a" />
-          <Text style={styles.brandBadgeText}>DERMYS SIMULATOR</Text>
-          <View style={styles.liveDot} />
+        <View style={styles.brandTitleWrap}>
+          <Text style={styles.brandTitle}>DERMYS</Text>
+          <Text style={styles.brandSubtitle}>SIMULADOR MOBILE</Text>
         </View>
 
         {/* Seletor Rápido de Dispositivo */}
@@ -101,7 +94,6 @@ export function DeviceFrameWrapper({ children }: DeviceFrameWrapperProps) {
             ]}
             onPress={() => setModelo('iphone_16_pro')}
           >
-            <Smartphone size={13} color={modelo === 'iphone_16_pro' ? '#000' : '#aaa'} />
             <Text
               style={[
                 styles.devicePillText,
@@ -119,7 +111,6 @@ export function DeviceFrameWrapper({ children }: DeviceFrameWrapperProps) {
             ]}
             onPress={() => setModelo('galaxy_s24')}
           >
-            <Smartphone size={13} color={modelo === 'galaxy_s24' ? '#000' : '#aaa'} />
             <Text
               style={[
                 styles.devicePillText,
@@ -137,7 +128,6 @@ export function DeviceFrameWrapper({ children }: DeviceFrameWrapperProps) {
             ]}
             onPress={() => setModelo('iphone_se')}
           >
-            <Smartphone size={13} color={modelo === 'iphone_se' ? '#000' : '#aaa'} />
             <Text
               style={[
                 styles.devicePillText,
@@ -182,7 +172,6 @@ export function DeviceFrameWrapper({ children }: DeviceFrameWrapperProps) {
 
       {/* Área Central com o Chassis do Smartphone */}
       <View style={styles.viewportStage}>
-        {/* Container escalonado */}
         <View
           style={[
             styles.scaledContainer,
@@ -193,13 +182,13 @@ export function DeviceFrameWrapper({ children }: DeviceFrameWrapperProps) {
             },
           ]}
         >
-          {/* Botões Laterais Físicos do Smartphone */}
+          {/* Botões Laterais Físicos */}
           <View style={styles.buttonActionLeft} />
           <View style={styles.buttonVolumeUp} />
           <View style={styles.buttonVolumeDown} />
           <View style={styles.buttonPowerRight} />
 
-          {/* Chassis Externo com Acabamento Titânio */}
+          {/* Chassis Externo */}
           <View
             style={[
               styles.phoneChassis,
@@ -211,7 +200,7 @@ export function DeviceFrameWrapper({ children }: DeviceFrameWrapperProps) {
               },
             ]}
           >
-            {/* Tela Interna do Dispositivo */}
+            {/* Tela Interna */}
             <View
               style={[
                 styles.phoneScreen,
@@ -222,11 +211,11 @@ export function DeviceFrameWrapper({ children }: DeviceFrameWrapperProps) {
                 },
               ]}
             >
-              {/* Barra de Status do Celular (Hora, Bateria, Wi-Fi) */}
+              {/* Barra de Status */}
               <View style={styles.statusBar}>
                 <Text style={styles.statusTimeText}>{horaAtual}</Text>
 
-                {/* Dynamic Island ou Notch */}
+                {/* Dynamic Island ou Punchhole */}
                 {config.temDynamicIsland ? (
                   <TouchableOpacity
                     style={styles.dynamicIsland}
@@ -234,7 +223,6 @@ export function DeviceFrameWrapper({ children }: DeviceFrameWrapperProps) {
                     onPress={alternarMenu}
                   >
                     <View style={styles.cameraLens} />
-                    <View style={styles.privacyDot} />
                   </TouchableOpacity>
                 ) : config.tipoNotch === 'punchhole' ? (
                   <View style={styles.punchholeCamera} />
@@ -247,10 +235,10 @@ export function DeviceFrameWrapper({ children }: DeviceFrameWrapperProps) {
                 </View>
               </View>
 
-              {/* Conteúdo Real do Aplicativo Dermys */}
+              {/* Conteúdo Real da Aplicação */}
               <View style={styles.appViewport}>{children}</View>
 
-              {/* Barra Indicadora de Home do iOS */}
+              {/* Home Indicator */}
               <View style={styles.homeIndicatorWrap} pointerEvents="none">
                 <View style={styles.homeIndicatorBar} />
               </View>
@@ -273,63 +261,53 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     height: '100%',
-    backgroundColor: '#08080a',
+    backgroundColor: '#0a0a0c',
     alignItems: 'center',
     justifyContent: 'flex-start',
     overflow: 'hidden',
   },
   topControlBar: {
     width: '100%',
-    height: 48,
-    backgroundColor: '#0f0f13',
+    height: 46,
+    backgroundColor: '#111114',
     borderBottomWidth: 1,
-    borderBottomColor: '#1a1a24',
+    borderBottomColor: '#1c1c22',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     zIndex: 100,
   },
-  brandBadge: {
+  brandTitleWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#18181f',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#262633',
+    gap: 6,
   },
-  brandBadgeText: {
+  brandTitle: {
     color: '#f3c21a',
-    fontSize: 11,
-    fontWeight: '800',
+    fontSize: 12,
+    fontWeight: '900',
     letterSpacing: 1,
   },
-  liveDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#22c55e',
+  brandSubtitle: {
+    color: '#666677',
+    fontSize: 10,
+    fontWeight: '700',
   },
   devicePillsWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#14141a',
+    gap: 4,
+    backgroundColor: '#17171c',
     padding: 3,
-    borderRadius: 10,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#22222c',
+    borderColor: '#24242c',
   },
   devicePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
     paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 7,
+    paddingVertical: 4,
+    borderRadius: 6,
   },
   devicePillActive: {
     backgroundColor: '#f3c21a',
@@ -346,12 +324,12 @@ const styles = StyleSheet.create({
   zoomControlWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#14141a',
+    gap: 2,
+    backgroundColor: '#17171c',
     padding: 3,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#22222c',
+    borderColor: '#24242c',
   },
   zoomPill: {
     paddingHorizontal: 8,
@@ -359,7 +337,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   zoomPillActive: {
-    backgroundColor: '#2b2b38',
+    backgroundColor: '#2b2b36',
   },
   zoomPillText: {
     color: '#777788',
@@ -374,15 +352,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(243, 194, 26, 0.1)',
+    backgroundColor: '#1a1a22',
     borderWidth: 1,
-    borderColor: 'rgba(243, 194, 26, 0.3)',
+    borderColor: '#282834',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: 6,
   },
   fullscreenToggleText: {
-    color: '#f3c21a',
+    color: '#cccccc',
     fontSize: 11,
     fontWeight: '700',
   },
@@ -391,7 +369,7 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 16,
+    paddingVertical: 14,
   },
   scaledContainer: {
     position: 'relative',
@@ -403,10 +381,10 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#2e2e3a',
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 20 },
-    shadowOpacity: 0.8,
-    shadowRadius: 40,
-    elevation: 24,
+    shadowOffset: { width: 0, height: 16 },
+    shadowOpacity: 0.6,
+    shadowRadius: 30,
+    elevation: 20,
     position: 'relative',
   },
   phoneScreen: {
@@ -437,11 +415,11 @@ const styles = StyleSheet.create({
   dynamicIsland: {
     position: 'absolute',
     left: '50%',
-    marginLeft: -60,
+    marginLeft: -55,
     top: 9,
-    width: 120,
-    height: 30,
-    borderRadius: 15,
+    width: 110,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: '#000000',
     flexDirection: 'row',
     alignItems: 'center',
@@ -452,20 +430,10 @@ const styles = StyleSheet.create({
     zIndex: 60,
   },
   cameraLens: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    width: 9,
+    height: 9,
+    borderRadius: 4.5,
     backgroundColor: '#0d131f',
-    borderWidth: 1.5,
-    borderColor: '#1c2838',
-  },
-  privacyDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#10b981',
-    marginLeft: 6,
-    opacity: 0.8,
   },
   punchholeCamera: {
     position: 'absolute',

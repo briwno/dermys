@@ -2,6 +2,7 @@ import { ConfigFiscalModal } from '@/components/fiscal/config-fiscal-modal';
 import { DetalhesNotaModal } from '@/components/fiscal/detalhes-nota-modal';
 import { EmissaoNfseModal } from '@/components/fiscal/emissao-nfse-modal';
 import { RelatorioDasnModal } from '@/components/fiscal/relatorio-dasn-modal';
+import { RelatorioFiscalPdfModal } from '@/components/fiscal/relatorio-fiscal-pdf-modal';
 import { TermometroMei } from '@/components/fiscal/termometro-mei';
 import { ReciboFiscalModal } from '@/components/recibo-fiscal-modal';
 import { FiscalService } from '@/services/fiscal/fiscal-service';
@@ -18,20 +19,13 @@ import type {
 import {
   AlertCircle,
   ArrowDownLeft,
-  ArrowUpRight,
   Check,
   Clock,
-  Coins,
-  CreditCard,
-  DollarSign,
   FileCheck2,
-  FileSpreadsheet,
   FileText,
-  Percent,
   PieChart,
   Plus,
   QrCode,
-  Receipt,
   Settings,
   ShieldCheck,
   Wallet,
@@ -84,6 +78,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
   const [modalConfigAberto, setModalConfigAberto] = useState(false);
   const [modalEmissaoAberto, setModalEmissaoAberto] = useState(false);
   const [modalDasnAberto, setModalDasnAberto] = useState(false);
+  const [modalPdfAberto, setModalPdfAberto] = useState(false);
   const [notaSelecionada, setNotaSelecionada] = useState<NotaFiscalRegistro | null>(null);
   const [modalDetalhesNotaAberto, setModalDetalhesNotaAberto] = useState(false);
 
@@ -246,7 +241,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
         <View style={[styles.cardHighlight, styles.cardHalf]}>
           <View style={styles.cardTopRow}>
             <Text style={styles.cardHighlightLabel}>Saldo Disponível</Text>
-            <Wallet size={16} color="#f3c21a" />
+            <Wallet size={15} color="#f3c21a" />
           </View>
           <Text style={styles.cardHighlightValue}>R$ {saldoLiberado.toFixed(2)}</Text>
           <Text style={styles.cardSubText}>Liberado Mercado Pago</Text>
@@ -255,32 +250,14 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
         <View style={[styles.cardHighlight, styles.cardHalf, styles.cardCustodia]}>
           <View style={styles.cardTopRow}>
             <Text style={styles.cardCustodiaLabel}>Em Custódia</Text>
-            <ShieldCheck size={16} color="#3b82f6" />
+            <ShieldCheck size={15} color="#3b82f6" />
           </View>
           <Text style={styles.cardCustodiaValue}>R$ {saldoCustodia.toFixed(2)}</Text>
           <Text style={styles.cardSubText}>Sinais de reservas futuras</Text>
         </View>
       </View>
 
-      {/* Grid de Faturamento e Taxas */}
-      <View style={styles.kpiRow}>
-        <View style={styles.kpiBox}>
-          <Text style={styles.kpiLabel}>Faturamento Bruto</Text>
-          <Text style={styles.kpiNumber}>R$ {faturamentoBrutoMes.toFixed(2)}</Text>
-        </View>
-        <View style={styles.kpiBox}>
-          <Text style={styles.kpiLabel}>Taxas Mercado Pago</Text>
-          <Text style={[styles.kpiNumber, { color: '#ef4444' }]}>- R$ {totalTaxasMP.toFixed(2)}</Text>
-        </View>
-        <View style={styles.kpiBox}>
-          <Text style={styles.kpiLabel}>Faturamento Líquido</Text>
-          <Text style={[styles.kpiNumber, { color: '#10b981' }]}>
-            R$ {faturamentoLiquido.toFixed(2)}
-          </Text>
-        </View>
-      </View>
-
-      {/* Barra de Ações Rápidas do Módulo Fiscal */}
+      {/* Barra de Ações do Módulo Fiscal */}
       <View style={styles.fiscalActionsRow}>
         <Pressable
           style={[styles.fiscalActionBtn, styles.fiscalActionBtnPrimary]}
@@ -292,9 +269,17 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
 
         <Pressable
           style={styles.fiscalActionBtn}
+          onPress={() => setModalPdfAberto(true)}
+        >
+          <FileText size={15} color="#f3c21a" />
+          <Text style={styles.fiscalActionBtnText}>Relatório em PDF</Text>
+        </Pressable>
+
+        <Pressable
+          style={styles.fiscalActionBtn}
           onPress={() => setModalConfigAberto(true)}
         >
-          <Settings size={15} color="#f3c21a" />
+          <Settings size={15} color="#aaa" />
           <Text style={styles.fiscalActionBtnText}>Dados Fiscais</Text>
         </Pressable>
       </View>
@@ -324,7 +309,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
               secaoAtiva === 'NOTAS_FISCAIS' && styles.sectionToggleBtnTextActive,
             ]}
           >
-            Notas Fiscais (NFS-e)
+            Notas Fiscais ({notasFiscais.length})
           </Text>
         </Pressable>
 
@@ -345,7 +330,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
               secaoAtiva === 'TRANSACOES' && styles.sectionToggleBtnTextActive,
             ]}
           >
-            Extrato de Cobranças
+            Extrato de Cobranças ({transacoes.length})
           </Text>
         </Pressable>
       </View>
@@ -355,12 +340,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
             <FileCheck2 size={16} color="#f3c21a" />
-            <Text style={styles.sectionTitle}>Histórico de Notas Fiscais</Text>
-            <View style={styles.badgeProvedor}>
-              <Text style={styles.badgeProvedorText}>
-                {perfilFiscal?.provedor_emissao?.toUpperCase() || 'SIMULADO'}
-              </Text>
-            </View>
+            <Text style={styles.sectionTitle}>Histórico de Documentos Fiscais</Text>
           </View>
 
           {/* Filtros de Status de Notas */}
@@ -409,7 +389,6 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
                 const isAut = nota.status === 'AUTORIZADA';
                 const isProc = nota.status === 'PROCESSANDO';
                 const isRej = nota.status === 'REJEITADA';
-                const isCanc = nota.status === 'CANCELADA';
 
                 return (
                   <Pressable
@@ -614,11 +593,11 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
       <View style={styles.sectionCard}>
         <View style={styles.sectionHeader}>
           <QrCode size={16} color="#f3c21a" />
-          <Text style={styles.sectionTitle}>Chave PIX & Sinal Padrão</Text>
+          <Text style={styles.sectionTitle}>Chave PIX & Sinal de Reserva</Text>
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>Chave PIX para Recebimentos Mercado Pago</Text>
+          <Text style={styles.inputLabel}>Chave PIX para Recebimentos</Text>
           <TextInput
             value={chavePix}
             onChangeText={setChavePix}
@@ -628,18 +607,16 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
           />
         </View>
 
-        <View style={styles.inputRow}>
-          <View style={[styles.inputGroup, { flex: 1 }]}>
-            <Text style={styles.inputLabel}>% de Sinal Padrão</Text>
-            <TextInput
-              value={percentualSinal}
-              onChangeText={setPercentualSinal}
-              keyboardType="numeric"
-              placeholder="30"
-              placeholderTextColor="#666"
-              style={styles.input}
-            />
-          </View>
+        <View style={styles.inputGroup}>
+          <Text style={styles.inputLabel}>% de Sinal Padrão</Text>
+          <TextInput
+            value={percentualSinal}
+            onChangeText={setPercentualSinal}
+            keyboardType="numeric"
+            placeholder="30"
+            placeholderTextColor="#666"
+            style={styles.input}
+          />
         </View>
 
         <Pressable
@@ -655,7 +632,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
               <Text style={styles.saveBtnText}>Parâmetros Salvos!</Text>
             </>
           ) : (
-            <Text style={styles.saveBtnText}>Salvar Chave PIX & Sinal</Text>
+            <Text style={styles.saveBtnText}>Salvar Parâmetros</Text>
           )}
         </Pressable>
       </View>
@@ -703,6 +680,16 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
         onClose={() => setModalDasnAberto(false)}
       />
 
+      <RelatorioFiscalPdfModal
+        visivel={modalPdfAberto}
+        perfil={perfil}
+        perfilFiscal={perfilFiscal}
+        metricas={metricasFiscais}
+        notasFiscais={notasFiscais}
+        transacoes={transacoes}
+        onClose={() => setModalPdfAberto(false)}
+      />
+
       <ReciboFiscalModal
         visivel={modalReciboAberto}
         recibo={reciboSelecionado}
@@ -725,15 +712,15 @@ const styles = StyleSheet.create({
   },
   cardHighlight: {
     backgroundColor: '#111',
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: '#222',
     padding: 14,
     gap: 4,
   },
   cardCustodia: {
-    borderColor: 'rgba(59, 130, 246, 0.3)',
-    backgroundColor: 'rgba(59, 130, 246, 0.05)',
+    borderColor: 'rgba(59, 130, 246, 0.25)',
+    backgroundColor: 'rgba(59, 130, 246, 0.04)',
   },
   cardTopRow: {
     flexDirection: 'row',
@@ -772,80 +759,54 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     fontSize: 10,
   },
-  kpiRow: {
+  fiscalActionsRow: {
     flexDirection: 'row',
     gap: 8,
   },
-  kpiBox: {
-    flex: 1,
-    backgroundColor: '#101010',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#1d1d1d',
-    padding: 10,
-    gap: 2,
-  },
-  kpiLabel: {
-    color: '#9ca3af',
-    fontSize: 9,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-  kpiNumber: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: '800',
-  },
-  fiscalActionsRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
   fiscalActionBtn: {
     flex: 1,
-    minHeight: 44,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
     backgroundColor: '#141414',
-    borderRadius: 12,
     borderWidth: 1,
     borderColor: '#242424',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderRadius: 10,
   },
   fiscalActionBtnPrimary: {
     backgroundColor: '#f3c21a',
     borderColor: '#f3c21a',
   },
   fiscalActionBtnPrimaryText: {
-    color: '#111',
-    fontSize: 11,
-    fontWeight: '900',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  fiscalActionBtnText: {
-    color: '#f3c21a',
+    color: '#000000',
     fontSize: 11,
     fontWeight: '800',
-    textTransform: 'uppercase',
+  },
+  fiscalActionBtnText: {
+    color: '#ffffff',
+    fontSize: 11,
+    fontWeight: '700',
   },
   sectionToggleWrap: {
     flexDirection: 'row',
     backgroundColor: '#111',
-    borderRadius: 12,
+    borderRadius: 10,
+    padding: 3,
     borderWidth: 1,
-    borderColor: '#222',
-    padding: 4,
+    borderColor: '#1f1f1f',
     gap: 4,
   },
   sectionToggleBtn: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
     paddingVertical: 8,
     borderRadius: 8,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 6,
   },
   sectionToggleBtnActive: {
     backgroundColor: '#f3c21a',
@@ -853,18 +814,17 @@ const styles = StyleSheet.create({
   sectionToggleBtnText: {
     color: '#888',
     fontSize: 11,
-    fontWeight: '800',
-    textTransform: 'uppercase',
+    fontWeight: '700',
   },
   sectionToggleBtnTextActive: {
-    color: '#111',
-    fontWeight: '900',
+    color: '#000',
+    fontWeight: '800',
   },
   sectionCard: {
     backgroundColor: '#101010',
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#1d1d1d',
+    borderColor: '#1e1e1e',
     padding: 14,
     gap: 12,
   },
@@ -875,106 +835,37 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '800',
     textTransform: 'uppercase',
-    letterSpacing: 0.6,
-    flex: 1,
-  },
-  badgeProvedor: {
-    backgroundColor: 'rgba(243, 194, 26, 0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(243, 194, 26, 0.3)',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
-  },
-  badgeProvedorText: {
-    color: '#f3c21a',
-    fontSize: 9,
-    fontWeight: '900',
-  },
-  inputGroup: {
-    gap: 4,
-  },
-  inputRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  inputLabel: {
-    color: '#9ca3af',
-    fontSize: 10,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-  input: {
-    minHeight: 46,
-    backgroundColor: '#161616',
-    borderWidth: 1,
-    borderColor: '#282828',
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    color: '#fff',
-    fontSize: 13,
-  },
-  saveBtn: {
-    minHeight: 46,
-    backgroundColor: '#f3c21a',
-    borderRadius: 10,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 4,
-  },
-  saveBtnText: {
-    color: '#111',
-    fontSize: 11,
-    fontWeight: '900',
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
+    letterSpacing: 0.5,
   },
   filterRow: {
-    gap: 8,
-    paddingVertical: 2,
+    flexDirection: 'row',
+    gap: 6,
   },
   filterTag: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: 8,
     borderWidth: 1,
   },
-  filterTagActive: {
-    backgroundColor: '#f3c21a',
-    borderColor: '#f3c21a',
-  },
   filterTagIdle: {
     backgroundColor: '#161616',
-    borderColor: '#262626',
+    borderColor: '#242424',
+  },
+  filterTagActive: {
+    backgroundColor: '#262626',
+    borderColor: '#f3c21a',
   },
   filterTagText: {
     color: '#888',
     fontSize: 10,
-    fontWeight: '800',
-    textTransform: 'uppercase',
+    fontWeight: '700',
   },
   filterTagTextActive: {
-    color: '#111',
-  },
-  emptyWrap: {
-    paddingVertical: 24,
-    alignItems: 'center',
-    gap: 4,
-  },
-  emptyTitle: {
-    color: '#fff',
-    fontSize: 13,
+    color: '#f3c21a',
     fontWeight: '800',
-  },
-  emptySub: {
-    color: '#6b7280',
-    fontSize: 11,
-    textAlign: 'center',
   },
   transacoesList: {
     gap: 8,
@@ -983,19 +874,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#141414',
-    borderRadius: 12,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#222',
+    borderColor: '#1f1f1f',
     padding: 10,
     gap: 10,
   },
   transacaoIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: '#1c1c1c',
-    justifyContent: 'center',
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    backgroundColor: '#1a1a1a',
     alignItems: 'center',
+    justifyContent: 'center',
   },
   transacaoInfo: {
     flex: 1,
@@ -1003,26 +894,26 @@ const styles = StyleSheet.create({
   },
   rowBetween: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  notaTipoPill: {
-    fontSize: 8,
-    fontWeight: '900',
-    backgroundColor: '#242424',
-    color: '#f3c21a',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
+    justifyContent: 'space-between',
   },
   transacaoCliente: {
     color: '#fff',
-    fontSize: 13,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  notaTipoPill: {
+    color: '#888',
+    fontSize: 9,
     fontWeight: '800',
+    backgroundColor: '#1f1f1f',
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 4,
   },
   transacaoDesc: {
-    color: '#888',
-    fontSize: 11,
+    color: '#777',
+    fontSize: 10,
   },
   transacaoBadgeRow: {
     flexDirection: 'row',
@@ -1032,46 +923,46 @@ const styles = StyleSheet.create({
   },
   statusBadge: {
     paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingVertical: 1,
     borderRadius: 4,
   },
-  badgeCustodia: {
-    backgroundColor: 'rgba(59, 130, 246, 0.2)',
-  },
   badgeLiberado: {
-    backgroundColor: 'rgba(16, 185, 129, 0.2)',
-  },
-  badgePendente: {
-    backgroundColor: 'rgba(243, 194, 26, 0.2)',
-  },
-  badgeRejeitado: {
-    backgroundColor: 'rgba(239, 68, 68, 0.2)',
-  },
-  badgeCancelado: {
-    backgroundColor: '#262626',
-  },
-  statusBadgeText: {
-    fontSize: 8,
-    fontWeight: '900',
-  },
-  badgeCustodiaText: {
-    color: '#60a5fa',
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
   },
   badgeLiberadoText: {
     color: '#10b981',
   },
+  badgePendente: {
+    backgroundColor: 'rgba(243, 194, 26, 0.1)',
+  },
   badgePendenteText: {
     color: '#f3c21a',
+  },
+  badgeRejeitado: {
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
   },
   badgeRejeitadoText: {
     color: '#ef4444',
   },
+  badgeCancelado: {
+    backgroundColor: 'rgba(107, 114, 128, 0.1)',
+  },
   badgeCanceladoText: {
-    color: '#888',
+    color: '#6b7280',
+  },
+  badgeCustodia: {
+    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+  },
+  badgeCustodiaText: {
+    color: '#60a5fa',
+  },
+  statusBadgeText: {
+    fontSize: 9,
+    fontWeight: '800',
   },
   transacaoData: {
-    color: '#6b7280',
-    fontSize: 10,
+    color: '#666',
+    fontSize: 9,
   },
   transacaoValores: {
     alignItems: 'flex-end',
@@ -1079,18 +970,66 @@ const styles = StyleSheet.create({
   },
   valorBrutoText: {
     color: '#fff',
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '800',
   },
   taxaMpText: {
     color: '#ef4444',
     fontSize: 9,
-    fontWeight: '700',
   },
   verReciboBtnText: {
     color: '#f3c21a',
+    fontSize: 9,
+    fontWeight: '700',
+  },
+  emptyWrap: {
+    padding: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
+  emptyTitle: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  emptySub: {
+    color: '#666',
     fontSize: 10,
+    textAlign: 'center',
+  },
+  inputGroup: {
+    gap: 4,
+  },
+  inputLabel: {
+    color: '#888',
+    fontSize: 10,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
+  input: {
+    backgroundColor: '#161616',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#242424',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    color: '#fff',
+    fontSize: 12,
+  },
+  saveBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#f3c21a',
+    borderRadius: 8,
+    paddingVertical: 9,
+    marginTop: 4,
+  },
+  saveBtnText: {
+    color: '#000',
+    fontSize: 11,
     fontWeight: '800',
-    marginTop: 2,
   },
 });

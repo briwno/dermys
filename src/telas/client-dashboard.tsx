@@ -47,7 +47,7 @@ export function DashboardCliente({ perfil, onLogout, activeTab = 'home' }: Props
         {/* Conteúdo Dinâmico por Aba */}
         {activeTab === 'home' && <ClienteInicioTab />}
         {activeTab === 'bookings' && <ClienteAgendamentosTab />}
-        {activeTab === 'chat' && <ClienteMensagensTab />}
+        {activeTab === 'chat' && <ClienteMensagensTab perfil={perfil} />}
         {activeTab === 'profile' && <ClientePerfilTab perfil={perfil} />}
       </ScrollView>
     </SafeAreaView>

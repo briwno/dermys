@@ -1,68 +1,52 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Bug, Sliders, Smartphone, Sparkles } from 'lucide-react-native';
+import { Smartphone } from 'lucide-react-native';
 import { useDebug } from './debug-context';
 
 export function DebugFloatingButton() {
-  const { alternarMenu, menuAberto, modoMoldura } = useDebug();
+  const { alternarMenu, menuAberto } = useDebug();
 
   return (
     <TouchableOpacity
-      style={[styles.floatingButton, menuAberto && styles.floatingButtonActive]}
+      style={[styles.floatingPill, menuAberto && styles.floatingPillActive]}
       onPress={alternarMenu}
-      activeOpacity={0.85}
+      activeOpacity={0.8}
     >
-      <View style={styles.pulseDot} />
-      <Sparkles size={16} color="#000000" />
-      <Text style={styles.buttonLabel}>DEBUG</Text>
-      <View style={styles.iconSubWrap}>
-        <Smartphone size={12} color="#000000" />
-      </View>
+      <Smartphone size={13} color={menuAberto ? '#000000' : '#f3c21a'} />
+      <Text style={[styles.pillLabel, menuAberto && styles.pillLabelActive]}>
+        Testes / Simulador
+      </Text>
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
-  floatingButton: {
+  floatingPill: {
     position: 'absolute',
     bottom: 84,
-    right: 14,
+    right: 16,
     zIndex: 9999,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#f3c21a',
+    backgroundColor: '#141414',
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    shadowColor: '#f3c21a',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.45,
-    shadowRadius: 10,
-    elevation: 12,
-    borderWidth: 1.5,
-    borderColor: '#ffffff',
+    paddingVertical: 7,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#262626',
   },
-  floatingButtonActive: {
-    backgroundColor: '#ffffff',
+  floatingPillActive: {
+    backgroundColor: '#f3c21a',
     borderColor: '#f3c21a',
   },
-  pulseDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#000000',
-  },
-  buttonLabel: {
-    color: '#000000',
+  pillLabel: {
+    color: '#cccccc',
     fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 0.8,
+    fontWeight: '700',
   },
-  iconSubWrap: {
-    marginLeft: 2,
-    paddingLeft: 4,
-    borderLeftWidth: 1,
-    borderLeftColor: 'rgba(0,0,0,0.2)',
+  pillLabelActive: {
+    color: '#000000',
+    fontWeight: '800',
   },
 });

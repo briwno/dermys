@@ -52,7 +52,7 @@ export function DashboardArtista({ perfil, onLogout, activeTab = 'dashboard' }: 
         {activeTab === 'dashboard' && <ArtistaDashboardTab perfil={perfil} />}
         {activeTab === 'schedule' && <ArtistaAgendaTab />}
         {activeTab === 'financial' && <ArtistaFinanceiroTab perfil={perfil} />}
-        {activeTab === 'chat' && <ArtistaMensagensTab />}
+        {activeTab === 'chat' && <ArtistaMensagensTab perfil={perfil} />}
         {activeTab === 'profile' && <ArtistaPerfilTab perfil={perfil} />}
       </ScrollView>
     </SafeAreaView>
