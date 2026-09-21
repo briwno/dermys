@@ -43,6 +43,11 @@ export interface PerfilUsuario {
   preco_inicial?: number;
   precoInicial?: number;
   curtidas?: number;
+  cpf_cnpj?: string;
+  regime_tributario?: string;
+  chave_pix?: string;
+  percentual_sinal?: number;
+  mercado_pago_public_key?: string;
   criado_em?: string;
   criadoEm?: string;
   createdAt?: string;
@@ -237,6 +242,11 @@ export function normalizarPerfil(p: any): PerfilUsuario {
     preco_inicial: preco,
     precoInicial: preco,
     curtidas,
+    cpf_cnpj: p.cpf_cnpj || '',
+    regime_tributario: p.regime_tributario || 'MEI',
+    chave_pix: p.chave_pix || '',
+    percentual_sinal: Number(p.percentual_sinal || 30),
+    mercado_pago_public_key: p.mercado_pago_public_key || '',
     criado_em: data,
     criadoEm: data,
     createdAt: data,

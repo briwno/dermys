@@ -1,8 +1,8 @@
 import { supabase } from '@/services/supabase';
 import type { PerfilUsuario } from '@/types/auth';
-import { Calendar, Clock, DollarSign, FileText, Users } from 'lucide-react-native';
+import { Calendar, Clock, DollarSign, FileCheck2, FileText, ShieldCheck, TrendingUp, Users } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 interface PropsDashboardTab {
   perfil: PerfilUsuario;
@@ -18,18 +18,22 @@ interface AtendimentoItem {
 export function ArtistaDashboardTab({ perfil }: PropsDashboardTab) {
   const [atendimentos, setAtendimentos] = useState<AtendimentoItem[]>([]);
   const [totalAgendamentos, setTotalAgendamentos] = useState<number>(0);
-  const [sinalTotal, setSinalTotal] = useState<number>(0);
+  const [sinalCustodiaTotal, setSinalCustodiaTotal] = useState<number>(0);
+  const [faturamentoMes, setFaturamentoMes] = useState<number>(0);
+  const [carregando, setCarregando] = useState(true);
+
+  const artistaId = perfil.id || perfil.uid;
 
   useEffect(() => {
     carregarDadosStudio();
-  }, [perfil.id]);
+  }, [artistaId]);
 
   const carregarDadosStudio = async () => {
+    if (!artistaId) return;
+    setCarregando(true);
     try {
-      const artistaId = perfil.id || perfil.uid;
-      if (!artistaId) return;
-
-      const { data, error } = await supabase
+      // 1. Carrega agendamentos
+      const { data: agendamentosData } = await supabase
         .from('agendamentos')
         .select(`
           id,
@@ -41,35 +45,56 @@ export function ArtistaDashboardTab({ perfil }: PropsDashboardTab) {
         `)
         .eq('artista_id', artistaId);
 
-      if (!error && data) {
-        setTotalAgendamentos(data.length);
+      if (agendamentosData) {
+        setTotalAgendamentos(agendamentosData.length);
 
-        const totalSinal = data.reduce((acc: number, curr: any) => acc + Number(curr.valor_sinal || 0), 0);
-        setSinalTotal(totalSinal);
+        const formatados: AtendimentoItem[] = agendamentosData
+          .filter((item: any) => item.status !== 'cancelado')
+          .slice(0, 4)
+          .map((item: any) => {
+            const d = item.data_horario ? new Date(item.data_horario) : new Date();
+            const horaStr = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-        const formatados: AtendimentoItem[] = data.map((item: any) => {
-          const d = item.data_horario ? new Date(item.data_horario) : new Date();
-          const horaStr = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-
-          return {
-            id: item.id,
-            cliente: item.cliente?.nome_exibicao || 'Cliente',
-            horario: horaStr,
-            estilo: item.estilo || 'Estilo Autoral',
-          };
-        });
+            return {
+              id: item.id,
+              cliente: item.cliente?.nome_exibicao || 'Cliente Dermys',
+              horario: `${d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })} • ${horaStr}`,
+              estilo: item.estilo || 'Estilo Autoral',
+            };
+          });
         setAtendimentos(formatados);
+      }
+
+      // 2. Carrega métricas financeiras de transacoes_financeiras
+      const { data: transacoesData } = await supabase
+        .from('transacoes_financeiras')
+        .select('valor_bruto, valor_liquido, status, tipo')
+        .eq('artista_id', artistaId);
+
+      if (transacoesData) {
+        const custodia = transacoesData
+          .filter((t: any) => t.status === 'CUSTODIA')
+          .reduce((acc: number, t: any) => acc + Number(t.valor_bruto || 0), 0);
+
+        const totalMes = transacoesData
+          .filter((t: any) => t.status === 'LIBERADO' || t.status === 'APROVADO')
+          .reduce((acc: number, t: any) => acc + Number(t.valor_liquido || 0), 0);
+
+        setSinalCustodiaTotal(custodia);
+        setFaturamentoMes(totalMes);
       }
     } catch {
       // silencioso
+    } finally {
+      setCarregando(false);
     }
   };
 
   const KPI = [
-    { label: 'Agendamentos', value: String(totalAgendamentos), icon: Calendar },
-    { label: 'Briefings pendentes', value: '3', icon: FileText },
-    { label: 'Sinal em custódia', value: `R$ ${sinalTotal}`, icon: DollarSign },
-    { label: 'Avaliação', value: '4.9 ★', icon: Users },
+    { label: 'Faturamento Líquido', value: `R$ ${faturamentoMes.toFixed(2)}`, icon: TrendingUp, color: '#10b981' },
+    { label: 'Sinais em Custódia (MP)', value: `R$ ${sinalCustodiaTotal.toFixed(2)}`, icon: ShieldCheck, color: '#3b82f6' },
+    { label: 'Agendamentos Ativos', value: String(totalAgendamentos), icon: Calendar, color: '#f3c21a' },
+    { label: 'Status Fiscal (MEI)', value: 'Regular', icon: FileCheck2, color: '#f3c21a' },
   ];
 
   return (
@@ -82,7 +107,7 @@ export function ArtistaDashboardTab({ perfil }: PropsDashboardTab) {
             <View key={item.label} style={styles.kpiCard}>
               <View style={styles.kpiHeader}>
                 <Text style={styles.kpiLabel}>{item.label}</Text>
-                <IconComp size={14} color="#f3c21a" />
+                <IconComp size={14} color={item.color} />
               </View>
               <Text style={styles.kpiValue}>{item.value}</Text>
             </View>
@@ -90,24 +115,16 @@ export function ArtistaDashboardTab({ perfil }: PropsDashboardTab) {
         })}
       </View>
 
-      {/* Atalhos Rápidos */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Atalhos rápidos</Text>
-        <View style={styles.actionRow}>
-          <Pressable style={styles.actionButton}>
-            <Text style={styles.actionText}>Novo agendamento</Text>
-          </Pressable>
-          <Pressable style={styles.actionButton}>
-            <Text style={styles.actionText}>Nova anamnese</Text>
-          </Pressable>
+      {/* Banner de Proteção Mercado Pago */}
+      <View style={styles.protectionBanner}>
+        <View style={styles.shieldWrap}>
+          <ShieldCheck size={20} color="#10b981" />
         </View>
-        <View style={styles.actionRow}>
-          <Pressable style={styles.actionButton}>
-            <Text style={styles.actionText}>Controle de sinal</Text>
-          </Pressable>
-          <Pressable style={styles.actionButton}>
-            <Text style={styles.actionText}>Gerenciar portfólio</Text>
-          </Pressable>
+        <View style={styles.protectionInfo}>
+          <Text style={styles.protectionTitle}>Garantia de Comparecimento Ativa</Text>
+          <Text style={styles.protectionText}>
+            Todos os agendamentos exigem pagamento prévio de sinal com custódia e emissão de recibo.
+          </Text>
         </View>
       </View>
 
@@ -115,7 +132,9 @@ export function ArtistaDashboardTab({ perfil }: PropsDashboardTab) {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Próximos atendimentos</Text>
         <View style={styles.listWrap}>
-          {atendimentos.length === 0 ? (
+          {carregando ? (
+            <ActivityIndicator color="#f3c21a" style={{ marginVertical: 10 }} />
+          ) : atendimentos.length === 0 ? (
             <Text style={styles.emptyText}>Nenhum atendimento agendado no momento.</Text>
           ) : (
             atendimentos.map((item) => (
@@ -163,15 +182,47 @@ const styles = StyleSheet.create({
   },
   kpiLabel: {
     color: '#9ca3af',
-    fontSize: 10,
+    fontSize: 9.5,
     textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    letterSpacing: 0.6,
     fontWeight: '700',
   },
   kpiValue: {
     color: '#fff',
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '900',
+  },
+  protectionBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#101010',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.25)',
+    padding: 12,
+    gap: 12,
+  },
+  shieldWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  protectionInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  protectionTitle: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  protectionText: {
+    color: '#9ca3af',
+    fontSize: 10.5,
+    lineHeight: 14,
   },
   section: {
     borderRadius: 14,
@@ -187,29 +238,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 0.8,
-  },
-  actionRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  actionButton: {
-    flex: 1,
-    minHeight: 44,
-    borderRadius: 10,
-    backgroundColor: '#1a1a1a',
-    borderWidth: 1,
-    borderColor: '#2b2b2b',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-  },
-  actionText: {
-    color: '#f3c21a',
-    textTransform: 'uppercase',
-    fontWeight: '800',
-    fontSize: 10,
-    textAlign: 'center',
-    letterSpacing: 0.6,
   },
   listWrap: {
     gap: 8,
@@ -241,8 +269,8 @@ const styles = StyleSheet.create({
   },
   slotText: {
     color: '#f3c21a',
-    fontWeight: '900',
-    fontSize: 13,
+    fontWeight: '800',
+    fontSize: 12,
   },
   emptyText: {
     color: '#6b7280',

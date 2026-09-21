@@ -1,8 +1,8 @@
-import { Calendar, Home, LayoutGrid, MessageSquare, User } from 'lucide-react-native';
+import { Calendar, DollarSign, Home, LayoutGrid, MessageSquare, User } from 'lucide-react-native';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-export type BottomNavTab = 'dashboard' | 'schedule' | 'home' | 'bookings' | 'chat' | 'profile';
+export type BottomNavTab = 'dashboard' | 'schedule' | 'financial' | 'home' | 'bookings' | 'chat' | 'profile';
 
 interface BottomNavProps {
   activeTab: BottomNavTab;
@@ -14,15 +14,16 @@ export function BottomNav({ activeTab, setActiveTab, role }: BottomNavProps) {
   const tabs: { id: BottomNavTab; icon: React.ComponentType<{ size: number; color: string }>; label: string }[] =
     role === 'artista'
       ? [
-          { id: 'dashboard', icon: LayoutGrid, label: 'Dashboard' },
+          { id: 'dashboard', icon: LayoutGrid, label: 'Início' },
           { id: 'schedule', icon: Calendar, label: 'Agenda' },
-          { id: 'chat', icon: MessageSquare, label: 'Mensagens' },
+          { id: 'financial', icon: DollarSign, label: 'Fiscal/Fin.' },
+          { id: 'chat', icon: MessageSquare, label: 'Chat' },
           { id: 'profile', icon: User, label: 'Perfil' },
         ]
       : [
           { id: 'home', icon: Home, label: 'Início' },
           { id: 'bookings', icon: Calendar, label: 'Agendamentos' },
-          { id: 'chat', icon: MessageSquare, label: 'Mensagens' },
+          { id: 'chat', icon: MessageSquare, label: 'Chat' },
           { id: 'profile', icon: User, label: 'Perfil' },
         ];
 

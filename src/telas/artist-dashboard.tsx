@@ -1,6 +1,7 @@
 import type { BottomNavTab } from '@/components/bottom-nav';
 import { ArtistaAgendaTab } from '@/telas/artista/agenda-tab';
 import { ArtistaDashboardTab } from '@/telas/artista/dashboard-tab';
+import { ArtistaFinanceiroTab } from '@/telas/artista/financeiro-tab';
 import { ArtistaMensagensTab } from '@/telas/artista/mensagens-tab';
 import { ArtistaPerfilTab } from '@/telas/artista/perfil-tab';
 import type { PerfilUsuario } from '@/types/auth';
@@ -19,6 +20,8 @@ export function DashboardArtista({ perfil, onLogout, activeTab = 'dashboard' }: 
     switch (activeTab) {
       case 'schedule':
         return 'Agenda de Atendimentos';
+      case 'financial':
+        return 'Painel Fiscal & Financeiro';
       case 'chat':
         return 'Mensagens com Clientes';
       case 'profile':
@@ -48,6 +51,7 @@ export function DashboardArtista({ perfil, onLogout, activeTab = 'dashboard' }: 
         {/* Conteúdo Dinâmico por Aba */}
         {activeTab === 'dashboard' && <ArtistaDashboardTab perfil={perfil} />}
         {activeTab === 'schedule' && <ArtistaAgendaTab />}
+        {activeTab === 'financial' && <ArtistaFinanceiroTab perfil={perfil} />}
         {activeTab === 'chat' && <ArtistaMensagensTab />}
         {activeTab === 'profile' && <ArtistaPerfilTab perfil={perfil} />}
       </ScrollView>

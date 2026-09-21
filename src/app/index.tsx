@@ -3,6 +3,12 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import * as Linking from 'expo-linking';
 
 import { BottomNav, type BottomNavTab } from '@/components/bottom-nav';
+import {
+  DebugFloatingButton,
+  DebugMenuModal,
+  DebugProvider,
+  DeviceFrameWrapper,
+} from '@/components/debug';
 import { USAR_MOCK_AUTH } from '@/constants/feature-flags';
 import { processarRetornoOAuthUrl } from '@/services/auth-oauth';
 import { supabase } from '@/services/supabase';
@@ -172,49 +178,65 @@ export default function TelaInicial() {
     }
   };
 
-  if (inicializando) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator color="#f3c21a" size="large" />
-      </View>
-    );
-  }
-
-  if (!perfil) {
-    return (
-      <TelaAutenticacao
-        onComplete={handleLoginComplete}
-        sessaoAuth={sessaoAuth}
-        dadosIncompletos={dadosIncompletos}
-        onLogout={encerrarSessao}
-      />
-    );
-  }
-
-  if (saindo) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator color="#f3c21a" size="large" />
-      </View>
-    );
-  }
-
   const tipoPerfilAtual =
-    perfil.role === 'artista' || perfil.tipo_perfil === 'artista' ? 'artista' : 'cliente';
+    perfil?.role === 'artista' || perfil?.tipo_perfil === 'artista' ? 'artista' : 'cliente';
 
-  const renderDashboard = () => {
-    if (tipoPerfilAtual === 'artista') {
-      return <DashboardArtista perfil={perfil} onLogout={encerrarSessao} activeTab={activeTab} />;
+  const renderConteudo = () => {
+    if (inicializando) {
+      return (
+        <View style={styles.container}>
+          <ActivityIndicator color="#f3c21a" size="large" />
+        </View>
+      );
     }
 
-    return <DashboardCliente perfil={perfil} onLogout={encerrarSessao} activeTab={activeTab} />;
+    if (!perfil) {
+      return (
+        <TelaAutenticacao
+          onComplete={handleLoginComplete}
+          sessaoAuth={sessaoAuth}
+          dadosIncompletos={dadosIncompletos}
+          onLogout={encerrarSessao}
+        />
+      );
+    }
+
+    if (saindo) {
+      return (
+        <View style={styles.container}>
+          <ActivityIndicator color="#f3c21a" size="large" />
+        </View>
+      );
+    }
+
+    const renderDashboard = () => {
+      if (tipoPerfilAtual === 'artista') {
+        return <DashboardArtista perfil={perfil} onLogout={encerrarSessao} activeTab={activeTab} />;
+      }
+
+      return <DashboardCliente perfil={perfil} onLogout={encerrarSessao} activeTab={activeTab} />;
+    };
+
+    return (
+      <View style={styles.shell}>
+        <View style={styles.content}>{renderDashboard()}</View>
+        <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} role={tipoPerfilAtual} />
+      </View>
+    );
   };
 
   return (
-    <View style={styles.shell}>
-      <View style={styles.content}>{renderDashboard()}</View>
-      <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} role={tipoPerfilAtual} />
-    </View>
+    <DebugProvider
+      onSetPerfil={setPerfil}
+      onSetActiveTab={setActiveTab}
+      perfilAtual={perfil}
+    >
+      <DeviceFrameWrapper>
+        {renderConteudo()}
+        <DebugFloatingButton />
+        <DebugMenuModal />
+      </DeviceFrameWrapper>
+    </DebugProvider>
   );
 }
 
@@ -234,3 +256,4 @@ const styles = StyleSheet.create({
     paddingBottom: 76,
   },
 });
+
