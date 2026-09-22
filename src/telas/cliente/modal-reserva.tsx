@@ -1,8 +1,10 @@
 import { AppModal } from '@/components/ui/app-modal';
+import { ChatService } from '@/services/chat-service';
 import { criarCobrancaSinal } from '@/services/mercadopago';
 import { supabase } from '@/services/supabase';
 import type { CartaoArtista } from '@/telas/cliente/inicio-tab';
 import type { ItemPortfolio } from '@/types/artista-detalhado';
+import type { CardBriefingPayload } from '@/types/chat';
 import * as ImagePicker from 'expo-image-picker';
 import {
   AlertCircle,
@@ -22,8 +24,11 @@ import {
   Info,
   Layers,
   MapPin,
+  MessageSquare,
   Plus,
   QrCode,
+  Ruler,
+  Send,
   ShieldCheck,
   Sparkles,
   Sun,
@@ -59,6 +64,7 @@ interface ModalReservaProps {
   } | null;
   onClose: () => void;
   onSucesso: () => void;
+  onRedirecionarChat?: (artistaId: string) => void;
 }
 
 export type TipoSessao = 'flash' | 'exclusivo';
@@ -122,10 +128,18 @@ const LOCAIS_CORPO = [
 ];
 
 const TAMANHOS_CM = [
-  { id: 'mini', label: '5 a 8 cm (Mini/Pequena)', fator: 1 },
-  { id: 'medio', label: '10 a 15 cm (Média)', fator: 1.4 },
-  { id: 'grande', label: '18 a 25 cm (Grande)', fator: 2.1 },
-  { id: 'fechamento', label: 'Fechamento / Grande Área', fator: 3.5 },
+  { id: 'mini', label: '5 a 8 cm (Mini/Pequena)', fator: 1, cmMedio: 7 },
+  { id: 'medio', label: '10 a 15 cm (Média)', fator: 1.4, cmMedio: 13 },
+  { id: 'grande', label: '18 a 25 cm (Grande)', fator: 2.1, cmMedio: 20 },
+  { id: 'fechamento', label: 'Fechamento / Grande Área', fator: 3.5, cmMedio: 35 },
+];
+
+const DISPONIBILIDADES = [
+  'Sextas ou sábados à tarde',
+  'Dias de semana pela manhã (10h)',
+  'Dias de semana à tarde (14h)',
+  'Finais de semana (integral)',
+  'Qualquer dia / Horário flexível',
 ];
 
 export function ModalReservaCliente({
@@ -134,12 +148,13 @@ export function ModalReservaCliente({
   flashInicial,
   onClose,
   onSucesso,
+  onRedirecionarChat,
 }: ModalReservaProps) {
-  // Etapas: 1 = Tipo & Briefing, 2 = Turno & Data, 3 = Sinal Pix (Hold 30m), 4 = Sucesso
+  // Etapas: 1 = Briefing do Projeto, 2 = Data & Turno, 3 = Sinal Pix (Hold 30m), 4 = Sucesso
   const [etapa, setEtapa] = useState<1 | 2 | 3 | 4>(1);
   const [carregando, setCarregando] = useState(false);
 
-  // Etapa 1: Tipo & Briefing
+  // Etapa 1: Briefing do Projeto
   const [tipoSessao, setTipoSessao] = useState<TipoSessao>(flashInicial ? 'flash' : 'exclusivo');
   const [flashSelecionado, setFlashSelecionado] = useState<any>(flashInicial || null);
   const [flashesArtista, setFlashesArtista] = useState<any[]>([]);
@@ -148,8 +163,11 @@ export function ModalReservaCliente({
   // Briefing exclusivo
   const [descricaoArte, setDescricaoArte] = useState('');
   const [localCorpo, setLocalCorpo] = useState('Antebraço');
+  const [fotoLocalCorpo, setFotoLocalCorpo] = useState<string | null>(null);
   const [tamanhoCm, setTamanhoCm] = useState('10 a 15 cm (Média)');
+  const [tamanhoNumericoCm, setTamanhoNumericoCm] = useState(13);
   const [fatorTamanho, setFatorTamanho] = useState(1.4);
+  const [disponibilidade, setDisponibilidade] = useState('Sextas ou sábados à tarde');
   const [referenciasUrls, setReferenciasUrls] = useState<string[]>([]);
   const [inputCustomUrl, setInputCustomUrl] = useState('');
   const [mostrarInputUrl, setMostrarInputUrl] = useState(false);
@@ -203,7 +221,7 @@ export function ModalReservaCliente({
     };
   }, [etapa, segundosRestantes]);
 
-  // Cálculo financeiro transparente (SEMPRE executado antes de qualquer retorno)
+  // Cálculo financeiro transparente
   const valorTotalEstimado = useMemo(() => {
     if (tipoSessao === 'flash' && flashSelecionado) {
       return Number(flashSelecionado.preco || artista?.precoInicial || 350);
@@ -280,7 +298,6 @@ export function ModalReservaCliente({
 
     setUpandoFoto(true);
 
-    // 1. Suporte Web direto via input de arquivo
     if (Platform.OS === 'web' && typeof document !== 'undefined') {
       const fileInput = document.createElement('input');
       fileInput.type = 'file';
@@ -306,7 +323,6 @@ export function ModalReservaCliente({
       return;
     }
 
-    // 2. Mobile (Expo ImagePicker)
     try {
       const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!perm.granted) {
@@ -333,6 +349,62 @@ export function ModalReservaCliente({
     }
   };
 
+  /**
+   * Upload opcional de foto da região anatômica do corpo
+   */
+  const escolherFotoRegiaoCorpo = async () => {
+    setUpandoFoto(true);
+
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = 'image/*';
+      fileInput.onchange = (e: any) => {
+        const file = e.target?.files?.[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const result = event.target?.result as string;
+            if (result) {
+              setFotoLocalCorpo(result);
+            }
+            setUpandoFoto(false);
+          };
+          reader.onerror = () => setUpandoFoto(false);
+          reader.readAsDataURL(file);
+        } else {
+          setUpandoFoto(false);
+        }
+      };
+      fileInput.click();
+      return;
+    }
+
+    try {
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!perm.granted) {
+        alert('Precisamos de permissão para acessar suas fotos.');
+        setUpandoFoto(false);
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        quality: 0.85,
+        base64: true,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setFotoLocalCorpo(result.assets[0].uri);
+      }
+    } catch (err) {
+      console.warn('Erro ao selecionar foto do local:', err);
+    } finally {
+      setUpandoFoto(false);
+    }
+  };
+
   const removerFoto = (index: number) => {
     setReferenciasUrls((prev) => prev.filter((_, i) => i !== index));
   };
@@ -346,6 +418,90 @@ export function ModalReservaCliente({
     setReferenciasUrls([...referenciasUrls, inputCustomUrl.trim()]);
     setInputCustomUrl('');
     setMostrarInputUrl(false);
+  };
+
+  /**
+   * FASE 1: Disparo do Envio do Briefing
+   * Cria o agendamento com status: 'request', envia card briefing no chat e redireciona para o chat!
+   */
+  const handleEnviarBriefingParaChat = async () => {
+    if (!artista) return;
+    setCarregando(true);
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      const clienteId =
+        session?.user?.id || '99999999-9999-9999-9999-999999999999';
+
+      const descricaoFinal =
+        tipoSessao === 'flash'
+          ? `[Flash Autoral] ${flashSelecionado?.titulo || 'Flash'} • ${localCorpo}`
+          : descricaoArte ||
+            `[Projeto Exclusivo] Tatuagem ${artista.estilo} (${localCorpo}, ~${tamanhoNumericoCm}cm)`;
+
+      // 1. Salva agendamento inicial com status 'request'
+      let bookingId: string | undefined = undefined;
+      const { data: agendamentoCriado, error: errAgendamento } = await supabase
+        .from('agendamentos')
+        .insert({
+          cliente_id: clienteId,
+          artista_id: artista.id,
+          estilo: artista.estilo,
+          descricao: descricaoFinal,
+          local_corpo: localCorpo,
+          tamanho_cm: `${tamanhoNumericoCm} cm (${tamanhoCm})`,
+          tipo_sessao: tipoSessao,
+          referencias_urls: referenciasUrls,
+          status: 'request',
+          sinal_pago: false,
+          valor_total: valorTotalEstimado,
+          valor_sinal: valorSinalCalculado,
+        })
+        .select('id')
+        .single();
+
+      if (errAgendamento) {
+        console.warn('Aviso ao criar registro de agendamento:', errAgendamento);
+      } else if (agendamentoCriado?.id) {
+        bookingId = agendamentoCriado.id;
+      }
+
+      // 2. Dispara card de Briefing no chat
+      const payloadBriefing: CardBriefingPayload = {
+        agendamentoId: bookingId,
+        referenciasUrls,
+        fotoLocalCorpoUrl: fotoLocalCorpo || undefined,
+        localCorpo,
+        tamanhoCm: `${tamanhoNumericoCm} cm`,
+        tamanhoNumericoCm,
+        descricao: descricaoFinal,
+        disponibilidadePreferencial: disponibilidade,
+        estilo: artista.estilo,
+        flashTitulo: tipoSessao === 'flash' ? flashSelecionado?.titulo : undefined,
+        flashImagemUrl:
+          tipoSessao === 'flash'
+            ? flashSelecionado?.imagem_url || flashSelecionado?.imagemUrl
+            : undefined,
+        valorEstimadoBase: valorTotalEstimado,
+      };
+
+      await ChatService.enviarBriefing(clienteId, artista.id, payloadBriefing);
+
+      onClose();
+
+      if (onRedirecionarChat) {
+        onRedirecionarChat(artista.id);
+      } else {
+        onSucesso();
+      }
+    } catch (err) {
+      console.warn('Erro ao enviar briefing:', err);
+    } finally {
+      setCarregando(false);
+    }
   };
 
   const avancarParaTurnos = () => {
@@ -375,7 +531,7 @@ export function ModalReservaCliente({
           : descricaoArte ||
             `[Projeto Exclusivo] Tatuagem ${artista.estilo} (${localCorpo}, ${tamanhoCm})`;
 
-      // 1. Cria o agendamento pré-reservado no Supabase com trava de agenda
+      // Cria o agendamento pré-reservado no Supabase
       const { data: agendamentoCriado, error: errAgendamento } = await supabase
         .from('agendamentos')
         .insert({
@@ -391,8 +547,8 @@ export function ModalReservaCliente({
           referencias_urls: referenciasUrls,
           valor_sinal: valorSinalCalculado,
           valor_total: valorTotalEstimado,
-          status: 'confirmado',
-          sinal_pago: true,
+          status: 'awaiting_deposit',
+          sinal_pago: false,
         })
         .select('id')
         .single();
@@ -401,7 +557,7 @@ export function ModalReservaCliente({
         throw new Error('Falha ao registrar agendamento.');
       }
 
-      // 2. Gera cobrança Pix via Mercado Pago em custódia
+      // Gera cobrança Pix via Mercado Pago em custódia
       const cobranca = await criarCobrancaSinal({
         agendamentoId: agendamentoCriado.id,
         artistaId: artista.id,
@@ -426,10 +582,24 @@ export function ModalReservaCliente({
   const confirmarSinalPago = async () => {
     setCarregando(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (session?.user && artista) {
+        const turnoObj = TURNOS.find((t) => t.id === turnoSelecionado) || TURNOS[1];
+        await ChatService.enviarConfirmacaoSinal(session.user.id, artista.id, {
+          agendamentoId: protocoloReserva,
+          valorSinal: valorSinalCalculado,
+          dataHorarioFormatada: `${dataSelecionada.toLocaleDateString('pt-BR')} às ${turnoObj.horarioInicio}`,
+          turnoNome: turnoObj.nome,
+          protocoloReserva: `DERM-RES-${protocoloReserva}`,
+        });
+      }
+
       setEtapa(4);
     } catch {
-      // silencioso
+      setEtapa(4);
     } finally {
       setCarregando(false);
     }
@@ -482,9 +652,9 @@ export function ModalReservaCliente({
                 ))}
               </View>
               <Text style={styles.progressText}>
-                {etapa === 1 && 'Passo 1/3 • Briefing'}
-                {etapa === 2 && 'Passo 2/3 • Data & Turno'}
-                {etapa === 3 && 'Passo 3/3 • Sinal (Pix)'}
+                {etapa === 1 && 'Fase 1 • Briefing & Pedido'}
+                {etapa === 2 && 'Fase 4 • Data & Turno'}
+                {etapa === 3 && 'Fase 4 • Sinal (Pix Hold)'}
                 {etapa === 4 && 'Reserva Confirmada'}
               </Text>
             </View>
@@ -499,16 +669,17 @@ export function ModalReservaCliente({
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
           >
-            {/* ETAPA 1: Flash vs Exclusivo */}
+            {/* ETAPA 1: FASE 1 - BRIEFING DO PROJETO */}
             {etapa === 1 && (
               <View style={styles.stepContainer}>
                 <View style={styles.stepHeader}>
-                  <Text style={styles.stepTitle}>O que vamos tatuar?</Text>
+                  <Text style={styles.stepTitle}>Briefing do Projeto</Text>
                   <Text style={styles.stepSub}>
-                    Selecione um flash autoral ou envie as referências da sua ideia para{' '}
-                    <Text style={{ color: '#f3c21a', fontWeight: '700' }}>
+                    Envie referências, medidas e detalhes para{' '}
+                    <Text style={{ color: '#f3c21a', fontWeight: '800' }}>
                       {artista.nomeArtista}
-                    </Text>
+                    </Text>{' '}
+                    avaliar e formalizar a proposta de orçamento
                   </Text>
                 </View>
 
@@ -635,54 +806,21 @@ export function ModalReservaCliente({
                         })}
                       </ScrollView>
                     )}
-
-                    {/* Local do corpo para o Flash */}
-                    <Text style={[styles.sectionLabel, { marginTop: 12 }]}>
-                      Onde você quer posicionar este Flash?
-                    </Text>
-                    <ScrollView
-                      horizontal
-                      showsHorizontalScrollIndicator={false}
-                      contentContainerStyle={styles.tagsRow}
-                    >
-                      {LOCAIS_CORPO.map((loc) => {
-                        const isSel = localCorpo === loc;
-                        return (
-                          <Pressable
-                            key={loc}
-                            onPress={() => setLocalCorpo(loc)}
-                            style={[
-                              styles.tagPill,
-                              isSel ? styles.tagPillActive : styles.tagPillIdle,
-                            ]}
-                          >
-                            <Text
-                              style={[
-                                styles.tagPillText,
-                                isSel && styles.tagPillTextActive,
-                              ]}
-                            >
-                              {loc}
-                            </Text>
-                          </Pressable>
-                        );
-                      })}
-                    </ScrollView>
                   </View>
                 )}
 
-                {/* FLUXO B: PROJETO EXCLUSIVO (UPLOAD REAL DE FOTOS DE REFERÊNCIA) */}
+                {/* FLUXO B: PROJETO EXCLUSIVO (UPLOAD DE REFERÊNCIAS + ANATOMIA) */}
                 {tipoSessao === 'exclusivo' && (
                   <View style={styles.exclusiveSection}>
-                    {/* Header de Fotos */}
+                    {/* 1. Fotos de Referência */}
                     <View style={styles.sectionHeaderRow}>
                       <Text style={styles.sectionLabel}>
-                        Fotos de Referência ({referenciasUrls.length}/3)
+                        1. Fotos de Referência ({referenciasUrls.length}/3)
                       </Text>
                       <Text style={styles.badgeInfo}>Até 3 fotos da sua galeria</Text>
                     </View>
 
-                    {/* 3 Slots de Upload de Fotos de Referência */}
+                    {/* Slots de Upload */}
                     <View style={styles.uploadSlotsRow}>
                       {[0, 1, 2].map((slotIndex) => {
                         const fotoUrl = referenciasUrls[slotIndex];
@@ -770,8 +908,10 @@ export function ModalReservaCliente({
                       </View>
                     )}
 
-                    {/* Local do Corpo */}
-                    <Text style={[styles.sectionLabel, { marginTop: 14 }]}>Local do Corpo</Text>
+                    {/* 2. Local do Corpo e Foto da Região Anatômica */}
+                    <Text style={[styles.sectionLabel, { marginTop: 14 }]}>
+                      2. Local do Corpo onde quer tatuar
+                    </Text>
                     <ScrollView
                       horizontal
                       showsHorizontalScrollIndicator={false}
@@ -801,10 +941,57 @@ export function ModalReservaCliente({
                       })}
                     </ScrollView>
 
-                    {/* Tamanho Aproximado */}
-                    <Text style={[styles.sectionLabel, { marginTop: 14 }]}>
-                      Tamanho Aproximado (cm)
-                    </Text>
+                    {/* Foto Opcional da Região Anatômica */}
+                    <View style={styles.anatomyPhotoBox}>
+                      <View style={styles.anatomyPhotoHeader}>
+                        <View style={{ flex: 1 }}>
+                          <Text style={styles.anatomyPhotoTitle}>
+                            Foto da região do corpo (Opcional)
+                          </Text>
+                          <Text style={styles.anatomyPhotoSub}>
+                            Recomendado para coberturas ou para o artista avaliar a curvatura e pele
+                          </Text>
+                        </View>
+                        {fotoLocalCorpo ? (
+                          <Pressable
+                            style={styles.btnRemoverFotoCorpo}
+                            onPress={() => setFotoLocalCorpo(null)}
+                          >
+                            <Trash2 size={14} color="#ef4444" />
+                          </Pressable>
+                        ) : null}
+                      </View>
+
+                      {fotoLocalCorpo ? (
+                        <View style={styles.anatomyPreviewWrap}>
+                          <Image source={{ uri: fotoLocalCorpo }} style={styles.anatomyPreviewImg} />
+                          <View style={styles.anatomyBadge}>
+                            <Text style={styles.anatomyBadgeText}>Região: {localCorpo}</Text>
+                          </View>
+                        </View>
+                      ) : (
+                        <Pressable
+                          style={styles.anatomyUploadBtn}
+                          onPress={escolherFotoRegiaoCorpo}
+                          disabled={upandoFoto}
+                        >
+                          <Camera size={16} color="#f3c21a" />
+                          <Text style={styles.anatomyUploadBtnText}>
+                            Tirar ou Escolher Foto do {localCorpo}
+                          </Text>
+                        </Pressable>
+                      )}
+                    </View>
+
+                    {/* 3. Dimensões Estimadas em cm */}
+                    <View style={styles.sectionHeaderRow}>
+                      <Text style={styles.sectionLabel}>3. Dimensões Estimadas (cm)</Text>
+                      <View style={styles.cmHighlightBadge}>
+                        <Ruler size={12} color="#111" />
+                        <Text style={styles.cmHighlightBadgeText}>~{tamanhoNumericoCm} cm</Text>
+                      </View>
+                    </View>
+
                     <View style={styles.sizeGrid}>
                       {TAMANHOS_CM.map((tam) => {
                         const isSel = tamanhoCm === tam.label;
@@ -813,6 +1000,7 @@ export function ModalReservaCliente({
                             key={tam.id}
                             onPress={() => {
                               setTamanhoCm(tam.label);
+                              setTamanhoNumericoCm(tam.cmMedio);
                               setFatorTamanho(tam.fator);
                             }}
                             style={[
@@ -833,27 +1021,93 @@ export function ModalReservaCliente({
                       })}
                     </View>
 
-                    {/* Descrição da Ideia */}
-                    <View style={[styles.inputGroup, { marginTop: 14 }]}>
+                    {/* 4. Descrição da Ideia */}
+                    <View style={[styles.inputGroup, { marginTop: 12 }]}>
                       <Text style={styles.inputLabel}>
-                        Descrição da sua ideia (Opcional)
+                        4. Descrição da sua ideia / Detalhes da arte
                       </Text>
                       <TextInput
                         value={descricaoArte}
                         onChangeText={setDescricaoArte}
-                        placeholder="Ex: Quero um ramo floral com sombreamento suave, traços finos no antebraço direito..."
+                        placeholder="Ex: Quero um ramo floral com sombreamento suave e traços finos no antebraço direito..."
                         placeholderTextColor="#666"
                         multiline
                         numberOfLines={3}
                         style={styles.textArea}
                       />
                     </View>
+
+                    {/* 5. Disponibilidade Preferencial */}
+                    <Text style={[styles.sectionLabel, { marginTop: 12 }]}>
+                      5. Sua Disponibilidade Preferencial
+                    </Text>
+                    <View style={styles.dispList}>
+                      {DISPONIBILIDADES.map((item) => {
+                        const isSel = disponibilidade === item;
+                        return (
+                          <Pressable
+                            key={item}
+                            onPress={() => setDisponibilidade(item)}
+                            style={[
+                              styles.dispItem,
+                              isSel ? styles.dispItemActive : styles.dispItemIdle,
+                            ]}
+                          >
+                            <View
+                              style={[
+                                styles.radioCircle,
+                                isSel && styles.radioCircleActive,
+                              ]}
+                            >
+                              {isSel && <View style={styles.radioDot} />}
+                            </View>
+                            <Text
+                              style={[
+                                styles.dispItemText,
+                                isSel && styles.dispItemTextActive,
+                              ]}
+                            >
+                              {item}
+                            </Text>
+                          </Pressable>
+                        );
+                      })}
+                    </View>
                   </View>
                 )}
+
+                {/* Bloco de Envio Direto para o Chat (Fase 1 -> Fase 2) */}
+                <View style={styles.briefingSubmitBlock}>
+                  <Pressable
+                    style={styles.btnEnviarBriefingChat}
+                    onPress={handleEnviarBriefingParaChat}
+                    disabled={carregando}
+                  >
+                    {carregando ? (
+                      <ActivityIndicator color="#111" size="small" />
+                    ) : (
+                      <>
+                        <Send size={18} color="#111" />
+                        <Text style={styles.btnEnviarBriefingChatText}>
+                          Enviar Briefing & Abrir Chat com Artista
+                        </Text>
+                      </>
+                    )}
+                  </Pressable>
+
+                  <Pressable
+                    style={styles.btnAvancarDiretoTurno}
+                    onPress={avancarParaTurnos}
+                  >
+                    <Text style={styles.btnAvancarDiretoTurnoText}>
+                      Ou Agendar Turno & Pagar Sinal Diretamente →
+                    </Text>
+                  </Pressable>
+                </View>
               </View>
             )}
 
-            {/* ETAPA 2: Data & Turno de Bancada */}
+            {/* ETAPA 2: FASE 4 - DATA & TURNO DE BANCADA */}
             {etapa === 2 && (
               <View style={styles.stepContainer}>
                 <View style={styles.stepHeader}>
@@ -998,7 +1252,7 @@ export function ModalReservaCliente({
               </View>
             )}
 
-            {/* ETAPA 3: Sinal Pix (Hold 30min) */}
+            {/* ETAPA 3: FASE 4 - SINAL PIX (HOLD 30MIN) */}
             {etapa === 3 && (
               <View style={styles.stepContainer}>
                 <View style={styles.stepHeader}>
@@ -1117,7 +1371,7 @@ export function ModalReservaCliente({
               </View>
             )}
 
-            {/* ETAPA 4: Confirmação & Protocolo */}
+            {/* ETAPA 4: CONFIRMAÇÃO & PROTOCOLO */}
             {etapa === 4 && (
               <View style={[styles.stepContainer, { alignItems: 'center', paddingVertical: 14 }]}>
                 <View style={styles.successIconWrap}>
@@ -1156,10 +1410,10 @@ export function ModalReservaCliente({
                 <View style={styles.anamneseCallout}>
                   <View style={styles.anamneseCalloutHeader}>
                     <FileHeart size={18} color="#f3c21a" />
-                    <Text style={styles.anamneseCalloutTitle}>Próximo Passo: Ficha de Saúde</Text>
+                    <Text style={styles.anamneseCalloutTitle}>Fase 5: Ficha de Saúde (Anamnese)</Text>
                   </View>
                   <Text style={styles.anamneseCalloutText}>
-                    Por exigência da Vigilância Sanitária e segurança do procedimento, complete e assine sua <Text style={{ color: '#f3c21a', fontWeight: '700' }}>Ficha de Anamnese</Text> na aba <Text style={{ color: '#fff', fontWeight: '700' }}>Meus Agendamentos</Text> antes do dia da sessão.
+                    Por exigência sanitária e biossegurança, complete e assine sua <Text style={{ color: '#f3c21a', fontWeight: '700' }}>Ficha de Anamnese</Text> na aba <Text style={{ color: '#fff', fontWeight: '700' }}>Meus Agendamentos</Text> ou no Chat antes da sessão.
                   </Text>
                 </View>
 
@@ -1176,8 +1430,8 @@ export function ModalReservaCliente({
             )}
           </ScrollView>
 
-          {/* Rodapé de Ação para Etapas 1 e 2 */}
-          {etapa < 3 && (
+          {/* Rodapé de Ação para Etapa 2 */}
+          {etapa === 2 && (
             <View style={styles.footer}>
               <View style={styles.footerPriceCol}>
                 <Text style={styles.footerPriceLabel}>Total Estimado:</Text>
@@ -1186,7 +1440,7 @@ export function ModalReservaCliente({
 
               <Pressable
                 style={styles.btnNext}
-                onPress={etapa === 1 ? avancarParaTurnos : avancarParaSinalPix}
+                onPress={avancarParaSinalPix}
                 disabled={carregando}
               >
                 {carregando ? (
@@ -1194,7 +1448,7 @@ export function ModalReservaCliente({
                 ) : (
                   <>
                     <Text style={styles.btnNextText}>
-                      {etapa === 1 ? 'Escolher Turno' : `Pagar Sinal (R$ ${valorSinalCalculado})`}
+                      Pagar Sinal (R$ {valorSinalCalculado})
                     </Text>
                     <ChevronRight size={18} color="#111" />
                   </>
@@ -1603,6 +1857,90 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  anatomyPhotoBox: {
+    backgroundColor: '#121217',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#22222d',
+    padding: 12,
+    gap: 8,
+    marginTop: 4,
+  },
+  anatomyPhotoHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  anatomyPhotoTitle: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  anatomyPhotoSub: {
+    color: '#888',
+    fontSize: 10,
+    marginTop: 2,
+  },
+  btnRemoverFotoCorpo: {
+    padding: 6,
+  },
+  anatomyPreviewWrap: {
+    height: 110,
+    borderRadius: 10,
+    overflow: 'hidden',
+    position: 'relative',
+    borderWidth: 1,
+    borderColor: '#f3c21a',
+  },
+  anatomyPreviewImg: {
+    width: '100%',
+    height: '100%',
+  },
+  anatomyBadge: {
+    position: 'absolute',
+    bottom: 6,
+    left: 6,
+    backgroundColor: 'rgba(0,0,0,0.85)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  anatomyBadgeText: {
+    color: '#f3c21a',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  anatomyUploadBtn: {
+    backgroundColor: '#181822',
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    borderColor: '#383848',
+    borderRadius: 10,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+  },
+  anatomyUploadBtnText: {
+    color: '#f3c21a',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  cmHighlightBadge: {
+    backgroundColor: '#f3c21a',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  cmHighlightBadgeText: {
+    color: '#111',
+    fontSize: 10,
+    fontWeight: '900',
+  },
   sizeGrid: {
     gap: 6,
   },
@@ -1646,6 +1984,79 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 12,
     textAlignVertical: 'top',
+  },
+  dispList: {
+    gap: 6,
+  },
+  dispItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  dispItemActive: {
+    backgroundColor: '#191812',
+    borderColor: '#f3c21a',
+  },
+  dispItemIdle: {
+    backgroundColor: '#121216',
+    borderColor: '#202028',
+  },
+  radioCircle: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    borderWidth: 1.5,
+    borderColor: '#666',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  radioCircleActive: {
+    borderColor: '#f3c21a',
+  },
+  radioDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#f3c21a',
+  },
+  dispItemText: {
+    color: '#aaa',
+    fontSize: 11,
+  },
+  dispItemTextActive: {
+    color: '#fff',
+    fontWeight: '700',
+  },
+  briefingSubmitBlock: {
+    gap: 8,
+    marginTop: 10,
+  },
+  btnEnviarBriefingChat: {
+    backgroundColor: '#f3c21a',
+    borderRadius: 14,
+    paddingVertical: 14,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+  },
+  btnEnviarBriefingChatText: {
+    color: '#111',
+    fontSize: 13,
+    fontWeight: '900',
+  },
+  btnAvancarDiretoTurno: {
+    alignItems: 'center',
+    paddingVertical: 6,
+  },
+  btnAvancarDiretoTurnoText: {
+    color: '#888',
+    fontSize: 11,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
   },
   daysRow: {
     gap: 8,

@@ -106,9 +106,59 @@ export function ArtistaAgendaTab() {
   const [qrCodeUrlFinal, setQrCodeUrlFinal] = useState<string | null>(null);
   const [copiadoPix, setCopiadoPix] = useState(false);
 
+  // Estados de Controle de Agenda (Aberta / Fechada)
+  const [agendaAberta, setAgendaAberta] = useState(true);
+  const [mensagemAgendaFechada, setMensagemAgendaFechada] = useState('');
+  const [salvandoStatusAgenda, setSalvandoStatusAgenda] = useState(false);
+
   useEffect(() => {
     carregarAgenda();
+    carregarStatusAgenda();
   }, []);
+
+  const carregarStatusAgenda = async () => {
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session?.user) return;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('agenda_aberta, mensagem_agenda_fechada')
+        .eq('id', session.user.id)
+        .maybeSingle();
+
+      if (profile) {
+        setAgendaAberta(profile.agenda_aberta ?? true);
+        setMensagemAgendaFechada(profile.mensagem_agenda_fechada || '');
+      }
+    } catch {
+      // silencioso
+    }
+  };
+
+  const alternarAgendaAberta = async () => {
+    setSalvandoStatusAgenda(true);
+    const novoStatus = !agendaAberta;
+    setAgendaAberta(novoStatus);
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session?.user) return;
+
+      await supabase
+        .from('profiles')
+        .update({ agenda_aberta: novoStatus })
+        .eq('id', session.user.id);
+    } catch (err) {
+      console.warn('Erro ao atualizar status da agenda:', err);
+    } finally {
+      setSalvandoStatusAgenda(false);
+    }
+  };
 
   const carregarAgenda = async () => {
     try {
@@ -302,6 +352,49 @@ export function ArtistaAgendaTab() {
 
   return (
     <View style={styles.container}>
+      {/* Controle de Abertura e Fechamento de Agenda do Tatuador */}
+      <View style={styles.agendaControlCard}>
+        <View style={styles.agendaControlLeft}>
+          <View
+            style={[
+              styles.agendaStatusDot,
+              agendaAberta ? styles.dotGreen : styles.dotAmber,
+            ]}
+          />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.agendaControlTitle}>
+              {agendaAberta ? 'Agenda Aberta (Recebendo Reservas)' : 'Agenda Fechada (Pausada)'}
+            </Text>
+            <Text style={styles.agendaControlSub}>
+              {agendaAberta
+                ? 'Novos briefings e pedidos de orçamento habilitados'
+                : 'Novos projetos temporariamente bloqueados no seu perfil'}
+            </Text>
+          </View>
+        </View>
+        <Pressable
+          style={[
+            styles.agendaToggleBtn,
+            agendaAberta ? styles.btnFechada : styles.btnAberta,
+          ]}
+          onPress={alternarAgendaAberta}
+          disabled={salvandoStatusAgenda}
+        >
+          {salvandoStatusAgenda ? (
+            <ActivityIndicator color={agendaAberta ? '#ef4444' : '#10b981'} size="small" />
+          ) : (
+            <Text
+              style={[
+                styles.agendaToggleBtnText,
+                agendaAberta ? styles.textFechada : styles.textAberta,
+              ]}
+            >
+              {agendaAberta ? 'Pausar Agenda' : 'Abrir Agenda'}
+            </Text>
+          )}
+        </Pressable>
+      </View>
+
       {/* Abas de Filtros */}
       <View style={styles.filterRow}>
         {[
@@ -882,7 +975,70 @@ export function ArtistaAgendaTab() {
 
 const styles = StyleSheet.create({
   container: {
-    gap: 14,
+    flex: 1,
+    gap: 12,
+  },
+  agendaControlCard: {
+    backgroundColor: '#121217',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#242430',
+    padding: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 10,
+  },
+  agendaControlLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+  },
+  agendaStatusDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+  },
+  dotGreen: {
+    backgroundColor: '#10b981',
+  },
+  dotAmber: {
+    backgroundColor: '#f59e0b',
+  },
+  agendaControlTitle: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  agendaControlSub: {
+    color: '#888',
+    fontSize: 10,
+    marginTop: 1,
+  },
+  agendaToggleBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  btnFechada: {
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderColor: '#ef4444',
+  },
+  btnAberta: {
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    borderColor: '#10b981',
+  },
+  agendaToggleBtnText: {
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  textFechada: {
+    color: '#ef4444',
+  },
+  textAberta: {
+    color: '#10b981',
   },
   filterRow: {
     flexDirection: 'row',

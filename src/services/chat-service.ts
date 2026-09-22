@@ -1,9 +1,71 @@
 import { supabase } from './supabase';
-import type { ConversaResumo, MensagemChat } from '@/types/chat';
+import type {
+  CardAnamnesePayload,
+  CardBriefingPayload,
+  CardDepositPayload,
+  CardQuotePayload,
+  ConversaResumo,
+  MensagemChat,
+  TipoCardMensagem,
+} from '@/types/chat';
 
 export class ChatService {
   /**
-   * Lista todas as conversas ativas do usuário atual, com resumo da última mensagem e perfil do contato
+   * Helper para deserializar mensagens especiais com payload de cards
+   */
+  static parsearMensagem(msg: any): MensagemChat {
+    const rawConteudo = msg.conteudo || '';
+    let tipo: TipoCardMensagem = 'texto';
+    let cardPayload: any = undefined;
+
+    if (rawConteudo.startsWith('[DERMYS_CARD:') && rawConteudo.endsWith(']')) {
+      try {
+        const jsonStr = rawConteudo.slice('[DERMYS_CARD:'.length, -1);
+        const parsed = JSON.parse(jsonStr);
+        tipo = parsed.tipo || 'texto';
+        cardPayload = parsed.payload;
+      } catch {
+        tipo = 'texto';
+      }
+    }
+
+    return {
+      id: msg.id,
+      remetente_id: msg.remetente_id,
+      destinatario_id: msg.destinatario_id,
+      conteudo: rawConteudo,
+      lida: msg.lida ?? false,
+      criado_em: msg.criado_em,
+      status_envio: 'enviado',
+      tipo_mensagem: tipo,
+      card_payload: cardPayload,
+    };
+  }
+
+  /**
+   * Helper para formatar o resumo de visualização da última mensagem na lista
+   */
+  static formatarResumoMensagem(msg: MensagemChat): string {
+    if (msg.tipo_mensagem === 'briefing') {
+      const b = msg.card_payload as CardBriefingPayload;
+      return `📋 Briefing de Projeto: ${b?.localCorpo || 'Tatuagem'} (${b?.tamanhoCm || 'Tamanho estimado'})`;
+    }
+    if (msg.tipo_mensagem === 'quote') {
+      const q = msg.card_payload as CardQuotePayload;
+      return `💰 Proposta de Orçamento: R$ ${Number(q?.valorTotal || 0).toFixed(2)} (${q?.duracaoEstimada || 'Sessão'})`;
+    }
+    if (msg.tipo_mensagem === 'deposit_confirmed') {
+      const d = msg.card_payload as CardDepositPayload;
+      return `✅ Sinal Confirmado: R$ ${Number(d?.valorSinal || 0).toFixed(2)} (${d?.turnoNome || 'Agendado'})`;
+    }
+    if (msg.tipo_mensagem === 'anamnese_card') {
+      return `🩺 Ficha de Saúde & Biossegurança enviada`;
+    }
+    return msg.conteudo || '';
+  }
+
+  /**
+   * Lista todas as conversas ativas do usuário atual
    */
   static async listarConversas(usuarioId: string): Promise<ConversaResumo[]> {
     if (!usuarioId) return [];
@@ -17,10 +79,10 @@ export class ChatService {
         .order('criado_em', { ascending: false });
 
       if (errMensagens || !mensagens) {
-        return [];
+        return await this.obterContatosSugeridos(usuarioId);
       }
 
-      // 2. Agrupa por contato (o outro lado da conversa)
+      // 2. Agrupa por contato
       const mapaContatos = new Map<
         string,
         { ultimaMensagem: string; dataUltimaMensagem: string; naoLidas: number }
@@ -30,9 +92,12 @@ export class ChatService {
         const contatoId = msg.remetente_id === usuarioId ? msg.destinatario_id : msg.remetente_id;
         if (!contatoId) continue;
 
+        const msgObj = this.parsearMensagem(msg);
+        const resumoTexto = this.formatarResumoMensagem(msgObj);
+
         if (!mapaContatos.has(contatoId)) {
           mapaContatos.set(contatoId, {
-            ultimaMensagem: msg.conteudo,
+            ultimaMensagem: resumoTexto,
             dataUltimaMensagem: msg.criado_em,
             naoLidas: msg.destinatario_id === usuarioId && !msg.lida ? 1 : 0,
           });
@@ -46,11 +111,10 @@ export class ChatService {
 
       const contatosIds = Array.from(mapaContatos.keys());
       if (contatosIds.length === 0) {
-        // Se não houver conversas, busca perfis de artistas ou clientes para iniciar conversa
         return await this.obterContatosSugeridos(usuarioId);
       }
 
-      // 3. Busca detalhes dos perfis dos contatos
+      // 3. Busca perfis dos contatos
       const { data: profiles, error: errProfiles } = await supabase
         .from('profiles')
         .select('id, nome_exibicao, foto_url, tipo_perfil, nome_estudio, estilo_principal, cidade')
@@ -81,7 +145,6 @@ export class ChatService {
         };
       });
 
-      // Ordena por data da última mensagem decrescente
       return listaConversas.sort(
         (a, b) =>
           new Date(b.data_ultima_mensagem).getTime() - new Date(a.data_ultima_mensagem).getTime()
@@ -122,7 +185,7 @@ export class ChatService {
   }
 
   /**
-   * Carrega histórico completo de mensagens entre dois usuários
+   * Carrega histórico completo de mensagens entre dois usuários com parse de cards
    */
   static async carregarMensagens(usuarioId: string, contatoId: string): Promise<MensagemChat[]> {
     if (!usuarioId || !contatoId) return [];
@@ -137,14 +200,14 @@ export class ChatService {
         .order('criado_em', { ascending: true });
 
       if (error || !data) return [];
-      return data as MensagemChat[];
+      return data.map((d) => this.parsearMensagem(d));
     } catch {
       return [];
     }
   }
 
   /**
-   * Envia uma nova mensagem com persistência no Supabase
+   * Envia uma mensagem comum de texto
    */
   static async enviarMensagem(
     remetenteId: string,
@@ -167,15 +230,60 @@ export class ChatService {
         .select('*')
         .single();
 
-      if (error) {
-        throw error;
-      }
-
-      return data as MensagemChat;
+      if (error || !data) throw error;
+      return this.parsearMensagem(data);
     } catch (err) {
       console.error('Erro ao enviar mensagem no Supabase:', err);
       return null;
     }
+  }
+
+  /**
+   * FASE 1 -> FASE 2: Envia o card de abertura de Briefing no chat
+   */
+  static async enviarBriefing(
+    remetenteId: string,
+    destinatarioId: string,
+    payload: CardBriefingPayload
+  ): Promise<MensagemChat | null> {
+    const payloadStr = `[DERMYS_CARD:${JSON.stringify({ tipo: 'briefing', payload })}]`;
+    return await this.enviarMensagem(remetenteId, destinatarioId, payloadStr);
+  }
+
+  /**
+   * FASE 3: Tatuador envia proposta de orçamento
+   */
+  static async enviarProposta(
+    remetenteId: string,
+    destinatarioId: string,
+    payload: CardQuotePayload
+  ): Promise<MensagemChat | null> {
+    const payloadStr = `[DERMYS_CARD:${JSON.stringify({ tipo: 'quote', payload })}]`;
+    return await this.enviarMensagem(remetenteId, destinatarioId, payloadStr);
+  }
+
+  /**
+   * FASE 4: Sistema / Gateway envia confirmação de sinal pago
+   */
+  static async enviarConfirmacaoSinal(
+    remetenteId: string,
+    destinatarioId: string,
+    payload: CardDepositPayload
+  ): Promise<MensagemChat | null> {
+    const payloadStr = `[DERMYS_CARD:${JSON.stringify({ tipo: 'deposit_confirmed', payload })}]`;
+    return await this.enviarMensagem(remetenteId, destinatarioId, payloadStr);
+  }
+
+  /**
+   * FASE 5: Envia card para preencher Ficha de Anamnese
+   */
+  static async enviarSolicitacaoAnamnese(
+    remetenteId: string,
+    destinatarioId: string,
+    payload: CardAnamnesePayload
+  ): Promise<MensagemChat | null> {
+    const payloadStr = `[DERMYS_CARD:${JSON.stringify({ tipo: 'anamnese_card', payload })}]`;
+    return await this.enviarMensagem(remetenteId, destinatarioId, payloadStr);
   }
 
   /**
@@ -216,13 +324,13 @@ export class ChatService {
           table: 'mensagens',
         },
         (payload) => {
-          const nova = payload.new as MensagemChat;
-          // Verifica se a mensagem pertence a essa conversa ativa
+          const raw = payload.new;
           if (
-            (nova.remetente_id === usuarioId && nova.destinatario_id === contatoId) ||
-            (nova.remetente_id === contatoId && nova.destinatario_id === usuarioId)
+            (raw.remetente_id === usuarioId && raw.destinatario_id === contatoId) ||
+            (raw.remetente_id === contatoId && raw.destinatario_id === usuarioId)
           ) {
-            onNovaMensagem(nova);
+            const parsed = ChatService.parsearMensagem(raw);
+            onNovaMensagem(parsed);
           }
         }
       )

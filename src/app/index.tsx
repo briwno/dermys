@@ -23,7 +23,13 @@ export default function TelaInicial() {
   const [dadosIncompletos, setDadosIncompletos] = useState<Partial<PerfilUsuario> | null>(null);
   const [saindo, setSaindo] = useState(false);
   const [activeTab, setActiveTab] = useState<BottomNavTab>('home');
+  const [chatContatoId, setChatContatoId] = useState<string | undefined>(undefined);
   const [inicializando, setInicializando] = useState(true);
+
+  const handleNavegarAba = (tab: BottomNavTab, contatoId?: string) => {
+    setChatContatoId(contatoId);
+    setActiveTab(tab);
+  };
 
   const carregarPerfilUsuario = async (userId: string, authUser?: any) => {
     try {
@@ -211,7 +217,15 @@ export default function TelaInicial() {
 
     const renderDashboard = () => {
       if (tipoPerfilAtual === 'artista') {
-        return <DashboardArtista perfil={perfil} onLogout={encerrarSessao} activeTab={activeTab} />;
+        return (
+          <DashboardArtista
+            perfil={perfil}
+            onLogout={encerrarSessao}
+            activeTab={activeTab}
+            chatContatoId={chatContatoId}
+            onNavegarAba={handleNavegarAba}
+          />
+        );
       }
 
       return (
@@ -219,7 +233,8 @@ export default function TelaInicial() {
           perfil={perfil}
           onLogout={encerrarSessao}
           activeTab={activeTab}
-          onNavegarAba={setActiveTab}
+          chatContatoId={chatContatoId}
+          onNavegarAba={handleNavegarAba}
         />
       );
     };
@@ -227,7 +242,14 @@ export default function TelaInicial() {
     return (
       <View style={styles.shell}>
         <View style={styles.content}>{renderDashboard()}</View>
-        <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} role={tipoPerfilAtual} />
+        <BottomNav
+          activeTab={activeTab}
+          setActiveTab={(tab) => {
+            setChatContatoId(undefined);
+            setActiveTab(tab);
+          }}
+          role={tipoPerfilAtual}
+        />
       </View>
     );
   };

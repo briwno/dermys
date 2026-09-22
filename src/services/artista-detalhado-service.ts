@@ -168,6 +168,8 @@ export class ArtistaDetalhadoService {
       portfolio,
       flashes,
       reviews,
+      agendaAberta: artistaDb.agenda_aberta ?? true,
+      mensagemAgendaFechada: artistaDb.mensagem_agenda_fechada || '',
       estudioInfo,
     };
   }

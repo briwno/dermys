@@ -63,5 +63,7 @@ export interface PerfilArtistaCompleto {
   portfolio: ItemPortfolio[];
   flashes: ItemPortfolio[];
   reviews: ReviewArtista[];
+  agendaAberta?: boolean;
+  mensagemAgendaFechada?: string;
   estudioInfo: DetalhesEstudio;
 }

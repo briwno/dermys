@@ -12,13 +12,15 @@ interface PropsDashboardCliente {
   perfil: PerfilUsuario;
   onLogout: () => void;
   activeTab?: BottomNavTab;
-  onNavegarAba?: (tab: BottomNavTab) => void;
+  chatContatoId?: string;
+  onNavegarAba?: (tab: BottomNavTab, contatoId?: string) => void;
 }
 
 export function DashboardCliente({
   perfil,
   onLogout,
   activeTab = 'home',
+  chatContatoId,
   onNavegarAba,
 }: PropsDashboardCliente) {
   const getTabTitle = () => {
@@ -53,7 +55,9 @@ export function DashboardCliente({
         {/* Conteúdo Dinâmico por Aba */}
         {activeTab === 'home' && <ClienteInicioTab onNavegarAba={onNavegarAba} />}
         {activeTab === 'bookings' && <ClienteAgendamentosTab />}
-        {activeTab === 'chat' && <ClienteMensagensTab perfil={perfil} />}
+        {activeTab === 'chat' && (
+          <ClienteMensagensTab perfil={perfil} contatoInicialId={chatContatoId} />
+        )}
         {activeTab === 'profile' && <ClientePerfilTab perfil={perfil} />}
       </ScrollView>
     </SafeAreaView>

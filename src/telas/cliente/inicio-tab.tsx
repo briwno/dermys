@@ -176,7 +176,7 @@ const TAGS = [
 ];
 
 interface PropsClienteInicioTab {
-  onNavegarAba?: (aba: BottomNavTab) => void;
+  onNavegarAba?: (aba: BottomNavTab, contatoId?: string) => void;
 }
 
 export function ClienteInicioTab({ onNavegarAba }: PropsClienteInicioTab) {
@@ -558,12 +558,12 @@ export function ClienteInicioTab({ onNavegarAba }: PropsClienteInicioTab) {
         onIniciarAgendamento={(art, flash) => iniciarReservaDireta(art, flash)}
         onAbrirChat={(art) => {
           if (onNavegarAba) {
-            onNavegarAba('chat');
+            onNavegarAba('chat', art.id);
           }
         }}
       />
 
-      {/* MODAL: RESERVA & CHECKOUT MERCADO PAGO */}
+      {/* MODAL: BRIEFING & RESERVA DE PROJETO */}
       <ModalReservaCliente
         visivel={modalReservaAberto}
         artista={artistaParaReserva}
@@ -577,6 +577,13 @@ export function ClienteInicioTab({ onNavegarAba }: PropsClienteInicioTab) {
           setFlashSelecionado(null);
           if (onNavegarAba) {
             onNavegarAba('bookings');
+          }
+        }}
+        onRedirecionarChat={(artistaId) => {
+          setModalReservaAberto(false);
+          setFlashSelecionado(null);
+          if (onNavegarAba) {
+            onNavegarAba('chat', artistaId);
           }
         }}
       />

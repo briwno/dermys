@@ -13,9 +13,17 @@ interface PropsDashboardArtista {
   perfil: PerfilUsuario;
   onLogout: () => void;
   activeTab?: BottomNavTab;
+  chatContatoId?: string;
+  onNavegarAba?: (tab: BottomNavTab, contatoId?: string) => void;
 }
 
-export function DashboardArtista({ perfil, onLogout, activeTab = 'dashboard' }: PropsDashboardArtista) {
+export function DashboardArtista({
+  perfil,
+  onLogout,
+  activeTab = 'dashboard',
+  chatContatoId,
+  onNavegarAba,
+}: PropsDashboardArtista) {
   const getTabTitle = () => {
     switch (activeTab) {
       case 'schedule':
@@ -52,7 +60,9 @@ export function DashboardArtista({ perfil, onLogout, activeTab = 'dashboard' }: 
         {activeTab === 'dashboard' && <ArtistaDashboardTab perfil={perfil} />}
         {activeTab === 'schedule' && <ArtistaAgendaTab />}
         {activeTab === 'financial' && <ArtistaFinanceiroTab perfil={perfil} />}
-        {activeTab === 'chat' && <ArtistaMensagensTab perfil={perfil} />}
+        {activeTab === 'chat' && (
+          <ArtistaMensagensTab perfil={perfil} contatoInicialId={chatContatoId} />
+        )}
         {activeTab === 'profile' && <ArtistaPerfilTab perfil={perfil} />}
       </ScrollView>
     </SafeAreaView>

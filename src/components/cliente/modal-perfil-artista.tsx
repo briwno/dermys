@@ -144,6 +144,34 @@ export function ModalPerfilArtista({
                       {perfil.notaMedia.toFixed(1)} ({perfil.totalAvaliacoes})
                     </Text>
                   </View>
+
+                  <View
+                    style={[
+                      styles.agendaBadgePill,
+                      perfil.agendaAberta !== false
+                        ? styles.agendaBadgeAberta
+                        : styles.agendaBadgeFechada,
+                    ]}
+                  >
+                    <View
+                      style={[
+                        styles.agendaBadgeDot,
+                        perfil.agendaAberta !== false
+                          ? styles.dotGreenMini
+                          : styles.dotAmberMini,
+                      ]}
+                    />
+                    <Text
+                      style={[
+                        styles.agendaBadgeText,
+                        perfil.agendaAberta !== false
+                          ? styles.agendaTextAberta
+                          : styles.agendaTextFechada,
+                      ]}
+                    >
+                      {perfil.agendaAberta !== false ? 'Agenda Aberta' : 'Agenda Fechada'}
+                    </Text>
+                  </View>
                 </View>
               </View>
             </View>
@@ -155,6 +183,20 @@ export function ModalPerfilArtista({
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
           >
+            {/* Aviso de Agenda Fechada se aplicável */}
+            {perfil.agendaAberta === false && (
+              <View style={styles.agendaFechadaCallout}>
+                <Clock size={16} color="#f59e0b" />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.agendaFechadaCalloutTitle}>Agenda Temporariamente Fechada</Text>
+                  <Text style={styles.agendaFechadaCalloutSub}>
+                    {perfil.mensagemAgendaFechada ||
+                      'O artista está pausado para novas datas, mas você pode enviar seu briefing para a lista de espera!'}
+                  </Text>
+                </View>
+              </View>
+            )}
+
             {/* Bloco de Média de Preços & Valores Transparentes */}
             <View style={styles.pricingSection}>
               <View style={styles.priceCard}>
@@ -465,12 +507,24 @@ export function ModalPerfilArtista({
             )}
 
             <Pressable
-              style={styles.btnBookAction}
+              style={[
+                styles.btnBookAction,
+                perfil.agendaAberta === false && styles.btnBookActionWaitlist,
+              ]}
               onPress={() => onIniciarAgendamento(perfil, flashSelecionado || undefined)}
             >
-              <Calendar size={18} color="#111" />
-              <Text style={styles.btnBookActionText}>
-                {flashSelecionado ? 'Reservar Flash Selecionado' : 'Solicitar Orçamento / Agendar'}
+              <Calendar size={18} color={perfil.agendaAberta === false ? '#f59e0b' : '#111'} />
+              <Text
+                style={[
+                  styles.btnBookActionText,
+                  perfil.agendaAberta === false && styles.btnBookActionTextWaitlist,
+                ]}
+              >
+                {flashSelecionado
+                  ? 'Reservar Flash Selecionado'
+                  : perfil.agendaAberta === false
+                  ? 'Enviar Briefing (Lista de Espera)'
+                  : 'Pedir Orçamento / Agendar'}
               </Text>
             </Pressable>
           </View>
@@ -672,8 +726,77 @@ const styles = StyleSheet.create({
   },
   ratingText: {
     color: '#fff',
-    fontSize: 11,
-    fontWeight: '700',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  agendaBadgePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  agendaBadgeAberta: {
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    borderColor: '#10b981',
+  },
+  agendaBadgeFechada: {
+    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+    borderColor: '#f59e0b',
+  },
+  agendaBadgeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  dotGreenMini: {
+    backgroundColor: '#10b981',
+  },
+  dotAmberMini: {
+    backgroundColor: '#f59e0b',
+  },
+  agendaBadgeText: {
+    fontSize: 9,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+  },
+  agendaTextAberta: {
+    color: '#10b981',
+  },
+  agendaTextFechada: {
+    color: '#f59e0b',
+  },
+  agendaFechadaCallout: {
+    backgroundColor: '#1c170a',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#543f07',
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 6,
+  },
+  agendaFechadaCalloutTitle: {
+    color: '#f59e0b',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  agendaFechadaCalloutSub: {
+    color: '#bbb',
+    fontSize: 10,
+    marginTop: 1,
+    lineHeight: 15,
+  },
+  btnBookActionWaitlist: {
+    backgroundColor: '#1c170a',
+    borderWidth: 1,
+    borderColor: '#543f07',
+  },
+  btnBookActionTextWaitlist: {
+    color: '#f59e0b',
   },
   scrollView: {
     flex: 1,

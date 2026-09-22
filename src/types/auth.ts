@@ -48,6 +48,10 @@ export interface PerfilUsuario {
   chave_pix?: string;
   percentual_sinal?: number;
   mercado_pago_public_key?: string;
+  agenda_aberta?: boolean;
+  agendaAberta?: boolean;
+  mensagem_agenda_fechada?: string;
+  mensagemAgendaFechada?: string;
   criado_em?: string;
   criadoEm?: string;
   createdAt?: string;
@@ -247,6 +251,10 @@ export function normalizarPerfil(p: any): PerfilUsuario {
     chave_pix: p.chave_pix || '',
     percentual_sinal: Number(p.percentual_sinal || 30),
     mercado_pago_public_key: p.mercado_pago_public_key || '',
+    agenda_aberta: p.agenda_aberta ?? p.agendaAberta ?? true,
+    agendaAberta: p.agenda_aberta ?? p.agendaAberta ?? true,
+    mensagem_agenda_fechada: p.mensagem_agenda_fechada || p.mensagemAgendaFechada || '',
+    mensagemAgendaFechada: p.mensagem_agenda_fechada || p.mensagemAgendaFechada || '',
     criado_em: data,
     criadoEm: data,
     createdAt: data,
