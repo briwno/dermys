@@ -1,13 +1,17 @@
 import { DetalhesNotaModal } from '@/components/fiscal/detalhes-nota-modal';
 import { EmissaoNfseModal } from '@/components/fiscal/emissao-nfse-modal';
 import { ReciboFiscalModal } from '@/components/recibo-fiscal-modal';
+import { AppModal } from '@/components/ui/app-modal';
 import { FiscalService } from '@/services/fiscal/fiscal-service';
 import { criarCobrancaFinal, gerarReciboFiscal, obterUrlQrCodePix } from '@/services/mercadopago';
 import { supabase } from '@/services/supabase';
 import type { ReciboFiscal } from '@/types/financeiro';
 import type { NotaFiscalRegistro } from '@/types/fiscal';
 import {
+  AlertCircle,
+  AlertTriangle,
   Calendar,
+  Check,
   CheckCircle,
   CheckCircle2,
   Clock,
@@ -15,16 +19,28 @@ import {
   DollarSign,
   FileCheck2,
   FileHeart,
+  HeartPulse,
+  Image as ImageIcon,
+  Info,
+  Layers,
+  MapPin,
   Play,
   QrCode,
+  ShieldAlert,
+  ShieldCheck,
+  Sparkles,
   Square,
+  Sun,
+  Sunset,
   Timer,
   X,
   XCircle,
+  Zap,
 } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -32,7 +48,19 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { AppModal } from '@/components/ui/app-modal';
+
+export interface FichaAnamneseArtista {
+  id?: string;
+  agendamento_id?: string;
+  cliente_id?: string;
+  alergias?: string;
+  doencas_cronicas?: string;
+  medicamentos?: string;
+  observacoes?: string;
+  assinado?: boolean;
+  tem_alerta_saude?: boolean;
+  data_assinatura?: string;
+}
 
 export interface ItemAgendaCompleto {
   id: string;
@@ -45,11 +73,15 @@ export interface ItemAgendaCompleto {
   descricao?: string;
   localCorpo?: string;
   tamanhoCm?: string;
+  turno?: string;
+  tipoSessao?: string;
+  referenciasUrls?: string[];
   status: 'pendente' | 'confirmado' | 'em_andamento' | 'concluido' | 'cancelado';
   valorSinal: number;
   valorTotal: number;
   valorFinal?: number;
   sinalPago: boolean;
+  fichaAnamnese?: FichaAnamneseArtista | null;
 }
 
 export function ArtistaAgendaTab() {
@@ -85,6 +117,7 @@ export function ArtistaAgendaTab() {
       } = await supabase.auth.getSession();
       if (!session?.user) return;
 
+      // 1. Busca agendamentos do artista
       const { data, error } = await supabase
         .from('agendamentos')
         .select(`
@@ -95,6 +128,9 @@ export function ArtistaAgendaTab() {
           descricao,
           local_corpo,
           tamanho_cm,
+          turno,
+          tipo_sessao,
+          referencias_urls,
           status,
           valor_sinal,
           valor_total,
@@ -106,8 +142,27 @@ export function ArtistaAgendaTab() {
         .order('data_horario', { ascending: true });
 
       if (!error && data) {
+        // 2. Busca fichas de anamnese
+        const { data: fichasData } = await supabase
+          .from('fichas_anamnese')
+          .select('*')
+          .eq('artista_id', session.user.id);
+
+        const fichasMap = new Map<string, FichaAnamneseArtista>();
+        if (fichasData) {
+          fichasData.forEach((f: any) => {
+            if (f.agendamento_id) {
+              fichasMap.set(f.agendamento_id, f);
+            } else if (f.cliente_id) {
+              fichasMap.set(f.cliente_id, f);
+            }
+          });
+        }
+
         const formatados: ItemAgendaCompleto[] = data.map((item: any) => {
           const d = item.data_horario ? new Date(item.data_horario) : new Date();
+          const ficha = fichasMap.get(item.id) || fichasMap.get(item.cliente_id) || null;
+
           return {
             id: item.id,
             clienteId: item.cliente_id,
@@ -119,11 +174,15 @@ export function ArtistaAgendaTab() {
             descricao: item.descricao,
             localCorpo: item.local_corpo || 'Braço / Antebraço',
             tamanhoCm: item.tamanho_cm || '10 a 15 cm',
+            turno: item.turno || 'tarde',
+            tipoSessao: item.tipo_sessao || 'exclusivo',
+            referenciasUrls: item.referencias_urls || [],
             status: item.status || 'pendente',
             valorSinal: Number(item.valor_sinal || 0),
             valorTotal: Number(item.valor_total || 350),
             valorFinal: item.valor_final ? Number(item.valor_final) : undefined,
             sinalPago: item.sinal_pago ?? true,
+            fichaAnamnese: ficha,
           };
         });
         setAgendamentos(formatados);
@@ -171,7 +230,6 @@ export function ArtistaAgendaTab() {
       } = await supabase.auth.getSession();
 
       if (session?.user) {
-        // Gera cobrança final no Mercado Pago
         const cobranca = await criarCobrancaFinal({
           agendamentoId: itemFinalizando.id,
           artistaId: session.user.id,
@@ -187,13 +245,11 @@ export function ArtistaAgendaTab() {
           setQrCodeUrlFinal(cobranca.qrCodeBase64 || obterUrlQrCodePix(cobranca.qrCodePayload));
         }
 
-        // Conclui o agendamento
         await atualizarStatus(itemFinalizando.id, 'concluido', {
           valor_final: precoFinal,
           concluido_em: new Date().toISOString(),
         });
 
-        // Emissão automática de NFS-e caso configurado
         try {
           const pFiscal = await FiscalService.obterOuCriarPerfilFiscal(session.user.id);
           if (pFiscal.emissao_automatica) {
@@ -261,7 +317,9 @@ export function ArtistaAgendaTab() {
               onPress={() => setFiltro(f.id as any)}
               style={[styles.filterBtn, ativo ? styles.filterBtnActive : styles.filterBtnIdle]}
             >
-              <Text style={[styles.filterBtnText, ativo && styles.filterBtnTextActive]}>{f.label}</Text>
+              <Text style={[styles.filterBtnText, ativo && styles.filterBtnTextActive]}>
+                {f.label}
+              </Text>
             </Pressable>
           );
         })}
@@ -273,7 +331,9 @@ export function ArtistaAgendaTab() {
       ) : agendamentosFiltrados.length === 0 ? (
         <View style={styles.emptyWrap}>
           <Text style={styles.emptyTitle}>Agenda vazia nesta categoria</Text>
-          <Text style={styles.emptySub}>Novas solicitações de clientes aparecerão aqui com sinal em custódia.</Text>
+          <Text style={styles.emptySub}>
+            Novas solicitações de clientes aparecerão aqui organizadas por turnos de bancada e sinal em custódia.
+          </Text>
         </View>
       ) : (
         agendamentosFiltrados.map((item) => {
@@ -282,6 +342,16 @@ export function ArtistaAgendaTab() {
           const isAndamento = item.status === 'em_andamento';
           const isConcluido = item.status === 'concluido';
           const isCancelado = item.status === 'cancelado';
+
+          const turnoNome =
+            item.turno === 'manha'
+              ? '🌅 Turno Manhã (10h)'
+              : item.turno === 'diaria'
+              ? '⚡ Diária Completa'
+              : '☀️ Turno Tarde (14h)';
+
+          const temAlerta = item.fichaAnamnese?.tem_alerta_saude;
+          const anamneseAssinada = item.fichaAnamnese?.assinado;
 
           return (
             <View key={item.id} style={styles.card}>
@@ -330,7 +400,20 @@ export function ArtistaAgendaTab() {
                 </View>
               </View>
 
-              {/* Detalhes de Data e Local */}
+              {/* Turno e Categoria */}
+              <View style={styles.pillsRow}>
+                <View style={styles.turnoBadge}>
+                  <Text style={styles.turnoBadgeText}>{turnoNome}</Text>
+                </View>
+
+                <View style={styles.typeBadge}>
+                  <Text style={styles.typeBadgeText}>
+                    {item.tipoSessao === 'flash' ? 'Flash Autoral' : 'Projeto Exclusivo'}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Detalhes de Data e Briefing */}
               <View style={styles.gridInfo}>
                 <View style={styles.infoCol}>
                   <View style={styles.infoLine}>
@@ -351,6 +434,42 @@ export function ArtistaAgendaTab() {
                 </View>
               </View>
 
+              {/* Status da Ficha Sanitária / Alerta Vermelho */}
+              <View
+                style={[
+                  styles.anamneseCheckRow,
+                  temAlerta
+                    ? styles.anamneseCheckRowAlert
+                    : anamneseAssinada
+                    ? styles.anamneseCheckRowOk
+                    : styles.anamneseCheckRowPending,
+                ]}
+              >
+                {temAlerta ? (
+                  <ShieldAlert size={14} color="#ef4444" />
+                ) : anamneseAssinada ? (
+                  <ShieldCheck size={14} color="#10b981" />
+                ) : (
+                  <HeartPulse size={14} color="#f3c21a" />
+                )}
+                <Text
+                  style={[
+                    styles.anamneseCheckText,
+                    temAlerta
+                      ? styles.anamneseCheckTextAlert
+                      : anamneseAssinada
+                      ? styles.anamneseCheckTextOk
+                      : styles.anamneseCheckTextPending,
+                  ]}
+                >
+                  {temAlerta
+                    ? 'ALERTA SANITÁRIO: Alergia / Queloide informado ⚠️'
+                    : anamneseAssinada
+                    ? 'Ficha de Saúde Assinada (Sem Restrições) ✅'
+                    : 'Ficha de Saúde: Pendente de preenchimento pelo cliente ⏳'}
+                </Text>
+              </View>
+
               {/* Barra Financeira do Card */}
               <View style={styles.financialRow}>
                 <View>
@@ -358,7 +477,7 @@ export function ArtistaAgendaTab() {
                     {isConcluido ? 'Total Liquidado:' : 'Orçamento Total:'}
                   </Text>
                   <Text style={styles.finVal}>
-                    R$ {isConcluido ? (item.valorFinal || item.valorTotal) : item.valorTotal}
+                    R$ {isConcluido ? item.valorFinal || item.valorTotal : item.valorTotal}
                   </Text>
                 </View>
 
@@ -377,9 +496,14 @@ export function ArtistaAgendaTab() {
 
               {/* Botões de Ações */}
               <View style={styles.actionsRow}>
-                <Pressable style={styles.btnSecondary} onPress={() => setItemAnamnese(item)}>
-                  <FileHeart size={14} color="#f3c21a" />
-                  <Text style={styles.btnSecondaryText}>Briefing/Anamnese</Text>
+                <Pressable
+                  style={[styles.btnSecondary, temAlerta && styles.btnSecondaryAlert]}
+                  onPress={() => setItemAnamnese(item)}
+                >
+                  <FileHeart size={14} color={temAlerta ? '#ef4444' : '#f3c21a'} />
+                  <Text style={[styles.btnSecondaryText, temAlerta && { color: '#ef4444' }]}>
+                    {temAlerta ? 'Ver Alertas / Ficha' : 'Briefing & Saúde'}
+                  </Text>
                 </Pressable>
 
                 {isPendente && (
@@ -411,7 +535,10 @@ export function ArtistaAgendaTab() {
                 )}
 
                 {isAndamento && (
-                  <Pressable style={styles.btnDangerAction} onPress={() => abrirModalFinalizar(item)}>
+                  <Pressable
+                    style={styles.btnDangerAction}
+                    onPress={() => abrirModalFinalizar(item)}
+                  >
                     <Square size={14} color="#fff" fill="#fff" />
                     <Text style={styles.btnDangerActionText}>Finalizar & Cobrar</Text>
                   </Pressable>
@@ -441,7 +568,7 @@ export function ArtistaAgendaTab() {
         })
       )}
 
-      {/* Modal de Finalização de Sessão & Cobrança MP */}
+      {/* MODAL DE FINALIZAÇÃO E COBRANÇA */}
       <AppModal
         visible={!!itemFinalizando}
         transparent
@@ -466,7 +593,6 @@ export function ArtistaAgendaTab() {
             </View>
 
             <ScrollView contentContainerStyle={styles.modalScroll} showsVerticalScrollIndicator={false}>
-              {/* Resumo Financeiro */}
               <View style={styles.calcCard}>
                 <View style={styles.calcRow}>
                   <Text style={styles.calcLabel}>Valor Total Final:</Text>
@@ -497,7 +623,6 @@ export function ArtistaAgendaTab() {
                 </View>
               </View>
 
-              {/* Seletor de Método de Liquidação */}
               <Text style={styles.methodTitle}>Forma de Recebimento do Restante:</Text>
               <View style={styles.methodRow}>
                 {[
@@ -520,7 +645,6 @@ export function ArtistaAgendaTab() {
                 })}
               </View>
 
-              {/* Se PIX foi gerado na finalização */}
               {pixCopiaColaFinal && (
                 <View style={styles.pixResultBox}>
                   <Text style={styles.pixResultTitle}>QR Code de Quitação Gerado</Text>
@@ -564,7 +688,7 @@ export function ArtistaAgendaTab() {
         </View>
       </AppModal>
 
-      {/* Modal de Detalhes da Anamnese e Briefing */}
+      {/* MODAL DE DETALHES DE BRIEFING & ANAMNESE COM ALERTAS VERMELHOS */}
       <AppModal
         visible={!!itemAnamnese}
         transparent
@@ -576,7 +700,10 @@ export function ArtistaAgendaTab() {
             <View style={styles.modalHeader}>
               <View style={styles.modalHeaderLeft}>
                 <FileHeart size={20} color="#f3c21a" />
-                <Text style={styles.modalTitle}>Briefing & Anamnese</Text>
+                <View>
+                  <Text style={styles.modalTitle}>Briefing & Ficha de Saúde</Text>
+                  <Text style={styles.modalSub}>Cliente: {itemAnamnese?.clienteNome}</Text>
+                </View>
               </View>
               <Pressable style={styles.closeBtn} onPress={() => setItemAnamnese(null)}>
                 <X size={18} color="#888" />
@@ -584,8 +711,22 @@ export function ArtistaAgendaTab() {
             </View>
 
             <ScrollView contentContainerStyle={styles.modalScroll}>
+              {/* Alerta Vermelho de Saúde se houver restrição */}
+              {itemAnamnese?.fichaAnamnese?.tem_alerta_saude && (
+                <View style={styles.redAlertBanner}>
+                  <AlertTriangle size={20} color="#ef4444" />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.redAlertTitle}>ATENÇÃO SANITÁRIA (ALERTA)</Text>
+                    <Text style={styles.redAlertSub}>
+                      O cliente informou condições ou sensibilidades que exigem cuidados especiais na bancada.
+                    </Text>
+                  </View>
+                </View>
+              )}
+
+              {/* Conceito da Tatuagem & Briefing */}
               <View style={styles.briefingCard}>
-                <Text style={styles.briefingCardHeader}>Conceito da Tatuagem</Text>
+                <Text style={styles.briefingCardHeader}>Projeto & Conceito</Text>
                 <Text style={styles.briefingCardBody}>
                   {itemAnamnese?.descricao || 'Ideia autoral combinada diretamente com o artista.'}
                 </Text>
@@ -599,29 +740,99 @@ export function ArtistaAgendaTab() {
                     <Text style={styles.metaLabel}>Tamanho Estimado</Text>
                     <Text style={styles.metaVal}>{itemAnamnese?.tamanhoCm}</Text>
                   </View>
+                  <View>
+                    <Text style={styles.metaLabel}>Turno</Text>
+                    <Text style={styles.metaVal}>
+                      {itemAnamnese?.turno === 'manha'
+                        ? 'Manhã (10h)'
+                        : itemAnamnese?.turno === 'diaria'
+                        ? 'Diária Completa'
+                        : 'Tarde (14h)'}
+                    </Text>
+                  </View>
                 </View>
+
+                {/* Fotos de Referência */}
+                {itemAnamnese?.referenciasUrls && itemAnamnese.referenciasUrls.length > 0 && (
+                  <View style={{ marginTop: 10 }}>
+                    <Text style={styles.metaLabel}>Fotos de Referência:</Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 6 }}>
+                      {itemAnamnese.referenciasUrls.map((url, idx) => (
+                        <Image key={idx} source={{ uri: url }} style={styles.refThumbModal} />
+                      ))}
+                    </ScrollView>
+                  </View>
+                )}
               </View>
 
+              {/* Declaração de Anamnese Sanitária */}
               <View style={styles.briefingCard}>
-                <Text style={styles.briefingCardHeader}>Declaração de Saúde Digital</Text>
-                <View style={styles.checkItem}>
-                  <CheckCircle2 size={14} color="#10b981" />
-                  <Text style={styles.checkText}>Sem histórico de alergia a pigmentos</Text>
-                </View>
-                <View style={styles.checkItem}>
-                  <CheckCircle2 size={14} color="#10b981" />
-                  <Text style={styles.checkText}>Não gestante / lactante</Text>
-                </View>
-                <View style={styles.checkItem}>
-                  <CheckCircle2 size={14} color="#10b981" />
-                  <Text style={styles.checkText}>Termo de responsabilidade assinado digitalmente</Text>
-                </View>
+                <Text style={styles.briefingCardHeader}>Ficha de Anamnese & Biossegurança</Text>
+
+                {itemAnamnese?.fichaAnamnese?.assinado ? (
+                  <View style={styles.healthDetailsList}>
+                    <View style={styles.healthItem}>
+                      <Text style={styles.healthKey}>Alergias (Pigmentos/Látex/Pomadas):</Text>
+                      <Text
+                        style={[
+                          styles.healthVal,
+                          itemAnamnese.fichaAnamnese.alergias !== 'Nenhuma' && { color: '#ef4444', fontWeight: '800' },
+                        ]}
+                      >
+                        {itemAnamnese.fichaAnamnese.alergias || 'Nenhuma relatada'}
+                      </Text>
+                    </View>
+
+                    <View style={styles.healthItem}>
+                      <Text style={styles.healthKey}>Condições / Queloides / Cicatrização:</Text>
+                      <Text
+                        style={[
+                          styles.healthVal,
+                          itemAnamnese.fichaAnamnese.doencas_cronicas !== 'Nenhuma' && { color: '#ef4444', fontWeight: '800' },
+                        ]}
+                      >
+                        {itemAnamnese.fichaAnamnese.doencas_cronicas || 'Nenhuma relatada'}
+                      </Text>
+                    </View>
+
+                    <View style={styles.healthItem}>
+                      <Text style={styles.healthKey}>Medicamentos / Anticoagulantes:</Text>
+                      <Text style={styles.healthVal}>
+                        {itemAnamnese.fichaAnamnese.medicamentos || 'Nenhum'}
+                      </Text>
+                    </View>
+
+                    <View style={styles.healthItem}>
+                      <Text style={styles.healthKey}>Observações:</Text>
+                      <Text style={styles.healthVal}>
+                        {itemAnamnese.fichaAnamnese.observacoes || 'Sem observações adicionais'}
+                      </Text>
+                    </View>
+
+                    <View style={styles.signedStamp}>
+                      <ShieldCheck size={14} color="#10b981" />
+                      <Text style={styles.signedStampText}>
+                        Assinado digitalmente pelo cliente em{' '}
+                        {itemAnamnese.fichaAnamnese.data_assinatura
+                          ? new Date(itemAnamnese.fichaAnamnese.data_assinatura).toLocaleString('pt-BR')
+                          : 'Data confirmada'}
+                      </Text>
+                    </View>
+                  </View>
+                ) : (
+                  <View style={styles.pendingAnamneseWrap}>
+                    <Clock size={16} color="#f3c21a" />
+                    <Text style={styles.pendingAnamneseText}>
+                      O cliente ainda não preencheu a ficha digital. Ele receberá o lembrete antes da sessão.
+                    </Text>
+                  </View>
+                )}
               </View>
             </ScrollView>
 
             <View style={styles.modalFooter}>
               <Pressable style={styles.btnCloseAnamnese} onPress={() => setItemAnamnese(null)}>
-                <Text style={styles.btnCloseAnamneseText}>Fechar</Text>
+                <Text style={styles.btnCloseAnamneseText}>Fechar Ficha</Text>
               </Pressable>
             </View>
           </View>
@@ -635,7 +846,7 @@ export function ArtistaAgendaTab() {
         onClose={() => setModalReciboAberto(false)}
       />
 
-      {/* Emissão Manual de NFS-e a partir do Agendamento */}
+      {/* Emissão Manual de NFS-e */}
       {itemEmissaoNfse && (
         <EmissaoNfseModal
           visivel={!!itemEmissaoNfse}
@@ -644,7 +855,9 @@ export function ArtistaAgendaTab() {
             clienteId: itemEmissaoNfse.clienteId,
             clienteNome: itemEmissaoNfse.clienteNome,
             agendamentoId: itemEmissaoNfse.id,
-            descricao: itemEmissaoNfse.descricao || `Tatuagem ${itemEmissaoNfse.estilo} (${itemEmissaoNfse.localCorpo || 'Corpo'})`,
+            descricao:
+              itemEmissaoNfse.descricao ||
+              `Tatuagem ${itemEmissaoNfse.estilo} (${itemEmissaoNfse.localCorpo || 'Corpo'})`,
             valor: itemEmissaoNfse.valorFinal || itemEmissaoNfse.valorTotal,
             estilo: itemEmissaoNfse.estilo,
           }}
@@ -726,7 +939,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#1e1e1e',
     padding: 14,
-    gap: 12,
+    gap: 10,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -797,6 +1010,36 @@ const styles = StyleSheet.create({
   badgeTextAndamento: { color: '#60a5fa' },
   badgeTextConcluido: { color: '#9ca3af' },
   badgeTextCancelado: { color: '#ef4444' },
+  pillsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  turnoBadge: {
+    backgroundColor: '#1c170c',
+    borderWidth: 1,
+    borderColor: '#4d390a',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  turnoBadgeText: {
+    color: '#f3c21a',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  typeBadge: {
+    backgroundColor: '#15151a',
+    borderWidth: 1,
+    borderColor: '#262633',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  typeBadgeText: {
+    color: '#888',
+    fontSize: 10,
+    fontWeight: '700',
+  },
   gridInfo: {
     flexDirection: 'row',
     backgroundColor: '#141414',
@@ -829,6 +1072,34 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
   },
+  anamneseCheckRow: {
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderWidth: 1,
+  },
+  anamneseCheckRowAlert: {
+    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    borderColor: 'rgba(239, 68, 68, 0.3)',
+  },
+  anamneseCheckRowOk: {
+    backgroundColor: 'rgba(16, 185, 129, 0.08)',
+    borderColor: 'rgba(16, 185, 129, 0.2)',
+  },
+  anamneseCheckRowPending: {
+    backgroundColor: 'rgba(243, 194, 26, 0.08)',
+    borderColor: 'rgba(243, 194, 26, 0.2)',
+  },
+  anamneseCheckText: {
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  anamneseCheckTextAlert: { color: '#ef4444' },
+  anamneseCheckTextOk: { color: '#10b981' },
+  anamneseCheckTextPending: { color: '#f3c21a' },
   financialRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -882,6 +1153,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: 6,
+  },
+  btnSecondaryAlert: {
+    borderColor: '#ef4444',
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
   },
   btnSecondaryText: {
     color: '#d1d5db',
@@ -968,7 +1243,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContainer: {
-    maxHeight: '88%',
+    maxHeight: '90%',
     backgroundColor: '#0c0c0c',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
@@ -1002,17 +1277,17 @@ const styles = StyleSheet.create({
   modalTitle: {
     color: '#fff',
     fontSize: 16,
-    fontWeight: '900',
+    fontWeight: '800',
   },
   modalSub: {
-    color: '#9ca3af',
+    color: '#888',
     fontSize: 11,
   },
   closeBtn: {
     width: 32,
     height: 32,
-    borderRadius: 16,
-    backgroundColor: '#171717',
+    borderRadius: 8,
+    backgroundColor: '#181818',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1025,7 +1300,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#141414',
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#222',
+    borderColor: '#242424',
     padding: 14,
     gap: 10,
   },
@@ -1035,25 +1310,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   calcLabel: {
-    color: '#9ca3af',
+    color: '#aaa',
     fontSize: 12,
   },
   calcInput: {
-    width: 90,
-    height: 38,
-    backgroundColor: '#1b1b1b',
-    borderWidth: 1,
-    borderColor: '#f3c21a',
+    backgroundColor: '#1c1c1c',
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#333',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     color: '#fff',
     fontSize: 14,
-    fontWeight: '900',
-    textAlign: 'center',
+    fontWeight: '700',
+    width: 100,
+    textAlign: 'right',
   },
   calcDiscount: {
     color: '#10b981',
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   divider: {
     height: 1,
@@ -1065,7 +1341,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   calcTotalLabel: {
-    color: '#fff',
+    color: '#f3c21a',
     fontSize: 13,
     fontWeight: '800',
   },
@@ -1075,82 +1351,84 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   methodTitle: {
-    color: '#9ca3af',
-    fontSize: 10,
+    color: '#888',
+    fontSize: 11,
     fontWeight: '800',
     textTransform: 'uppercase',
-    letterSpacing: 0.6,
   },
   methodRow: {
-    gap: 6,
+    flexDirection: 'row',
+    gap: 8,
   },
   methodBtn: {
-    minHeight: 42,
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 6,
     borderRadius: 10,
     borderWidth: 1,
-    paddingHorizontal: 12,
+    alignItems: 'center',
     justifyContent: 'center',
   },
   methodBtnActive: {
-    backgroundColor: 'rgba(243, 194, 26, 0.15)',
+    backgroundColor: '#f3c21a',
     borderColor: '#f3c21a',
   },
   methodBtnIdle: {
     backgroundColor: '#141414',
-    borderColor: '#222',
+    borderColor: '#242424',
   },
   methodBtnText: {
+    fontSize: 10,
+    fontWeight: '800',
     color: '#888',
-    fontSize: 12,
-    fontWeight: '700',
+    textAlign: 'center',
   },
   methodBtnTextActive: {
-    color: '#f3c21a',
-    fontWeight: '900',
+    color: '#111',
   },
   pixResultBox: {
-    backgroundColor: '#141414',
-    borderRadius: 14,
+    backgroundColor: '#121212',
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: 'rgba(243, 194, 26, 0.3)',
+    borderColor: '#262626',
     padding: 14,
-    gap: 8,
     alignItems: 'center',
+    gap: 8,
   },
   pixResultTitle: {
-    color: '#f3c21a',
+    color: '#10b981',
     fontSize: 13,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontWeight: '800',
   },
   pixResultSub: {
     color: '#888',
     fontSize: 11,
-    textAlign: 'center',
   },
   copyPixBtn: {
     backgroundColor: '#f3c21a',
-    paddingHorizontal: 16,
+    borderRadius: 10,
     paddingVertical: 10,
-    borderRadius: 8,
+    paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    marginTop: 6,
   },
   copyPixBtnText: {
     color: '#111',
     fontSize: 11,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontWeight: '800',
   },
   modalFooter: {
     paddingHorizontal: 20,
-    paddingTop: 10,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#1a1a1a',
   },
   btnConfirmFinish: {
-    height: 48,
-    borderRadius: 12,
     backgroundColor: '#f3c21a',
+    borderRadius: 12,
+    paddingVertical: 14,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
@@ -1158,62 +1436,130 @@ const styles = StyleSheet.create({
   },
   btnConfirmFinishText: {
     color: '#111',
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '900',
     textTransform: 'uppercase',
+  },
+  redAlertBanner: {
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#ef4444',
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+  },
+  redAlertTitle: {
+    color: '#ef4444',
+    fontSize: 12,
+    fontWeight: '900',
     letterSpacing: 0.5,
   },
+  redAlertSub: {
+    color: '#ffcaca',
+    fontSize: 11,
+    lineHeight: 15,
+    marginTop: 2,
+  },
   briefingCard: {
-    backgroundColor: '#141414',
+    backgroundColor: '#131318',
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#222',
+    borderColor: '#22222c',
     padding: 14,
-    gap: 10,
+    gap: 8,
   },
   briefingCardHeader: {
     color: '#f3c21a',
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '800',
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   briefingCardBody: {
-    color: '#d1d5db',
-    fontSize: 13,
-    lineHeight: 18,
+    color: '#fff',
+    fontSize: 12,
+    lineHeight: 17,
   },
   briefingMetaRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    borderTopWidth: 1,
-    borderTopColor: '#222',
-    paddingTop: 8,
+    backgroundColor: '#181820',
+    borderRadius: 10,
+    padding: 10,
+    marginTop: 4,
   },
   metaLabel: {
-    color: '#6b7280',
+    color: '#888',
     fontSize: 9,
     fontWeight: '700',
     textTransform: 'uppercase',
   },
   metaVal: {
     color: '#fff',
-    fontSize: 12,
+    fontSize: 11,
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  refThumbModal: {
+    width: 64,
+    height: 64,
+    borderRadius: 8,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: '#333340',
+  },
+  healthDetailsList: {
+    gap: 8,
+    marginTop: 4,
+  },
+  healthItem: {
+    gap: 2,
+  },
+  healthKey: {
+    color: '#888',
+    fontSize: 10,
     fontWeight: '700',
   },
-  checkItem: {
+  healthVal: {
+    color: '#ddd',
+    fontSize: 12,
+  },
+  signedStamp: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    borderRadius: 8,
+    padding: 8,
+    marginTop: 6,
+  },
+  signedStampText: {
+    color: '#10b981',
+    fontSize: 10,
+    fontWeight: '700',
+    flex: 1,
+  },
+  pendingAnamneseWrap: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    backgroundColor: 'rgba(243, 194, 26, 0.08)',
+    borderRadius: 8,
+    padding: 10,
+    marginTop: 4,
   },
-  checkText: {
-    color: '#d1d5db',
-    fontSize: 12,
+  pendingAnamneseText: {
+    color: '#ccc',
+    fontSize: 11,
+    lineHeight: 16,
+    flex: 1,
   },
   btnCloseAnamnese: {
-    height: 44,
-    borderRadius: 10,
-    backgroundColor: '#222',
-    justifyContent: 'center',
+    backgroundColor: '#1e1e24',
+    borderRadius: 12,
+    paddingVertical: 12,
     alignItems: 'center',
   },
   btnCloseAnamneseText: {

@@ -1,10 +1,25 @@
+import {
+  CartaoArtistaFeed,
+  type ItemArtistaFeedData,
+} from '@/components/cliente/cartao-artista-feed';
+import { ModalFiltroLocalidade } from '@/components/cliente/modal-filtro-localidade';
+import { ModalPerfilArtista } from '@/components/cliente/modal-perfil-artista';
+import { ArtistaDetalhadoService } from '@/services/artista-detalhado-service';
+import { LocalidadeService } from '@/services/localidade-service';
 import { supabase } from '@/services/supabase';
 import { ModalReservaCliente } from '@/telas/cliente/modal-reserva';
+import type { ItemPortfolio, PerfilArtistaCompleto } from '@/types/artista-detalhado';
+import type { LocalidadeUsuario } from '@/types/localidade';
+import type { BottomNavTab } from '@/components/bottom-nav';
 import {
   Calendar,
+  ChevronDown,
+  Compass,
   Flame,
+  Globe,
   Heart,
   MapPin,
+  Navigation,
   Search,
   ShieldCheck,
   Sparkles,
@@ -23,18 +38,114 @@ import {
   View,
 } from 'react-native';
 
-export interface ItemFlashFeed {
-  id: string;
-  artistaId: string;
-  artistaNome: string;
-  titulo: string;
-  imagemUrl: string;
-  estilo: string;
-  preco: number;
-  disponivel: boolean;
-  estudioNome?: string;
-  cidade?: string;
-}
+const TATTOOS_PADRAO_POR_ESTILO: Record<string, { titulo: string; imagemUrl: string }[]> = {
+  'Fine Line': [
+    {
+      titulo: 'Floral Botânico Fine Line',
+      imagemUrl: 'https://images.unsplash.com/photo-1611501275019-9b5cda994e8d?w=800&auto=format&fit=crop&q=80',
+    },
+    {
+      titulo: 'Constelação & Fases Lunares',
+      imagemUrl: 'https://images.unsplash.com/photo-1598371839696-5c5bb00bdc28?w=800&auto=format&fit=crop&q=80',
+    },
+    {
+      titulo: 'Borboleta Micro-traço',
+      imagemUrl: 'https://images.unsplash.com/photo-1562962230-16e4623d36e6?w=800&auto=format&fit=crop&q=80',
+    },
+    {
+      titulo: 'Ramo de Oliveira Geométrico',
+      imagemUrl: 'https://images.unsplash.com/photo-1590246814883-57c511e76523?w=800&auto=format&fit=crop&q=80',
+    },
+  ],
+  'Blackwork': [
+    {
+      titulo: 'Crânio Floral Blackwork',
+      imagemUrl: 'https://images.unsplash.com/photo-1598371839696-5c5bb00bdc28?w=800&auto=format&fit=crop&q=80',
+    },
+    {
+      titulo: 'Corvo & Adaga Escura',
+      imagemUrl: 'https://images.unsplash.com/photo-1568515045052-f9a854d70bfd?w=800&auto=format&fit=crop&q=80',
+    },
+    {
+      titulo: 'Serpente Ouroboros Gravura',
+      imagemUrl: 'https://images.unsplash.com/photo-1611501275019-9b5cda994e8d?w=800&auto=format&fit=crop&q=80',
+    },
+    {
+      titulo: 'Mandala Sombreada',
+      imagemUrl: 'https://images.unsplash.com/photo-1562962230-16e4623d36e6?w=800&auto=format&fit=crop&q=80',
+    },
+  ],
+  'Realismo': [
+    {
+      titulo: 'Leão Sombreado Realista',
+      imagemUrl: 'https://images.unsplash.com/photo-1598371839696-5c5bb00bdc28?w=800&auto=format&fit=crop&q=80',
+    },
+    {
+      titulo: 'Retrato Micro-realismo',
+      imagemUrl: 'https://images.unsplash.com/photo-1611501275019-9b5cda994e8d?w=800&auto=format&fit=crop&q=80',
+    },
+    {
+      titulo: 'Texturas em Pele',
+      imagemUrl: 'https://images.unsplash.com/photo-1568515045052-f9a854d70bfd?w=800&auto=format&fit=crop&q=80',
+    },
+  ],
+  'Old School': [
+    {
+      titulo: 'Adaga & Rosa Tradicional',
+      imagemUrl: 'https://images.unsplash.com/photo-1568515045052-f9a854d70bfd?w=800&auto=format&fit=crop&q=80',
+    },
+    {
+      titulo: 'Pantera Negra Classic',
+      imagemUrl: 'https://images.unsplash.com/photo-1598371839696-5c5bb00bdc28?w=800&auto=format&fit=crop&q=80',
+    },
+    {
+      titulo: 'Âncora & Andorinhas',
+      imagemUrl: 'https://images.unsplash.com/photo-1611501275019-9b5cda994e8d?w=800&auto=format&fit=crop&q=80',
+    },
+  ],
+  'Oriental': [
+    {
+      titulo: 'Dragão Ryū & Nuvens',
+      imagemUrl: 'https://images.unsplash.com/photo-1611501275019-9b5cda994e8d?w=800&auto=format&fit=crop&q=80',
+    },
+    {
+      titulo: 'Carpa Koi & Ondas',
+      imagemUrl: 'https://images.unsplash.com/photo-1598371839696-5c5bb00bdc28?w=800&auto=format&fit=crop&q=80',
+    },
+    {
+      titulo: 'Máscara Hannya & Flor',
+      imagemUrl: 'https://images.unsplash.com/photo-1568515045052-f9a854d70bfd?w=800&auto=format&fit=crop&q=80',
+    },
+  ],
+  'Aquarela': [
+    {
+      titulo: 'Pássaro Fluido Aquarelado',
+      imagemUrl: 'https://images.unsplash.com/photo-1562962230-16e4623d36e6?w=800&auto=format&fit=crop&q=80',
+    },
+    {
+      titulo: 'Galáxia & Cores Vivas',
+      imagemUrl: 'https://images.unsplash.com/photo-1590246814883-57c511e76523?w=800&auto=format&fit=crop&q=80',
+    },
+    {
+      titulo: 'Água-viva & Pigmentos',
+      imagemUrl: 'https://images.unsplash.com/photo-1611501275019-9b5cda994e8d?w=800&auto=format&fit=crop&q=80',
+    },
+  ],
+  'Geek': [
+    {
+      titulo: 'Cyberpunk & Linhas Neon',
+      imagemUrl: 'https://images.unsplash.com/photo-1598371839696-5c5bb00bdc28?w=800&auto=format&fit=crop&q=80',
+    },
+    {
+      titulo: 'Anime Shonen Traço Fino',
+      imagemUrl: 'https://images.unsplash.com/photo-1568515045052-f9a854d70bfd?w=800&auto=format&fit=crop&q=80',
+    },
+    {
+      titulo: 'Símbolo Gamer Gravura',
+      imagemUrl: 'https://images.unsplash.com/photo-1611501275019-9b5cda994e8d?w=800&auto=format&fit=crop&q=80',
+    },
+  ],
+};
 
 export interface CartaoArtista {
   id: string;
@@ -48,30 +159,65 @@ export interface CartaoArtista {
   fotoUrl?: string;
   capaUrl?: string;
   biografia?: string;
+  rawArtista?: any;
+  rawFlashes?: any[];
+  rawReviews?: any[];
 }
 
-const TAGS = ['Todos', 'Fine Line', 'Blackwork', 'Realismo', 'Old School', 'Aquarela', 'Geek', 'Oriental'];
+const TAGS = [
+  'Todos',
+  'Fine Line',
+  'Blackwork',
+  'Realismo',
+  'Old School',
+  'Aquarela',
+  'Geek',
+  'Oriental',
+];
 
-export function ClienteInicioTab() {
+interface PropsClienteInicioTab {
+  onNavegarAba?: (aba: BottomNavTab) => void;
+}
+
+export function ClienteInicioTab({ onNavegarAba }: PropsClienteInicioTab) {
   const [consulta, setConsulta] = useState('');
   const [tagSelecionada, setTagSelecionada] = useState<string>('Todos');
-  const [artistas, setArtistas] = useState<CartaoArtista[]>([]);
-  const [flashes, setFlashes] = useState<ItemFlashFeed[]>([]);
+  const [artistasFeed, setArtistasFeed] = useState<ItemArtistaFeedData[]>([]);
   const [curtidos, setCurtidos] = useState<Record<string, boolean>>({});
   const [carregando, setCarregando] = useState(true);
 
-  // Reserva de Horário
-  const [artistaSelecionado, setArtistaSelecionado] = useState<CartaoArtista | null>(null);
+  // Estado de Localidade & Geofence
+  const [localidade, setLocalidade] = useState<LocalidadeUsuario>(
+    LocalidadeService.obterLocalidadePadrao()
+  );
+  const [modalLocalidadeAberto, setModalLocalidadeAberto] = useState(false);
+
+  // Estados dos Modais
+  const [perfilArtistaAberto, setPerfilArtistaAberto] = useState<PerfilArtistaCompleto | null>(null);
+  const [flashSelecionado, setFlashSelecionado] = useState<ItemPortfolio | null>(null);
+  const [modalPerfilAberto, setModalPerfilAberto] = useState(false);
+
+  const [artistaParaReserva, setArtistaParaReserva] = useState<CartaoArtista | null>(null);
   const [modalReservaAberto, setModalReservaAberto] = useState(false);
 
   useEffect(() => {
     carregarDados();
+    inicializarLocalidade();
   }, []);
+
+  const inicializarLocalidade = async () => {
+    try {
+      const salva = await LocalidadeService.carregarLocalidadeSalva();
+      setLocalidade(salva);
+    } catch {
+      // silencioso
+    }
+  };
 
   const carregarDados = async () => {
     setCarregando(true);
     try {
-      // 1. Carrega Artistas e seus flashes
+      // 1. Carrega Artistas e seus flashes/portfólios
       const { data: artistasData, error: errArtistas } = await supabase
         .from('profiles')
         .select(`
@@ -80,46 +226,75 @@ export function ClienteInicioTab() {
         `)
         .eq('tipo_perfil', 'artista');
 
-      if (!errArtistas && artistasData) {
-        const formatados: CartaoArtista[] = artistasData.map((item: any) => {
-          const primeiroFlash = item.flashes?.[0]?.imagem_url;
-          return {
-            id: item.id,
-            nomeArtista: item.nome_exibicao || 'Artista Dermys',
-            nomeEstudio: item.nome_estudio || 'Estúdio Particular',
-            enderecoEstudio: item.endereco_estudio,
-            estilo: item.estilo_principal || 'Fine Line',
-            cidade: item.cidade || 'São Paulo, SP',
-            curtidas: Number(item.curtidas || 0),
-            precoInicial: Number(item.preco_inicial || 350),
-            fotoUrl: item.foto_url,
-            capaUrl: primeiroFlash || item.foto_url,
-            biografia: item.biografia,
-          };
-        });
-        setArtistas(formatados);
+      // 2. Carrega todas as avaliações reais de clientes
+      const { data: reviewsData } = await supabase
+        .from('avaliacoes')
+        .select('*')
+        .order('criado_em', { ascending: false });
 
-        // 2. Extrai Flashes para a vitrine
-        const todosFlashes: ItemFlashFeed[] = [];
-        artistasData.forEach((art: any) => {
-          if (art.flashes && Array.isArray(art.flashes)) {
-            art.flashes.forEach((f: any) => {
-              todosFlashes.push({
-                id: f.id,
-                artistaId: art.id,
-                artistaNome: art.nome_exibicao,
-                estudioNome: art.nome_estudio,
-                cidade: art.cidade,
-                titulo: f.titulo,
-                imagemUrl: f.imagem_url,
-                estilo: f.estilo || art.estilo_principal,
-                preco: Number(f.preco || 400),
-                disponivel: f.disponivel ?? true,
-              });
-            });
+      const reviewsPorArtista: Record<string, any[]> = {};
+      if (reviewsData && Array.isArray(reviewsData)) {
+        reviewsData.forEach((rev) => {
+          if (!reviewsPorArtista[rev.artista_id]) {
+            reviewsPorArtista[rev.artista_id] = [];
           }
+          reviewsPorArtista[rev.artista_id].push(rev);
         });
-        setFlashes(todosFlashes);
+      }
+
+      if (!errArtistas && artistasData) {
+        const todosArtistas: ItemArtistaFeedData[] = [];
+
+        artistasData.forEach((art: any) => {
+          const reviewsDoArtista = reviewsPorArtista[art.id] || [];
+          const estilo = art.estilo_principal || 'Fine Line';
+
+          let obras: ItemPortfolio[] = [];
+
+          // Garante fotos REAIS de tatuagem/portfólio (nunca selfie/foto de perfil)
+          if (art.flashes && Array.isArray(art.flashes) && art.flashes.length > 0) {
+            obras = art.flashes.map((f: any) => ({
+              id: f.id,
+              artistaId: art.id,
+              titulo: f.titulo || `${estilo} Autoral`,
+              imagemUrl: f.imagem_url,
+              estilo: f.estilo || estilo,
+              preco: Number(f.preco || art.preco_inicial || 350),
+              disponivel: f.disponivel ?? true,
+            }));
+          } else {
+            const padroes =
+              TATTOOS_PADRAO_POR_ESTILO[estilo] || TATTOOS_PADRAO_POR_ESTILO['Fine Line'];
+            obras = padroes.map((p, idx) => ({
+              id: `${art.id}-padrao-${idx}`,
+              artistaId: art.id,
+              titulo: p.titulo,
+              imagemUrl: p.imagemUrl,
+              estilo: estilo,
+              preco: Number(art.preco_inicial || 350),
+              disponivel: true,
+            }));
+          }
+
+          todosArtistas.push({
+            id: art.id,
+            artistaId: art.id,
+            artistaNome: art.nome_exibicao || 'Artista Dermys',
+            artistaFoto: art.foto_url, // estritamente para o mini-avatar de 20px
+            estudioNome: art.nome_estudio || 'Estúdio Particular',
+            cidade: art.cidade || 'São Paulo, SP',
+            estilo: estilo,
+            precoInicial: Number(art.preco_inicial || 350),
+            curtidas: Number(art.curtidas || 120),
+            notaMedia: 4.9,
+            obras,
+            rawArtista: art,
+            rawFlashes: art.flashes || [],
+            rawReviews: reviewsDoArtista,
+          });
+        });
+
+        setArtistasFeed(todosArtistas);
       }
     } catch {
       // silencioso
@@ -132,70 +307,155 @@ export function ClienteInicioTab() {
     setCurtidos((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const iniciarReserva = (artista: CartaoArtista) => {
-    setArtistaSelecionado(artista);
+  /**
+   * Abre o resumo do tatuador ao tocar em qualquer obra do feed
+   */
+  const abrirResumoArtista = (
+    artistaRaw: any,
+    flashesRaw: any[] = [],
+    reviewsRaw: any[] = [],
+    flashItem?: any
+  ) => {
+    const perfilCompleto = ArtistaDetalhadoService.montarPerfilCompleto(
+      artistaRaw,
+      flashesRaw,
+      reviewsRaw,
+      { latitude: localidade.latitude, longitude: localidade.longitude }
+    );
+    setPerfilArtistaAberto(perfilCompleto);
+    setFlashSelecionado(flashItem || null);
+    setModalPerfilAberto(true);
+  };
+
+  const iniciarReservaDireta = (artista: PerfilArtistaCompleto, flash?: ItemPortfolio) => {
+    setModalPerfilAberto(false);
+    setArtistaParaReserva({
+      id: artista.id,
+      nomeArtista: artista.nomeArtista,
+      nomeEstudio: artista.nomeEstudio,
+      enderecoEstudio: artista.enderecoEstudio,
+      estilo: artista.estilo,
+      cidade: artista.cidade,
+      curtidas: artista.curtidas,
+      precoInicial: flash?.preco || artista.precoInicial,
+      fotoUrl: artista.fotoUrl,
+      capaUrl: flash?.imagemUrl || artista.capaUrl,
+      biografia: artista.biografia,
+    });
     setModalReservaAberto(true);
   };
 
-  const reservarPeloFlash = (flash: ItemFlashFeed) => {
-    const art = artistas.find((a) => a.id === flash.artistaId);
-    if (art) {
-      setArtistaSelecionado(art);
-      setModalReservaAberto(true);
-    }
-  };
+  // 1. Calcula distâncias geográficas Haversine para todos os artistas
+  const artistasComDistancia = useMemo(() => {
+    return artistasFeed.map((item) => {
+      let distanciaKm: number | undefined = undefined;
+      let distanciaFormatada: string | undefined = undefined;
 
-  const cartoesFiltrados = useMemo(() => {
-    const porTag =
-      tagSelecionada === 'Todos'
-        ? artistas
-        : artistas.filter(
-            (item) => item.estilo.toLowerCase() === tagSelecionada.toLowerCase()
-          );
+      const lat = item.rawArtista?.latitude ? Number(item.rawArtista.latitude) : undefined;
+      const lon = item.rawArtista?.longitude ? Number(item.rawArtista.longitude) : undefined;
 
-    if (!consulta.trim()) {
-      return porTag;
-    }
+      if (lat !== undefined && lon !== undefined && !isNaN(lat) && !isNaN(lon)) {
+        distanciaKm = LocalidadeService.calcularDistanciaKm(
+          localidade.latitude,
+          localidade.longitude,
+          lat,
+          lon
+        );
+        distanciaFormatada = LocalidadeService.formatarDistancia(distanciaKm);
+      }
 
-    const busca = consulta.trim().toLowerCase();
-
-    return porTag.filter((item) => {
-      const nomeArtista = item.nomeArtista.toLowerCase();
-      const estilo = item.estilo.toLowerCase();
-      const cidade = item.cidade.toLowerCase();
-      const nomeEstudio = item.nomeEstudio.toLowerCase();
-
-      return (
-        nomeArtista.includes(busca) ||
-        estilo.includes(busca) ||
-        cidade.includes(busca) ||
-        nomeEstudio.includes(busca)
-      );
+      return {
+        ...item,
+        distanciaKm,
+        distanciaFormatada,
+      };
     });
-  }, [artistas, consulta, tagSelecionada]);
+  }, [artistasFeed, localidade.latitude, localidade.longitude]);
 
-  const flashesFiltrados = useMemo(() => {
-    if (tagSelecionada === 'Todos') return flashes;
-    return flashes.filter(
-      (f) => f.estilo.toLowerCase() === tagSelecionada.toLowerCase()
-    );
-  }, [flashes, tagSelecionada]);
+  // 2. Filtros de raio de busca, estilos, texto e ordenação inteligente
+  const artistasFiltrados = useMemo(() => {
+    let resultado = artistasComDistancia;
+
+    // Filtro por raio de distância em KM
+    if (localidade.raioKm !== null) {
+      resultado = resultado.filter(
+        (item) => item.distanciaKm !== undefined && item.distanciaKm <= (localidade.raioKm || 50)
+      );
+    }
+
+    // Filtro por tag de estilo
+    if (tagSelecionada !== 'Todos') {
+      resultado = resultado.filter(
+        (item) => item.estilo.toLowerCase() === tagSelecionada.toLowerCase()
+      );
+    }
+
+    // Filtro por busca textual
+    if (consulta.trim()) {
+      const busca = consulta.trim().toLowerCase();
+      resultado = resultado.filter(
+        (item) =>
+          item.artistaNome.toLowerCase().includes(busca) ||
+          item.estudioNome.toLowerCase().includes(busca) ||
+          item.estilo.toLowerCase().includes(busca) ||
+          item.cidade.toLowerCase().includes(busca) ||
+          item.obras.some((o) => o.titulo.toLowerCase().includes(busca))
+      );
+    }
+
+    // Ordenação configurada
+    const ordenacao = localidade.ordenacao || 'distancia';
+    return [...resultado].sort((a, b) => {
+      if (ordenacao === 'distancia') {
+        const distA = a.distanciaKm ?? 999999;
+        const distB = b.distanciaKm ?? 999999;
+        return distA - distB;
+      }
+      if (ordenacao === 'avaliacoes') {
+        return (b.notaMedia || 0) - (a.notaMedia || 0);
+      }
+      if (ordenacao === 'populares') {
+        return (b.curtidas || 0) - (a.curtidas || 0);
+      }
+      if (ordenacao === 'preco') {
+        return (a.precoInicial || 0) - (b.precoInicial || 0);
+      }
+      return 0;
+    });
+  }, [artistasComDistancia, localidade.raioKm, localidade.ordenacao, tagSelecionada, consulta]);
 
   return (
     <View style={styles.container}>
-      {/* Input de Busca com Ícone */}
+      {/* Barra de Localização Minimalista & Contagem */}
+      <View style={styles.topLocationRow}>
+        <Pressable
+          style={styles.locationChip}
+          onPress={() => setModalLocalidadeAberto(true)}
+        >
+          <MapPin size={13} color="#f3c21a" />
+          <Text style={styles.locationChipText} numberOfLines={1}>
+            {localidade.cidade}, {localidade.estado}
+            {localidade.raioKm ? ` • ${localidade.raioKm} km` : ' • Brasil'}
+          </Text>
+          <ChevronDown size={12} color="#888892" />
+        </Pressable>
+
+        <Text style={styles.feedCountPill}>{artistasFiltrados.length} artistas</Text>
+      </View>
+
+      {/* Barra de Busca Minimalista */}
       <View style={styles.searchWrap}>
-        <Search size={18} color="#6b7280" style={styles.searchIcon} />
+        <Search size={15} color="#71717a" style={styles.searchIcon} />
         <TextInput
           value={consulta}
           onChangeText={setConsulta}
-          placeholder="Buscar por tatuador, estúdio, estilo ou cidade"
-          placeholderTextColor="#6b7280"
+          placeholder="Buscar artista, estúdio ou estilo..."
+          placeholderTextColor="#71717a"
           style={styles.searchInput}
         />
       </View>
 
-      {/* Linha de Tags de Estilos */}
+      {/* Pílulas de Estilos */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -217,169 +477,107 @@ export function ClienteInicioTab() {
         })}
       </ScrollView>
 
-      {/* Carrossel de Flashes Autorais Disponíveis */}
-      {flashesFiltrados.length > 0 && !consulta && (
-        <View style={styles.flashSection}>
-          <View style={styles.flashSectionHeader}>
-            <View style={styles.rowAlign}>
-              <Flame size={16} color="#f3c21a" />
-              <Text style={styles.flashSectionTitle}>Flashes Autorais Disponíveis</Text>
-            </View>
-            <Text style={styles.flashCountBadge}>{flashesFiltrados.length} artes</Text>
-          </View>
-
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.flashScrollContent}
-          >
-            {flashesFiltrados.map((flash) => (
-              <Pressable
-                key={flash.id}
-                style={styles.flashCard}
-                onPress={() => reservarPeloFlash(flash)}
-              >
-                <Image source={{ uri: flash.imagemUrl }} style={styles.flashImage} />
-                <View style={styles.flashBadgeOverlay}>
-                  <Text style={styles.flashEstiloTag}>{flash.estilo}</Text>
-                </View>
-
-                <View style={styles.flashCardBody}>
-                  <Text style={styles.flashTitle} numberOfLines={1}>
-                    {flash.titulo}
-                  </Text>
-                  <Text style={styles.flashArtistName} numberOfLines={1}>
-                    por {flash.artistaNome}
-                  </Text>
-                  <View style={styles.flashFooter}>
-                    <Text style={styles.flashPrice}>R$ {flash.preco.toFixed(2)}</Text>
-                    <View style={styles.flashBookTag}>
-                      <Text style={styles.flashBookTagText}>Garantir Flash</Text>
-                    </View>
-                  </View>
-                </View>
-              </Pressable>
-            ))}
-          </ScrollView>
+      {/* Feed Estilo Pinterest com Carrossel de Obras */}
+      <View style={styles.feedSection}>
+        <View style={styles.feedHeaderRow}>
+          <Text style={styles.feedTitle}>Explorar Trabalhos & Portfólios</Text>
+          <Text style={styles.feedCountText}>{artistasFiltrados.length} artistas</Text>
         </View>
-      )}
 
-      {/* Grid de Estúdios & Tatuadores */}
-      <View style={styles.artistsSectionHeader}>
-        <View style={styles.rowAlign}>
-          <Sparkles size={16} color="#f3c21a" />
-          <Text style={styles.flashSectionTitle}>Tatuadores & Estúdios em Destaque</Text>
-        </View>
-        <Text style={styles.flashCountBadge}>{cartoesFiltrados.length} encontrados</Text>
-      </View>
+        {carregando ? (
+          <ActivityIndicator color="#f3c21a" style={{ marginVertical: 40 }} />
+        ) : (
+          <FlatList
+            data={artistasFiltrados}
+            keyExtractor={(item) => item.id}
+            numColumns={2}
+            scrollEnabled={false}
+            columnWrapperStyle={styles.columnWrap}
+            contentContainerStyle={styles.gridContent}
+            renderItem={({ item }) => (
+              <CartaoArtistaFeed
+                item={item}
+                isCurtido={curtidos[item.id]}
+                onCurtir={alternarCurtida}
+                onAbrirPerfil={(artItem, obra) =>
+                  abrirResumoArtista(
+                    artItem.rawArtista,
+                    artItem.rawFlashes,
+                    artItem.rawReviews,
+                    obra
+                  )
+                }
+              />
+            )}
+            ListEmptyComponent={
+              <View style={styles.emptyWrap}>
+                <Compass size={32} color="#71717a" style={{ marginBottom: 8 }} />
+                <Text style={styles.emptyTitle}>Nenhum tatuador encontrado neste raio</Text>
+                <Text style={styles.emptyText}>
+                  {localidade.raioKm
+                    ? `Não encontramos artistas cadastrados a menos de ${localidade.raioKm} km de ${localidade.cidade}.`
+                    : 'Não encontramos tatuadores para os filtros selecionados.'}
+                </Text>
 
-      {carregando ? (
-        <ActivityIndicator color="#f3c21a" style={{ marginVertical: 30 }} />
-      ) : (
-        <FlatList
-          data={cartoesFiltrados}
-          keyExtractor={(item) => item.id}
-          numColumns={2}
-          scrollEnabled={false}
-          columnWrapperStyle={styles.columnWrap}
-          contentContainerStyle={styles.gridContent}
-          renderItem={({ item, index }) => {
-            const isFav = curtidos[item.id];
-            const curtidasTotal = item.curtidas + (isFav ? 1 : 0);
-
-            return (
-              <Pressable
-                style={[styles.card, index % 3 === 0 ? styles.cardTall : styles.cardShort]}
-                onPress={() => iniciarReserva(item)}
-              >
-                {/* Imagem de Capa do Portfólio / Flash */}
-                <View style={styles.cardImageWrap}>
-                  <Image
-                    source={{
-                      uri:
-                        item.capaUrl ||
-                        item.fotoUrl ||
-                        'https://images.unsplash.com/photo-1598371839696-5c5bb00bdc28?w=500&auto=format&fit=crop&q=80',
-                    }}
-                    style={styles.cardImage}
-                  />
-
-                  {/* Badge de Estilo */}
-                  <View style={styles.styleBadge}>
-                    <Text style={styles.styleBadgeText}>{item.estilo}</Text>
-                  </View>
-
-                  {/* Botão de Curtida */}
+                {localidade.raioKm !== null && (
                   <Pressable
-                    style={styles.likeIconBtn}
-                    onPress={(e) => {
-                      e.stopPropagation();
-                      alternarCurtida(item.id);
+                    style={styles.btnExpandirRaio}
+                    onPress={() => {
+                      const expandida: LocalidadeUsuario = {
+                        ...localidade,
+                        raioKm: null,
+                      };
+                      setLocalidade(expandida);
+                      LocalidadeService.salvarLocalidade(expandida);
                     }}
                   >
-                    <Heart
-                      size={15}
-                      color={isFav ? '#f43f5e' : '#fff'}
-                      fill={isFav ? '#f43f5e' : 'rgba(0,0,0,0.5)'}
-                    />
+                    <Globe size={14} color="#000" />
+                    <Text style={styles.btnExpandirRaioText}>Ver Tatuadores em Todo o Brasil</Text>
                   </Pressable>
-                </View>
+                )}
+              </View>
+            }
+          />
+        )}
+      </View>
 
-                {/* Dados do Artista e Estúdio */}
-                <View style={styles.cardContent}>
-                  <View style={styles.artistNameRow}>
-                    <Text style={styles.artistName} numberOfLines={1}>
-                      {item.nomeArtista}
-                    </Text>
-                    <ShieldCheck size={13} color="#10b981" />
-                  </View>
+      {/* MODAL: FILTRO REGIONAL DE LOCALIDADE, DISTÂNCIA & ORDENAÇÃO */}
+      <ModalFiltroLocalidade
+        visivel={modalLocalidadeAberto}
+        localidadeAtual={localidade}
+        onClose={() => setModalLocalidadeAberto(false)}
+        onAplicar={(novaLocalidade) => setLocalidade(novaLocalidade)}
+      />
 
-                  <Text style={styles.studioName} numberOfLines={1}>
-                    {item.nomeEstudio}
-                  </Text>
-
-                  <View style={styles.cityRow}>
-                    <MapPin size={11} color="#6b7280" />
-                    <Text style={styles.cityText} numberOfLines={1}>
-                      {item.cidade}
-                    </Text>
-                  </View>
-
-                  <View style={styles.cardFooter}>
-                    <View style={styles.priceRow}>
-                      <Text style={styles.priceLabel}>A partir de</Text>
-                      <Text style={styles.priceText}>R$ {item.precoInicial}</Text>
-                    </View>
-
-                    <Pressable
-                      style={styles.bookBtn}
-                      onPress={() => iniciarReserva(item)}
-                    >
-                      <Calendar size={11} color="#111" />
-                      <Text style={styles.bookBtnText}>Reservar</Text>
-                    </Pressable>
-                  </View>
-                </View>
-              </Pressable>
-            );
-          }}
-          ListEmptyComponent={
-            <View style={styles.emptyWrap}>
-              <Text style={styles.emptyText}>
-                Nenhum artista ou estúdio encontrado para este filtro.
-              </Text>
-            </View>
+      {/* MODAL: RESUMO DO TATUADOR COM REVIEWS REAIS, PORTFÓLIO E ESTÚDIO */}
+      <ModalPerfilArtista
+        visivel={modalPerfilAberto}
+        perfil={perfilArtistaAberto}
+        flashInicial={flashSelecionado}
+        onClose={() => setModalPerfilAberto(false)}
+        onIniciarAgendamento={(art, flash) => iniciarReservaDireta(art, flash)}
+        onAbrirChat={(art) => {
+          if (onNavegarAba) {
+            onNavegarAba('chat');
           }
-        />
-      )}
+        }}
+      />
 
-      {/* Modal de Reserva de Horário */}
+      {/* MODAL: RESERVA & CHECKOUT MERCADO PAGO */}
       <ModalReservaCliente
         visivel={modalReservaAberto}
-        artista={artistaSelecionado}
-        onClose={() => setModalReservaAberto(false)}
+        artista={artistaParaReserva}
+        flashInicial={flashSelecionado}
+        onClose={() => {
+          setModalReservaAberto(false);
+          setFlashSelecionado(null);
+        }}
         onSucesso={() => {
-          // Callback ao concluir agendamento
+          setModalReservaAberto(false);
+          setFlashSelecionado(null);
+          if (onNavegarAba) {
+            onNavegarAba('bookings');
+          }
         }}
       />
     </View>
@@ -388,7 +586,36 @@ export function ClienteInicioTab() {
 
 const styles = StyleSheet.create({
   container: {
-    gap: 14,
+    gap: 12,
+  },
+  topLocationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 2,
+    marginBottom: 2,
+  },
+  locationChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#121216',
+    borderWidth: 1,
+    borderColor: '#222228',
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  locationChipText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: -0.2,
+  },
+  feedCountPill: {
+    color: '#71717a',
+    fontSize: 11,
+    fontWeight: '600',
   },
   searchWrap: {
     position: 'relative',
@@ -400,24 +627,24 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   searchInput: {
-    minHeight: 48,
-    backgroundColor: '#111111',
+    backgroundColor: '#0f0f12',
     borderWidth: 1,
-    borderColor: '#222222',
-    borderRadius: 14,
-    color: '#fff',
-    paddingLeft: 42,
-    paddingRight: 14,
+    borderColor: '#222228',
+    borderRadius: 12,
+    color: '#ffffff',
     fontSize: 13,
+    paddingLeft: 38,
+    paddingRight: 14,
+    height: 42,
   },
   tagsRow: {
-    gap: 8,
-    paddingRight: 8,
+    gap: 6,
+    paddingVertical: 2,
   },
   tag: {
-    borderRadius: 999,
     paddingHorizontal: 12,
-    paddingVertical: 7,
+    paddingVertical: 6,
+    borderRadius: 18,
     borderWidth: 1,
   },
   tagActive: {
@@ -425,263 +652,86 @@ const styles = StyleSheet.create({
     borderColor: '#f3c21a',
   },
   tagIdle: {
-    backgroundColor: '#101010',
-    borderColor: '#222222',
+    backgroundColor: '#0f0f12',
+    borderColor: '#1e1e24',
   },
   tagText: {
-    fontSize: 10,
-    textTransform: 'uppercase',
-    fontWeight: '900',
-    letterSpacing: 0.6,
+    fontSize: 11,
+    fontWeight: '700',
   },
   tagTextActive: {
-    color: '#111',
+    color: '#000000',
   },
   tagTextIdle: {
-    color: '#a1a1aa',
+    color: '#8e8e93',
   },
-  flashSection: {
-    backgroundColor: '#101010',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#1d1d1d',
-    padding: 12,
-    gap: 10,
-  },
-  flashSectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  rowAlign: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  flashSectionTitle: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '900',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  flashCountBadge: {
-    color: '#888',
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  flashScrollContent: {
-    gap: 10,
-  },
-  flashCard: {
-    width: 170,
-    backgroundColor: '#161616',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#262626',
-    overflow: 'hidden',
-  },
-  flashImage: {
-    width: '100%',
-    height: 120,
-    backgroundColor: '#222',
-  },
-  flashBadgeOverlay: {
-    position: 'absolute',
-    top: 6,
-    left: 6,
-    backgroundColor: 'rgba(0,0,0,0.75)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.15)',
-  },
-  flashEstiloTag: {
-    color: '#f3c21a',
-    fontSize: 8,
-    fontWeight: '900',
-    textTransform: 'uppercase',
-  },
-  flashCardBody: {
-    padding: 8,
-    gap: 2,
-  },
-  flashTitle: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '800',
-  },
-  flashArtistName: {
-    color: '#888',
-    fontSize: 10,
-  },
-  flashFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  feedSection: {
+    gap: 8,
     marginTop: 4,
-    borderTopWidth: 1,
-    borderTopColor: '#222',
-    paddingTop: 4,
   },
-  flashPrice: {
-    color: '#f3c21a',
-    fontSize: 12,
-    fontWeight: '900',
-  },
-  flashBookTag: {
-    backgroundColor: 'rgba(243, 194, 26, 0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(243, 194, 26, 0.3)',
-    borderRadius: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  flashBookTagText: {
-    color: '#f3c21a',
-    fontSize: 8,
-    fontWeight: '900',
-  },
-  artistsSectionHeader: {
+  feedHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 2,
+    paddingHorizontal: 2,
+    marginBottom: 4,
   },
-  gridContent: {
-    gap: 12,
-    paddingBottom: 30,
-  },
-  columnWrap: {
-    gap: 10,
-  },
-  card: {
-    flex: 1,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#1f1f1f',
-    backgroundColor: '#101010',
-    overflow: 'hidden',
-  },
-  cardTall: {
-    minHeight: 255,
-  },
-  cardShort: {
-    minHeight: 240,
-  },
-  cardImageWrap: {
-    height: 125,
-    width: '100%',
-    position: 'relative',
-    backgroundColor: '#1a1a1a',
-  },
-  cardImage: {
-    width: '100%',
-    height: '100%',
-  },
-  styleBadge: {
-    position: 'absolute',
-    bottom: 6,
-    left: 6,
-    backgroundColor: 'rgba(0,0,0,0.8)',
-    borderWidth: 1,
-    borderColor: 'rgba(243, 194, 26, 0.4)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  styleBadgeText: {
-    color: '#f3c21a',
-    fontSize: 8,
-    fontWeight: '900',
-    textTransform: 'uppercase',
-  },
-  likeIconBtn: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    borderRadius: 999,
-    padding: 5,
-  },
-  cardContent: {
-    padding: 10,
-    gap: 4,
-    flex: 1,
-    justifyContent: 'space-between',
-  },
-  artistNameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  artistName: {
-    color: '#fff',
+  feedTitle: {
+    color: '#e4e4e7',
     fontSize: 13,
     fontWeight: '800',
-    flex: 1,
+    letterSpacing: -0.2,
   },
-  studioName: {
-    color: '#9ca3af',
-    fontSize: 10,
+  feedCountText: {
+    color: '#71717a',
+    fontSize: 11,
     fontWeight: '600',
   },
-  cityRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  cityText: {
-    color: '#6b7280',
-    fontSize: 10,
-  },
-  cardFooter: {
-    marginTop: 4,
-    borderTopWidth: 1,
-    borderTopColor: '#1a1a1a',
-    paddingTop: 6,
-    gap: 6,
-  },
-  priceRow: {
-    flexDirection: 'row',
+  columnWrap: {
     justifyContent: 'space-between',
-    alignItems: 'center',
+    gap: 10,
   },
-  priceLabel: {
-    color: '#6b7280',
-    fontSize: 8,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-  priceText: {
-    color: '#f3c21a',
-    fontSize: 13,
-    fontWeight: '900',
-  },
-  bookBtn: {
-    backgroundColor: '#f3c21a',
-    borderRadius: 6,
-    height: 28,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 4,
-  },
-  bookBtnText: {
-    color: '#111',
-    fontSize: 9,
-    fontWeight: '900',
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
+  gridContent: {
+    gap: 10,
+    paddingBottom: 24,
   },
   emptyWrap: {
-    paddingVertical: 24,
+    paddingVertical: 48,
+    paddingHorizontal: 20,
     alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#0f0f13',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#1e1e26',
+    marginVertical: 12,
+  },
+  emptyTitle: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '800',
+    marginBottom: 4,
+    textAlign: 'center',
   },
   emptyText: {
-    color: '#888',
+    color: '#71717a',
+    fontSize: 11,
+    textAlign: 'center',
+    lineHeight: 16,
+  },
+  btnExpandirRaio: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#f3c21a',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 10,
+    marginTop: 16,
+  },
+  btnExpandirRaioText: {
+    color: '#000000',
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '800',
   },
 });

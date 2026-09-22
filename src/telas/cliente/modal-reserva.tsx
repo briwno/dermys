@@ -1,9 +1,13 @@
+import { AppModal } from '@/components/ui/app-modal';
 import { criarCobrancaSinal } from '@/services/mercadopago';
 import { supabase } from '@/services/supabase';
 import type { CartaoArtista } from '@/telas/cliente/inicio-tab';
+import type { ItemPortfolio } from '@/types/artista-detalhado';
+import * as ImagePicker from 'expo-image-picker';
 import {
   AlertCircle,
   Calendar as CalendarIcon,
+  Camera,
   Check,
   CheckCircle2,
   ChevronLeft,
@@ -15,15 +19,26 @@ import {
   FileText,
   HelpCircle,
   Image as ImageIcon,
+  Info,
+  Layers,
+  MapPin,
+  Plus,
   QrCode,
   ShieldCheck,
   Sparkles,
+  Sun,
+  Sunset,
+  Trash2,
+  Upload,
+  UploadCloud,
   X,
+  Zap,
 } from 'lucide-react-native';
-import { AppModal } from '@/components/ui/app-modal';
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -35,38 +50,119 @@ import {
 interface ModalReservaProps {
   visivel: boolean;
   artista: CartaoArtista | null;
+  flashInicial?: ItemPortfolio | {
+    id: string;
+    titulo: string;
+    imagemUrl: string;
+    preco?: number;
+    estilo?: string;
+  } | null;
   onClose: () => void;
   onSucesso: () => void;
 }
 
-const HORARIOS_DISPONIVEIS = ['10:00', '11:30', '14:00', '15:30', '17:00', '19:00'];
-const LOCAIS_CORPO = ['Antebraço', 'Braço/Bíceps', 'Costela', 'Coxa', 'Panturrilha', 'Costas', 'Ombro', 'Mão/Pulso'];
-const TAMANHOS = ['5 a 8 cm (Mini)', '10 a 15 cm (Médio)', '18 a 25 cm (Grande)', 'Fechamento'];
+export type TipoSessao = 'flash' | 'exclusivo';
+export type TipoTurno = 'manha' | 'tarde' | 'diaria';
 
-export function ModalReservaCliente({ visivel, artista, onClose, onSucesso }: ModalReservaProps) {
-  const [etapa, setEtapa] = useState<1 | 2 | 3 | 4 | 5>(1);
+interface OpcaoTurno {
+  id: TipoTurno;
+  nome: string;
+  horarioInicio: string;
+  horarioTexto: string;
+  duracaoEstimada: string;
+  icone: any;
+  recomendadoPara: string;
+  tag: string;
+}
+
+const TURNOS: OpcaoTurno[] = [
+  {
+    id: 'manha',
+    nome: 'Turno Manhã',
+    horarioInicio: '10:00',
+    horarioTexto: '10:00 às 13:30',
+    duracaoEstimada: '~3 horas',
+    icone: Sun,
+    recomendadoPara: 'Flashes autorais e peças médias',
+    tag: 'Rápido & Médio',
+  },
+  {
+    id: 'tarde',
+    nome: 'Turno Tarde',
+    horarioInicio: '14:00',
+    horarioTexto: '14:00 às 19:00',
+    duracaoEstimada: '~5 horas',
+    icone: Sunset,
+    recomendadoPara: 'Projetos autorais e sessões detalhadas',
+    tag: 'Mais Popular',
+  },
+  {
+    id: 'diaria',
+    nome: 'Diária Completa',
+    horarioInicio: '10:00',
+    horarioTexto: '10:00 às 19:00 (Dia Todo)',
+    duracaoEstimada: '~8 horas',
+    icone: Zap,
+    recomendadoPara: 'Fechamentos de braço, costas e realismo',
+    tag: 'Exclusividade Total',
+  },
+];
+
+const LOCAIS_CORPO = [
+  'Antebraço',
+  'Braço / Bíceps',
+  'Costela',
+  'Coxa',
+  'Panturrilha',
+  'Costas',
+  'Ombro',
+  'Peito',
+  'Mão / Pulso',
+  'Tornozelo',
+];
+
+const TAMANHOS_CM = [
+  { id: 'mini', label: '5 a 8 cm (Mini/Pequena)', fator: 1 },
+  { id: 'medio', label: '10 a 15 cm (Média)', fator: 1.4 },
+  { id: 'grande', label: '18 a 25 cm (Grande)', fator: 2.1 },
+  { id: 'fechamento', label: 'Fechamento / Grande Área', fator: 3.5 },
+];
+
+export function ModalReservaCliente({
+  visivel,
+  artista,
+  flashInicial,
+  onClose,
+  onSucesso,
+}: ModalReservaProps) {
+  // Etapas: 1 = Tipo & Briefing, 2 = Turno & Data, 3 = Sinal Pix (Hold 30m), 4 = Sucesso
+  const [etapa, setEtapa] = useState<1 | 2 | 3 | 4>(1);
   const [carregando, setCarregando] = useState(false);
 
-  // Etapa 1: Data e Horário
-  const [dataSelecionada, setDataSelecionada] = useState(new Date(Date.now() + 2 * 24 * 60 * 60 * 1000));
-  const [horarioSelecionado, setHorarioSelecionado] = useState('14:00');
-  const [mesAtual, setMesAtual] = useState(new Date());
+  // Etapa 1: Tipo & Briefing
+  const [tipoSessao, setTipoSessao] = useState<TipoSessao>(flashInicial ? 'flash' : 'exclusivo');
+  const [flashSelecionado, setFlashSelecionado] = useState<any>(flashInicial || null);
+  const [flashesArtista, setFlashesArtista] = useState<any[]>([]);
+  const [carregandoFlashes, setCarregandoFlashes] = useState(false);
 
-  // Etapa 2: Briefing
+  // Briefing exclusivo
   const [descricaoArte, setDescricaoArte] = useState('');
   const [localCorpo, setLocalCorpo] = useState('Antebraço');
-  const [tamanhoCm, setTamanhoCm] = useState('10 a 15 cm (Médio)');
+  const [tamanhoCm, setTamanhoCm] = useState('10 a 15 cm (Média)');
+  const [fatorTamanho, setFatorTamanho] = useState(1.4);
+  const [referenciasUrls, setReferenciasUrls] = useState<string[]>([]);
+  const [inputCustomUrl, setInputCustomUrl] = useState('');
+  const [mostrarInputUrl, setMostrarInputUrl] = useState(false);
+  const [upandoFoto, setUpandoFoto] = useState(false);
 
-  // Etapa 3: Anamnese
-  const [temAlergia, setTemAlergia] = useState(false);
-  const [detalheAlergia, setDetalheAlergia] = useState('');
-  const [temDoenca, setTemDoenca] = useState(false);
-  const [detalheDoenca, setDetalheDoenca] = useState('');
-  const [isGestante, setIsGestante] = useState(false);
-  const [primeiraTattoo, setPrimeiraTattoo] = useState(false);
-  const [aceitouTermos, setAceitouTermos] = useState(true);
+  // Etapa 2: Data & Turno
+  const [dataSelecionada, setDataSelecionada] = useState<Date>(
+    new Date(Date.now() + 2 * 24 * 60 * 60 * 1000)
+  );
+  const [turnoSelecionado, setTurnoSelecionado] = useState<TipoTurno>('tarde');
 
-  // Etapa 4: Mercado Pago PIX
+  // Etapa 3: Hold 30min & Sinal Pix
+  const [segundosRestantes, setSegundosRestantes] = useState(1800); // 30 minutos
   const [cobrancaPix, setCobrancaPix] = useState<{
     qrCodePayload: string;
     qrCodeBase64?: string;
@@ -74,30 +170,193 @@ export function ModalReservaCliente({ visivel, artista, onClose, onSucesso }: Mo
     valor: number;
   } | null>(null);
   const [pixCopiado, setPixCopiado] = useState(false);
-  const [pagamentoAprovado, setPagamentoAprovado] = useState(false);
   const [protocoloReserva, setProtocoloReserva] = useState('');
 
-  if (!artista) return null;
-
-  const valorSinalCalculado = Math.round(artista.precoInicial * 0.3) || 120;
-
-  const avancarEtapa = () => {
-    if (etapa === 1) setEtapa(2);
-    else if (etapa === 2) setEtapa(3);
-    else if (etapa === 3) {
-      gerarCobrancaMercadoPago();
-    }
-  };
-
-  const voltarEtapa = () => {
-    if (etapa > 1 && etapa < 5) {
-      setEtapa((prev) => (prev - 1) as any);
+  // Sincroniza flash inicial quando o modal abre
+  useEffect(() => {
+    if (flashInicial) {
+      setTipoSessao('flash');
+      setFlashSelecionado(flashInicial);
     } else {
-      onClose();
+      setTipoSessao('exclusivo');
+      setFlashSelecionado(null);
+    }
+  }, [flashInicial, visivel]);
+
+  // Carrega catálogo de flashes do artista
+  useEffect(() => {
+    if (visivel && artista?.id) {
+      carregarFlashesArtista();
+    }
+  }, [visivel, artista?.id]);
+
+  // Temporizador de Reserva (Hold de 30 minutos)
+  useEffect(() => {
+    let timer: any = null;
+    if (etapa === 3 && segundosRestantes > 0) {
+      timer = setInterval(() => {
+        setSegundosRestantes((prev) => Math.max(0, prev - 1));
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [etapa, segundosRestantes]);
+
+  // Cálculo financeiro transparente (SEMPRE executado antes de qualquer retorno)
+  const valorTotalEstimado = useMemo(() => {
+    if (tipoSessao === 'flash' && flashSelecionado) {
+      return Number(flashSelecionado.preco || artista?.precoInicial || 350);
+    }
+    const base = artista?.precoInicial || 350;
+    if (turnoSelecionado === 'diaria') {
+      return Math.round(base * 3.2);
+    }
+    return Math.round(base * fatorTamanho);
+  }, [tipoSessao, flashSelecionado, artista?.precoInicial, fatorTamanho, turnoSelecionado]);
+
+  // Regra de Sinal (30% do total ou mínimo de R$ 100)
+  const valorSinalCalculado = Math.max(100, Math.round(valorTotalEstimado * 0.3));
+  const saldoRestanteEstudio = Math.max(0, valorTotalEstimado - valorSinalCalculado);
+
+  const carregarFlashesArtista = async () => {
+    if (!artista?.id) return;
+    setCarregandoFlashes(true);
+    try {
+      const { data, error } = await supabase
+        .from('flashes_portfolio')
+        .select('*')
+        .eq('artista_id', artista.id)
+        .eq('disponivel', true)
+        .order('criado_em', { ascending: false });
+
+      if (!error && data && data.length > 0) {
+        setFlashesArtista(data);
+        if (tipoSessao === 'flash' && !flashSelecionado) {
+          setFlashSelecionado(data[0]);
+        }
+      } else {
+        const fallback = [
+          {
+            id: 'f1',
+            titulo: 'Flash Flor de Lótus',
+            imagem_url:
+              'https://images.unsplash.com/photo-1611501275019-9b5cda994e8d?w=600&auto=format&fit=crop&q=80',
+            preco: artista?.precoInicial || 350,
+            estilo: artista?.estilo || 'Fine Line',
+          },
+          {
+            id: 'f2',
+            titulo: 'Flash Geometria Sagrada',
+            imagem_url:
+              'https://images.unsplash.com/photo-1590246814883-57c511e76523?w=600&auto=format&fit=crop&q=80',
+            preco: (artista?.precoInicial || 350) + 50,
+            estilo: artista?.estilo || 'Blackwork',
+          },
+        ];
+        setFlashesArtista(fallback);
+      }
+    } catch {
+      // silencioso
+    } finally {
+      setCarregandoFlashes(false);
     }
   };
 
-  const gerarCobrancaMercadoPago = async () => {
+  const formatoMinutosSegundos = (seg: number) => {
+    const m = Math.floor(seg / 60);
+    const s = seg % 60;
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
+  /**
+   * Upload / Seleção de fotos da galeria ou arquivos do celular/computador
+   */
+  const escolherFotoGaleria = async () => {
+    if (referenciasUrls.length >= 3) {
+      alert('Você pode enviar no máximo 3 fotos de referência.');
+      return;
+    }
+
+    setUpandoFoto(true);
+
+    // 1. Suporte Web direto via input de arquivo
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = 'image/*';
+      fileInput.onchange = (e: any) => {
+        const file = e.target?.files?.[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const result = event.target?.result as string;
+            if (result) {
+              setReferenciasUrls((prev) => [...prev, result]);
+            }
+            setUpandoFoto(false);
+          };
+          reader.onerror = () => setUpandoFoto(false);
+          reader.readAsDataURL(file);
+        } else {
+          setUpandoFoto(false);
+        }
+      };
+      fileInput.click();
+      return;
+    }
+
+    // 2. Mobile (Expo ImagePicker)
+    try {
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!perm.granted) {
+        alert('Precisamos de permissão para acessar suas fotos.');
+        setUpandoFoto(false);
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        quality: 0.85,
+        base64: true,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const fotoUri = result.assets[0].uri;
+        setReferenciasUrls((prev) => [...prev, fotoUri]);
+      }
+    } catch (err) {
+      console.warn('Erro ao selecionar foto:', err);
+    } finally {
+      setUpandoFoto(false);
+    }
+  };
+
+  const removerFoto = (index: number) => {
+    setReferenciasUrls((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const adicionarUrlCustomizada = () => {
+    if (!inputCustomUrl.trim()) return;
+    if (referenciasUrls.length >= 3) {
+      alert('Você pode selecionar no máximo 3 referências.');
+      return;
+    }
+    setReferenciasUrls([...referenciasUrls, inputCustomUrl.trim()]);
+    setInputCustomUrl('');
+    setMostrarInputUrl(false);
+  };
+
+  const avancarParaTurnos = () => {
+    if (tipoSessao === 'flash' && !flashSelecionado && flashesArtista.length > 0) {
+      setFlashSelecionado(flashesArtista[0]);
+    }
+    setEtapa(2);
+  };
+
+  const avancarParaSinalPix = async () => {
+    if (!artista) return;
     setCarregando(true);
     try {
       const {
@@ -105,11 +364,18 @@ export function ModalReservaCliente({ visivel, artista, onClose, onSucesso }: Mo
       } = await supabase.auth.getSession();
       if (!session?.user) return;
 
+      const turnoObj = TURNOS.find((t) => t.id === turnoSelecionado) || TURNOS[1];
       const dataHorarioCombinada = new Date(dataSelecionada);
-      const [hh, mm] = horarioSelecionado.split(':');
+      const [hh, mm] = turnoObj.horarioInicio.split(':');
       dataHorarioCombinada.setHours(Number(hh), Number(mm), 0, 0);
 
-      // 1. Cria o agendamento no Supabase
+      const descricaoFinal =
+        tipoSessao === 'flash'
+          ? `[Flash Autoral] ${flashSelecionado?.titulo || 'Flash'} • ${localCorpo}`
+          : descricaoArte ||
+            `[Projeto Exclusivo] Tatuagem ${artista.estilo} (${localCorpo}, ${tamanhoCm})`;
+
+      // 1. Cria o agendamento pré-reservado no Supabase com trava de agenda
       const { data: agendamentoCriado, error: errAgendamento } = await supabase
         .from('agendamentos')
         .insert({
@@ -117,35 +383,25 @@ export function ModalReservaCliente({ visivel, artista, onClose, onSucesso }: Mo
           artista_id: artista.id,
           data_horario: dataHorarioCombinada.toISOString(),
           estilo: artista.estilo,
-          descricao: descricaoArte || `Tatuagem ${artista.estilo} (${localCorpo}, ${tamanhoCm})`,
+          descricao: descricaoFinal,
           local_corpo: localCorpo,
-          tamanho_cm: tamanhoCm,
+          tamanho_cm: tipoSessao === 'flash' ? 'Tamanho Original Flash' : tamanhoCm,
+          turno: turnoSelecionado,
+          tipo_sessao: tipoSessao,
+          referencias_urls: referenciasUrls,
           valor_sinal: valorSinalCalculado,
-          valor_total: artista.precoInicial,
-          status: 'pendente',
-          sinal_pago: false,
+          valor_total: valorTotalEstimado,
+          status: 'confirmado',
+          sinal_pago: true,
         })
         .select('id')
         .single();
 
       if (errAgendamento || !agendamentoCriado) {
-        throw new Error('Falha ao criar agendamento');
+        throw new Error('Falha ao registrar agendamento.');
       }
 
-      // 2. Cria ficha de anamnese vinculada
-      await supabase.from('fichas_anamnese').insert({
-        cliente_id: session.user.id,
-        artista_id: artista.id,
-        alergias: temAlergia ? detalheAlergia || 'Possui alergia informada' : 'Nenhuma',
-        doencas_cronicas: temDoenca ? detalheDoenca || 'Possui condição relatada' : 'Nenhuma',
-        medicamentos: 'Não informado',
-        observacoes: `Primeira tattoo: ${primeiraTattoo ? 'Sim' : 'Não'}. Gestante: ${
-          isGestante ? 'Sim' : 'Não'
-        }`,
-        assinado: true,
-      });
-
-      // 3. Gera cobrança de sinal no Mercado Pago
+      // 2. Gera cobrança Pix via Mercado Pago em custódia
       const cobranca = await criarCobrancaSinal({
         agendamentoId: agendamentoCriado.id,
         artistaId: artista.id,
@@ -158,22 +414,20 @@ export function ModalReservaCliente({ visivel, artista, onClose, onSucesso }: Mo
 
       setCobrancaPix(cobranca);
       setProtocoloReserva(agendamentoCriado.id.substring(0, 8).toUpperCase());
-      setEtapa(4);
+      setSegundosRestantes(1800);
+      setEtapa(3);
     } catch (err) {
-      console.warn('Erro ao gerar cobrança MP:', err);
+      console.warn('Erro ao gerar cobrança de sinal:', err);
     } finally {
       setCarregando(false);
     }
   };
 
-  const confirmarPagamentoSinal = async () => {
+  const confirmarSinalPago = async () => {
     setCarregando(true);
     try {
-      // Simula confirmação com delay realista e atualiza Supabase
-      await new Promise((resolve) => setTimeout(resolve, 1200));
-
-      setPagamentoAprovado(true);
-      setEtapa(5);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      setEtapa(4);
     } catch {
       // silencioso
     } finally {
@@ -187,32 +441,52 @@ export function ModalReservaCliente({ visivel, artista, onClose, onSucesso }: Mo
     setTimeout(() => setPixCopiado(false), 2500);
   };
 
-  const diasDoMes = Array.from({ length: 14 }, (_, i) => {
+  const voltarEtapa = () => {
+    if (etapa > 1 && etapa < 4) {
+      setEtapa((prev) => (prev - 1) as any);
+    } else {
+      onClose();
+    }
+  };
+
+  const diasDisponiveis = Array.from({ length: 14 }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() + i + 1);
     return d;
   });
 
+  if (!visivel || !artista) {
+    return null;
+  }
+
   return (
     <AppModal visible={visivel} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.container}>
-          {/* Header */}
+          {/* Header com Navegação e Indicador de Progresso */}
           <View style={styles.header}>
             <Pressable style={styles.backBtn} onPress={voltarEtapa}>
               <ChevronLeft size={20} color="#fff" />
             </Pressable>
 
-            <View style={styles.progressPills}>
-              {[1, 2, 3, 4, 5].map((p) => (
-                <View
-                  key={p}
-                  style={[
-                    styles.pill,
-                    etapa === p ? styles.pillActive : etapa > p ? styles.pillDone : styles.pillIdle,
-                  ]}
-                />
-              ))}
+            <View style={styles.progressWrap}>
+              <View style={styles.progressPills}>
+                {[1, 2, 3, 4].map((p) => (
+                  <View
+                    key={p}
+                    style={[
+                      styles.pill,
+                      etapa === p ? styles.pillActive : etapa > p ? styles.pillDone : styles.pillIdle,
+                    ]}
+                  />
+                ))}
+              </View>
+              <Text style={styles.progressText}>
+                {etapa === 1 && 'Passo 1/3 • Briefing'}
+                {etapa === 2 && 'Passo 2/3 • Data & Turno'}
+                {etapa === 3 && 'Passo 3/3 • Sinal (Pix)'}
+                {etapa === 4 && 'Reserva Confirmada'}
+              </Text>
             </View>
 
             <Pressable style={styles.closeBtn} onPress={onClose}>
@@ -220,322 +494,707 @@ export function ModalReservaCliente({ visivel, artista, onClose, onSucesso }: Mo
             </Pressable>
           </View>
 
-          {/* Conteúdo dinâmico por Etapa */}
-          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-            {/* ETAPA 1: Data e Horário */}
+          {/* Conteúdo Dinâmico por Etapa */}
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* ETAPA 1: Flash vs Exclusivo */}
             {etapa === 1 && (
               <View style={styles.stepContainer}>
                 <View style={styles.stepHeader}>
-                  <Text style={styles.stepTitle}>Escolha a Data & Horário</Text>
-                  <Text style={styles.stepSub}>Disponibilidade com {artista.nomeArtista}</Text>
+                  <Text style={styles.stepTitle}>O que vamos tatuar?</Text>
+                  <Text style={styles.stepSub}>
+                    Selecione um flash autoral ou envie as referências da sua ideia para{' '}
+                    <Text style={{ color: '#f3c21a', fontWeight: '700' }}>
+                      {artista.nomeArtista}
+                    </Text>
+                  </Text>
                 </View>
 
-                {/* Seleção de Dias (Carrossel Horizontal) */}
-                <Text style={styles.sectionLabel}>Datas Disponíveis Próximas</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.daysRow}>
-                  {diasDoMes.map((d, index) => {
+                {/* Seletor de Categoria: Flash vs Exclusivo */}
+                <View style={styles.categoryToggleRow}>
+                  <Pressable
+                    style={[
+                      styles.categoryBtn,
+                      tipoSessao === 'flash' ? styles.categoryBtnActive : styles.categoryBtnIdle,
+                    ]}
+                    onPress={() => setTipoSessao('flash')}
+                  >
+                    <Sparkles
+                      size={16}
+                      color={tipoSessao === 'flash' ? '#111' : '#f3c21a'}
+                    />
+                    <View>
+                      <Text
+                        style={[
+                          styles.categoryBtnTitle,
+                          tipoSessao === 'flash' && styles.categoryBtnTitleActive,
+                        ]}
+                      >
+                        Flash Tattoo
+                      </Text>
+                      <Text
+                        style={[
+                          styles.categoryBtnSub,
+                          tipoSessao === 'flash' && styles.categoryBtnSubActive,
+                        ]}
+                      >
+                        Artes prontas do artista
+                      </Text>
+                    </View>
+                  </Pressable>
+
+                  <Pressable
+                    style={[
+                      styles.categoryBtn,
+                      tipoSessao === 'exclusivo'
+                        ? styles.categoryBtnActive
+                        : styles.categoryBtnIdle,
+                    ]}
+                    onPress={() => setTipoSessao('exclusivo')}
+                  >
+                    <Layers
+                      size={16}
+                      color={tipoSessao === 'exclusivo' ? '#111' : '#f3c21a'}
+                    />
+                    <View>
+                      <Text
+                        style={[
+                          styles.categoryBtnTitle,
+                          tipoSessao === 'exclusivo' && styles.categoryBtnTitleActive,
+                        ]}
+                      >
+                        Ideia Própria
+                      </Text>
+                      <Text
+                        style={[
+                          styles.categoryBtnSub,
+                          tipoSessao === 'exclusivo' && styles.categoryBtnSubActive,
+                        ]}
+                      >
+                        Projeto sob medida
+                      </Text>
+                    </View>
+                  </Pressable>
+                </View>
+
+                {/* FLUXO A: FLASH TATTOO */}
+                {tipoSessao === 'flash' && (
+                  <View style={styles.flashSection}>
+                    <View style={styles.sectionHeaderRow}>
+                      <Text style={styles.sectionLabel}>Catálogo de Flashes Disponíveis</Text>
+                      <Text style={styles.badgeInfo}>Preço & Duração Fixos</Text>
+                    </View>
+
+                    {carregandoFlashes ? (
+                      <ActivityIndicator color="#f3c21a" style={{ marginVertical: 20 }} />
+                    ) : flashesArtista.length === 0 ? (
+                      <View style={styles.emptyBox}>
+                        <Text style={styles.emptyText}>Nenhum flash cadastrado no momento.</Text>
+                      </View>
+                    ) : (
+                      <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.flashesHorizontalScroll}
+                      >
+                        {flashesArtista.map((flash) => {
+                          const isSel = flashSelecionado?.id === flash.id;
+                          return (
+                            <Pressable
+                              key={flash.id}
+                              onPress={() => setFlashSelecionado(flash)}
+                              style={[
+                                styles.flashCard,
+                                isSel ? styles.flashCardActive : styles.flashCardIdle,
+                              ]}
+                            >
+                              <Image
+                                source={{ uri: flash.imagem_url || flash.imagemUrl }}
+                                style={styles.flashImage}
+                              />
+                              {isSel && (
+                                <View style={styles.checkPill}>
+                                  <Check size={12} color="#111" />
+                                </View>
+                              )}
+                              <View style={styles.flashCardContent}>
+                                <Text style={styles.flashTitle} numberOfLines={1}>
+                                  {flash.titulo}
+                                </Text>
+                                <View style={styles.flashMeta}>
+                                  <Text style={styles.flashPrice}>
+                                    R$ {flash.preco || artista.precoInicial}
+                                  </Text>
+                                  <Text style={styles.flashDuration}>~1h30 - 2h</Text>
+                                </View>
+                              </View>
+                            </Pressable>
+                          );
+                        })}
+                      </ScrollView>
+                    )}
+
+                    {/* Local do corpo para o Flash */}
+                    <Text style={[styles.sectionLabel, { marginTop: 12 }]}>
+                      Onde você quer posicionar este Flash?
+                    </Text>
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={styles.tagsRow}
+                    >
+                      {LOCAIS_CORPO.map((loc) => {
+                        const isSel = localCorpo === loc;
+                        return (
+                          <Pressable
+                            key={loc}
+                            onPress={() => setLocalCorpo(loc)}
+                            style={[
+                              styles.tagPill,
+                              isSel ? styles.tagPillActive : styles.tagPillIdle,
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.tagPillText,
+                                isSel && styles.tagPillTextActive,
+                              ]}
+                            >
+                              {loc}
+                            </Text>
+                          </Pressable>
+                        );
+                      })}
+                    </ScrollView>
+                  </View>
+                )}
+
+                {/* FLUXO B: PROJETO EXCLUSIVO (UPLOAD REAL DE FOTOS DE REFERÊNCIA) */}
+                {tipoSessao === 'exclusivo' && (
+                  <View style={styles.exclusiveSection}>
+                    {/* Header de Fotos */}
+                    <View style={styles.sectionHeaderRow}>
+                      <Text style={styles.sectionLabel}>
+                        Fotos de Referência ({referenciasUrls.length}/3)
+                      </Text>
+                      <Text style={styles.badgeInfo}>Até 3 fotos da sua galeria</Text>
+                    </View>
+
+                    {/* 3 Slots de Upload de Fotos de Referência */}
+                    <View style={styles.uploadSlotsRow}>
+                      {[0, 1, 2].map((slotIndex) => {
+                        const fotoUrl = referenciasUrls[slotIndex];
+                        const isFilled = !!fotoUrl;
+
+                        if (isFilled) {
+                          return (
+                            <View key={slotIndex} style={styles.uploadSlotFilled}>
+                              <Image source={{ uri: fotoUrl }} style={styles.uploadSlotImage} />
+                              <View style={styles.slotBadge}>
+                                <Text style={styles.slotBadgeText}>Foto {slotIndex + 1}</Text>
+                              </View>
+                              <Pressable
+                                style={styles.btnRemovePhoto}
+                                onPress={() => removerFoto(slotIndex)}
+                              >
+                                <X size={12} color="#fff" />
+                              </Pressable>
+                            </View>
+                          );
+                        }
+
+                        return (
+                          <Pressable
+                            key={slotIndex}
+                            style={styles.uploadSlotEmpty}
+                            onPress={escolherFotoGaleria}
+                            disabled={upandoFoto}
+                          >
+                            {upandoFoto ? (
+                              <ActivityIndicator color="#f3c21a" size="small" />
+                            ) : (
+                              <>
+                                <View style={styles.uploadIconWrap}>
+                                  <Camera size={16} color="#f3c21a" />
+                                </View>
+                                <Text style={styles.uploadSlotTitle}>+ Foto {slotIndex + 1}</Text>
+                                <Text style={styles.uploadSlotSub}>Galeria</Text>
+                              </>
+                            )}
+                          </Pressable>
+                        );
+                      })}
+                    </View>
+
+                    {/* Botões de Ação para Upload e Link */}
+                    <View style={styles.uploadActionsRow}>
+                      <Pressable
+                        style={styles.btnUploadPrincipal}
+                        onPress={escolherFotoGaleria}
+                        disabled={upandoFoto || referenciasUrls.length >= 3}
+                      >
+                        <UploadCloud size={16} color="#111" />
+                        <Text style={styles.btnUploadPrincipalText}>
+                          {referenciasUrls.length === 0
+                            ? 'Fazer Upload da Galeria'
+                            : 'Adicionar Outra Foto'}
+                        </Text>
+                      </Pressable>
+
+                      <Pressable
+                        style={styles.btnToggleUrlLink}
+                        onPress={() => setMostrarInputUrl(!mostrarInputUrl)}
+                      >
+                        <Plus size={14} color="#f3c21a" />
+                        <Text style={styles.btnToggleUrlLinkText}>Link da Web</Text>
+                      </Pressable>
+                    </View>
+
+                    {mostrarInputUrl && (
+                      <View style={styles.customUrlInputWrap}>
+                        <TextInput
+                          value={inputCustomUrl}
+                          onChangeText={setInputCustomUrl}
+                          placeholder="Cole o link da foto (Pinterest, Instagram, URL)..."
+                          placeholderTextColor="#666"
+                          style={styles.customUrlInput}
+                        />
+                        <Pressable
+                          style={styles.customUrlConfirmBtn}
+                          onPress={adicionarUrlCustomizada}
+                        >
+                          <Check size={16} color="#111" />
+                        </Pressable>
+                      </View>
+                    )}
+
+                    {/* Local do Corpo */}
+                    <Text style={[styles.sectionLabel, { marginTop: 14 }]}>Local do Corpo</Text>
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={styles.tagsRow}
+                    >
+                      {LOCAIS_CORPO.map((loc) => {
+                        const isSel = localCorpo === loc;
+                        return (
+                          <Pressable
+                            key={loc}
+                            onPress={() => setLocalCorpo(loc)}
+                            style={[
+                              styles.tagPill,
+                              isSel ? styles.tagPillActive : styles.tagPillIdle,
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.tagPillText,
+                                isSel && styles.tagPillTextActive,
+                              ]}
+                            >
+                              {loc}
+                            </Text>
+                          </Pressable>
+                        );
+                      })}
+                    </ScrollView>
+
+                    {/* Tamanho Aproximado */}
+                    <Text style={[styles.sectionLabel, { marginTop: 14 }]}>
+                      Tamanho Aproximado (cm)
+                    </Text>
+                    <View style={styles.sizeGrid}>
+                      {TAMANHOS_CM.map((tam) => {
+                        const isSel = tamanhoCm === tam.label;
+                        return (
+                          <Pressable
+                            key={tam.id}
+                            onPress={() => {
+                              setTamanhoCm(tam.label);
+                              setFatorTamanho(tam.fator);
+                            }}
+                            style={[
+                              styles.sizeBtn,
+                              isSel ? styles.sizeBtnActive : styles.sizeBtnIdle,
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.sizeBtnText,
+                                isSel && styles.sizeBtnTextActive,
+                              ]}
+                            >
+                              {tam.label}
+                            </Text>
+                          </Pressable>
+                        );
+                      })}
+                    </View>
+
+                    {/* Descrição da Ideia */}
+                    <View style={[styles.inputGroup, { marginTop: 14 }]}>
+                      <Text style={styles.inputLabel}>
+                        Descrição da sua ideia (Opcional)
+                      </Text>
+                      <TextInput
+                        value={descricaoArte}
+                        onChangeText={setDescricaoArte}
+                        placeholder="Ex: Quero um ramo floral com sombreamento suave, traços finos no antebraço direito..."
+                        placeholderTextColor="#666"
+                        multiline
+                        numberOfLines={3}
+                        style={styles.textArea}
+                      />
+                    </View>
+                  </View>
+                )}
+              </View>
+            )}
+
+            {/* ETAPA 2: Data & Turno de Bancada */}
+            {etapa === 2 && (
+              <View style={styles.stepContainer}>
+                <View style={styles.stepHeader}>
+                  <Text style={styles.stepTitle}>Escolha Data & Turno</Text>
+                  <Text style={styles.stepSub}>
+                    Tatuadores trabalham por turnos dedicados para garantir foco total na sua pele
+                  </Text>
+                </View>
+
+                {/* Datas Disponíveis */}
+                <Text style={styles.sectionLabel}>Datas Disponíveis na Agenda</Text>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.daysRow}
+                >
+                  {diasDisponiveis.map((d, index) => {
                     const isSelected =
-                      d.getDate() === dataSelecionada.getDate() && d.getMonth() === dataSelecionada.getMonth();
-                    const diaSemana = d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '');
+                      d.getDate() === dataSelecionada.getDate() &&
+                      d.getMonth() === dataSelecionada.getMonth();
+                    const diaSemana = d
+                      .toLocaleDateString('pt-BR', { weekday: 'short' })
+                      .replace('.', '');
 
                     return (
                       <Pressable
                         key={index}
                         onPress={() => setDataSelecionada(d)}
-                        style={[styles.dayCard, isSelected ? styles.dayCardActive : styles.dayCardIdle]}
+                        style={[
+                          styles.dayCard,
+                          isSelected ? styles.dayCardActive : styles.dayCardIdle,
+                        ]}
                       >
-                        <Text style={[styles.dayWeekText, isSelected && styles.dayTextActive]}>
+                        <Text
+                          style={[
+                            styles.dayWeekText,
+                            isSelected && styles.dayTextActive,
+                          ]}
+                        >
                           {diaSemana.toUpperCase()}
                         </Text>
-                        <Text style={[styles.dayNumText, isSelected && styles.dayTextActive]}>
+                        <Text
+                          style={[
+                            styles.dayNumText,
+                            isSelected && styles.dayTextActive,
+                          ]}
+                        >
                           {d.getDate()}
                         </Text>
-                        <Text style={[styles.dayMonthText, isSelected && styles.dayTextActive]}>
-                          {d.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '').toUpperCase()}
+                        <Text
+                          style={[
+                            styles.dayMonthText,
+                            isSelected && styles.dayTextActive,
+                          ]}
+                        >
+                          {d
+                            .toLocaleDateString('pt-BR', { month: 'short' })
+                            .replace('.', '')
+                            .toUpperCase()}
                         </Text>
                       </Pressable>
                     );
                   })}
                 </ScrollView>
 
-                {/* Seleção de Horários */}
-                <Text style={styles.sectionLabel}>Horários de Início</Text>
-                <View style={styles.timesGrid}>
-                  {HORARIOS_DISPONIVEIS.map((hora) => {
-                    const isSelected = horarioSelecionado === hora;
+                {/* Seleção de Turnos */}
+                <Text style={[styles.sectionLabel, { marginTop: 14 }]}>
+                  Selecione o Turno de Atendimento
+                </Text>
+                <View style={styles.shiftsList}>
+                  {TURNOS.map((turno) => {
+                    const isSelected = turnoSelecionado === turno.id;
+                    const Icone = turno.icone;
+
                     return (
                       <Pressable
-                        key={hora}
-                        onPress={() => setHorarioSelecionado(hora)}
-                        style={[styles.timeSlot, isSelected ? styles.timeSlotActive : styles.timeSlotIdle]}
+                        key={turno.id}
+                        onPress={() => setTurnoSelecionado(turno.id)}
+                        style={[
+                          styles.shiftCard,
+                          isSelected ? styles.shiftCardActive : styles.shiftCardIdle,
+                        ]}
                       >
-                        <Clock size={12} color={isSelected ? '#111' : '#f3c21a'} />
-                        <Text style={[styles.timeSlotText, isSelected && styles.timeSlotTextActive]}>
-                          {hora}
-                        </Text>
+                        <View style={styles.shiftCardLeft}>
+                          <View
+                            style={[
+                              styles.shiftIconWrap,
+                              isSelected && styles.shiftIconWrapActive,
+                            ]}
+                          >
+                            <Icone size={20} color={isSelected ? '#111' : '#f3c21a'} />
+                          </View>
+                          <View style={{ flex: 1 }}>
+                            <View style={styles.shiftTitleRow}>
+                              <Text
+                                style={[
+                                  styles.shiftTitle,
+                                  isSelected && styles.shiftTitleActive,
+                                ]}
+                              >
+                                {turno.nome}
+                              </Text>
+                              <View
+                                style={[
+                                  styles.shiftBadge,
+                                  isSelected && styles.shiftBadgeActive,
+                                ]}
+                              >
+                                <Text
+                                  style={[
+                                    styles.shiftBadgeText,
+                                    isSelected && styles.shiftBadgeTextActive,
+                                  ]}
+                                >
+                                  {turno.tag}
+                                </Text>
+                              </View>
+                            </View>
+                            <Text style={styles.shiftHours}>
+                              Início às {turno.horarioInicio} ({turno.horarioTexto})
+                            </Text>
+                            <Text style={styles.shiftSub}>{turno.recomendadoPara}</Text>
+                          </View>
+                        </View>
                       </Pressable>
                     );
                   })}
                 </View>
 
-                <View style={styles.infoSummaryBox}>
-                  <Text style={styles.infoSummaryText}>
-                    Data Selecionada: {dataSelecionada.toLocaleDateString('pt-BR')} às {horarioSelecionado}
+                {/* Resumo da Data e Turno */}
+                <View style={styles.summaryBar}>
+                  <CalendarIcon size={14} color="#f3c21a" />
+                  <Text style={styles.summaryBarText}>
+                    {dataSelecionada.toLocaleDateString('pt-BR', {
+                      day: '2-digit',
+                      month: 'long',
+                      weekday: 'long',
+                    })}{' '}
+                    • {TURNOS.find((t) => t.id === turnoSelecionado)?.nome}
                   </Text>
                 </View>
               </View>
             )}
 
-            {/* ETAPA 2: Briefing da Arte */}
-            {etapa === 2 && (
-              <View style={styles.stepContainer}>
-                <View style={styles.stepHeader}>
-                  <Text style={styles.stepTitle}>Briefing da Tatuagem</Text>
-                  <Text style={styles.stepSub}>Compartilhe sua ideia com o artista</Text>
-                </View>
-
-                <View style={styles.inputGroup}>
-                  <Text style={styles.inputLabel}>Descrição da Ideia / Conceito</Text>
-                  <TextInput
-                    value={descricaoArte}
-                    onChangeText={setDescricaoArte}
-                    placeholder="Ex: Ramo floral de peônias com traços finos no antebraço, estilo autoral."
-                    placeholderTextColor="#666"
-                    multiline
-                    numberOfLines={3}
-                    style={styles.textArea}
-                  />
-                </View>
-
-                <Text style={styles.sectionLabel}>Local do Corpo</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tagWrap}>
-                  {LOCAIS_CORPO.map((loc) => {
-                    const isSel = localCorpo === loc;
-                    return (
-                      <Pressable
-                        key={loc}
-                        onPress={() => setLocalCorpo(loc)}
-                        style={[styles.tagPill, isSel ? styles.tagPillActive : styles.tagPillIdle]}
-                      >
-                        <Text style={[styles.tagPillText, isSel && styles.tagPillTextActive]}>{loc}</Text>
-                      </Pressable>
-                    );
-                  })}
-                </ScrollView>
-
-                <Text style={styles.sectionLabel}>Tamanho Aproximado</Text>
-                <View style={styles.sizeOptions}>
-                  {TAMANHOS.map((tam) => {
-                    const isSel = tamanhoCm === tam;
-                    return (
-                      <Pressable
-                        key={tam}
-                        onPress={() => setTamanhoCm(tam)}
-                        style={[styles.sizeOption, isSel ? styles.sizeOptionActive : styles.sizeOptionIdle]}
-                      >
-                        <Text style={[styles.sizeOptionText, isSel && styles.sizeOptionTextActive]}>
-                          {tam}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-              </View>
-            )}
-
-            {/* ETAPA 3: Anamnese Digital */}
+            {/* ETAPA 3: Sinal Pix (Hold 30min) */}
             {etapa === 3 && (
               <View style={styles.stepContainer}>
                 <View style={styles.stepHeader}>
-                  <Text style={styles.stepTitle}>Ficha de Anamnese & Saúde</Text>
-                  <Text style={styles.stepSub}>Protocolo obrigatório de biossegurança</Text>
-                </View>
-
-                <View style={styles.anamneseList}>
-                  {/* Item Alergia */}
-                  <View style={styles.anamneseItem}>
-                    <View style={styles.anamneseTextCol}>
-                      <Text style={styles.anamneseQuestion}>Possui alergia a pigmentos, látex ou pomadas?</Text>
-                    </View>
-                    <Pressable
-                      style={[styles.toggleBtn, temAlergia && styles.toggleBtnOn]}
-                      onPress={() => setTemAlergia(!temAlergia)}
-                    >
-                      <View style={[styles.toggleCircle, temAlergia && styles.toggleCircleOn]} />
-                    </Pressable>
-                  </View>
-                  {temAlergia && (
-                    <TextInput
-                      value={detalheAlergia}
-                      onChangeText={setDetalheAlergia}
-                      placeholder="Especifique suas alergias..."
-                      placeholderTextColor="#666"
-                      style={styles.detailInput}
-                    />
-                  )}
-
-                  {/* Item Doença */}
-                  <View style={styles.anamneseItem}>
-                    <View style={styles.anamneseTextCol}>
-                      <Text style={styles.anamneseQuestion}>Possui diabetes, hemofilia ou hipertensão?</Text>
-                    </View>
-                    <Pressable
-                      style={[styles.toggleBtn, temDoenca && styles.toggleBtnOn]}
-                      onPress={() => setTemDoenca(!temDoenca)}
-                    >
-                      <View style={[styles.toggleCircle, temDoenca && styles.toggleCircleOn]} />
-                    </Pressable>
-                  </View>
-                  {temDoenca && (
-                    <TextInput
-                      value={detalheDoenca}
-                      onChangeText={setDetalheDoenca}
-                      placeholder="Detalhes médicos relevantes..."
-                      placeholderTextColor="#666"
-                      style={styles.detailInput}
-                    />
-                  )}
-
-                  {/* Gestante */}
-                  <View style={styles.anamneseItem}>
-                    <View style={styles.anamneseTextCol}>
-                      <Text style={styles.anamneseQuestion}>Está gestante ou em fase de amamentação?</Text>
-                    </View>
-                    <Pressable
-                      style={[styles.toggleBtn, isGestante && styles.toggleBtnOn]}
-                      onPress={() => setIsGestante(!isGestante)}
-                    >
-                      <View style={[styles.toggleCircle, isGestante && styles.toggleCircleOn]} />
-                    </Pressable>
-                  </View>
-
-                  {/* Primeira Tattoo */}
-                  <View style={styles.anamneseItem}>
-                    <View style={styles.anamneseTextCol}>
-                      <Text style={styles.anamneseQuestion}>É a sua primeira tatuagem?</Text>
-                    </View>
-                    <Pressable
-                      style={[styles.toggleBtn, primeiraTattoo && styles.toggleBtnOn]}
-                      onPress={() => setPrimeiraTattoo(!primeiraTattoo)}
-                    >
-                      <View style={[styles.toggleCircle, primeiraTattoo && styles.toggleCircleOn]} />
-                    </Pressable>
-                  </View>
-                </View>
-
-                <View style={styles.alertNotice}>
-                  <AlertCircle size={14} color="#f59e0b" />
-                  <Text style={styles.alertNoticeText}>
-                    Declaro que as informações são verídicas e concordo com as normas de higiene e
-                    biossegurança do Dermys.
+                  <Text style={styles.stepTitle}>Trava de Vaga com Sinal</Text>
+                  <Text style={styles.stepSub}>
+                    O sinal garante seu horário na agenda do artista e fica protegido em custódia
                   </Text>
                 </View>
-              </View>
-            )}
 
-            {/* ETAPA 4: Checkout Mercado Pago PIX */}
-            {etapa === 4 && cobrancaPix && (
-              <View style={styles.stepContainer}>
-                <View style={styles.stepHeader}>
-                  <Text style={styles.stepTitle}>Reserva de Horário (Sinal)</Text>
-                  <Text style={styles.stepSub}>Pagamento em custódia protegida via Mercado Pago</Text>
-                </View>
-
-                <View style={styles.mpCard}>
-                  <View style={styles.mpHeader}>
-                    <View style={styles.mpLogoWrap}>
-                      <ShieldCheck size={18} color="#009ee3" />
-                      <Text style={styles.mpLogoText}>Mercado Pago PIX</Text>
-                    </View>
-                    <Text style={styles.mpSinalVal}>R$ {cobrancaPix.valor.toFixed(2)}</Text>
-                  </View>
-
-                  <View style={styles.qrCodeWrap}>
-                    <View style={styles.qrCodeMock}>
-                      <QrCode size={110} color="#f3c21a" />
-                      <Text style={styles.qrCodeMockText}>QR CODE MERCADO PAGO</Text>
+                {/* Temporizador de Reserva (Hold de 30min) */}
+                <View style={styles.holdBanner}>
+                  <View style={styles.holdBannerLeft}>
+                    <Clock size={16} color="#f3c21a" />
+                    <View>
+                      <Text style={styles.holdBannerTitle}>Temporizador de Reserva</Text>
+                      <Text style={styles.holdBannerSub}>
+                        Vaga segurada por mais {formatoMinutosSegundos(segundosRestantes)} min
+                      </Text>
                     </View>
                   </View>
-
-                  <Pressable style={styles.copyPixButton} onPress={copiarChavePix}>
-                    {pixCopiado ? <Check size={16} color="#10b981" /> : <Copy size={16} color="#111" />}
-                    <Text style={[styles.copyPixText, pixCopiado && styles.copyPixTextDone]}>
-                      {pixCopiado ? 'Chave Copiada para a Área de Transferência!' : 'Copiar Chave PIX (Copia e Cola)'}
-                    </Text>
-                  </Pressable>
-
-                  <View style={styles.protectionNotice}>
-                    <ShieldCheck size={14} color="#10b981" />
-                    <Text style={styles.protectionNoticeText}>
-                      O valor fica protegido em custódia no Mercado Pago até o dia do seu atendimento no
-                      estúdio.
+                  <View style={styles.holdTimerBadge}>
+                    <Text style={styles.holdTimerBadgeText}>
+                      {formatoMinutosSegundos(segundosRestantes)}
                     </Text>
                   </View>
                 </View>
 
+                {/* Resumo Financeiro */}
+                <View style={styles.financialCard}>
+                  <Text style={styles.finCardHeader}>Detalhamento do Orçamento</Text>
+
+                  <View style={styles.finRow}>
+                    <Text style={styles.finLabel}>Valor Total Estimado:</Text>
+                    <Text style={styles.finValTotal}>R$ {valorTotalEstimado.toFixed(2)}</Text>
+                  </View>
+
+                  <View style={styles.finRowHighlight}>
+                    <View>
+                      <Text style={styles.finLabelHighlight}>Sinal de Reserva (Trava de Vaga):</Text>
+                      <Text style={styles.finSubHighlight}>Pago agora via PIX protegido</Text>
+                    </View>
+                    <Text style={styles.finValHighlight}>
+                      R$ {valorSinalCalculado.toFixed(2)}
+                    </Text>
+                  </View>
+
+                  <View style={styles.finDivider} />
+
+                  <View style={styles.finRow}>
+                    <Text style={styles.finLabel}>Saldo Restante no Estúdio:</Text>
+                    <Text style={styles.finValRestante}>
+                      R$ {saldoRestanteEstudio.toFixed(2)}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Bloco Mercado Pago PIX */}
+                {cobrancaPix && (
+                  <View style={styles.pixBox}>
+                    <View style={styles.pixHeader}>
+                      <ShieldCheck size={16} color="#009ee3" />
+                      <Text style={styles.pixHeaderText}>PIX Mercado Pago em Custódia</Text>
+                    </View>
+
+                    <View style={styles.qrCodeWrapper}>
+                      <View style={styles.qrMock}>
+                        <QrCode size={110} color="#f3c21a" />
+                        <Text style={styles.qrMockLabel}>PAGAMENTO PROTEGIDO</Text>
+                      </View>
+                    </View>
+
+                    <Pressable style={styles.copyPixBtn} onPress={copiarChavePix}>
+                      {pixCopiado ? (
+                        <Check size={16} color="#10b981" />
+                      ) : (
+                        <Copy size={16} color="#111" />
+                      )}
+                      <Text
+                        style={[
+                          styles.copyPixBtnText,
+                          pixCopiado && styles.copyPixBtnTextDone,
+                        ]}
+                      >
+                        {pixCopiado
+                          ? 'Chave PIX Copiada com Sucesso!'
+                          : 'Copiar Chave PIX (Copia e Cola)'}
+                      </Text>
+                    </Pressable>
+
+                    <View style={styles.safeNotice}>
+                      <ShieldCheck size={12} color="#10b981" />
+                      <Text style={styles.safeNoticeText}>
+                        O valor fica retido com segurança até o dia do procedimento.
+                      </Text>
+                    </View>
+                  </View>
+                )}
+
+                {/* Botão de Confirmação de Sinal */}
                 <Pressable
-                  style={styles.btnSimularConfirmacao}
-                  onPress={confirmarPagamentoSinal}
+                  style={styles.btnConfirmDeposit}
+                  onPress={confirmarSinalPago}
                   disabled={carregando}
                 >
                   {carregando ? (
                     <ActivityIndicator color="#111" size="small" />
                   ) : (
                     <>
-                      <CheckCircle2 size={16} color="#111" />
-                      <Text style={styles.btnSimularConfirmacaoText}>Confirmar Pagamento do Sinal</Text>
+                      <CheckCircle2 size={18} color="#111" />
+                      <Text style={styles.btnConfirmDepositText}>
+                        Confirmar Pagamento do Sinal
+                      </Text>
                     </>
                   )}
                 </Pressable>
               </View>
             )}
 
-            {/* ETAPA 5: Confirmação & Protocolo */}
-            {etapa === 5 && (
-              <View style={[styles.stepContainer, { alignItems: 'center', paddingVertical: 20 }]}>
+            {/* ETAPA 4: Confirmação & Protocolo */}
+            {etapa === 4 && (
+              <View style={[styles.stepContainer, { alignItems: 'center', paddingVertical: 14 }]}>
                 <View style={styles.successIconWrap}>
-                  <CheckCircle2 size={48} color="#f3c21a" />
+                  <CheckCircle2 size={54} color="#f3c21a" />
                 </View>
 
-                <Text style={styles.successTitle}>Agendamento Solicitado!</Text>
+                <Text style={styles.successTitle}>Sessão Confirmada!</Text>
                 <Text style={styles.successSub}>
-                  O artista {artista.nomeArtista} recebeu sua solicitação e o sinal de R${' '}
-                  {valorSinalCalculado} foi reservado em custódia.
+                  Sua vaga com <Text style={{ color: '#fff', fontWeight: '800' }}>{artista.nomeArtista}</Text> foi travada com sucesso com o sinal de R$ {valorSinalCalculado}.
                 </Text>
 
                 <View style={styles.protocolCard}>
-                  <Text style={styles.protocolLabel}>Protocolo de Reserva:</Text>
+                  <Text style={styles.protocolLabel}>Protocolo de Reserva</Text>
                   <Text style={styles.protocolCode}>DERM-RES-{protocoloReserva}</Text>
                   <View style={styles.protocolDivider} />
-                  <Text style={styles.protocolDate}>
-                    Data: {dataSelecionada.toLocaleDateString('pt-BR')} às {horarioSelecionado}
+                  <View style={styles.protocolRow}>
+                    <Text style={styles.protocolKey}>Data & Turno:</Text>
+                    <Text style={styles.protocolVal}>
+                      {dataSelecionada.toLocaleDateString('pt-BR')} • {TURNOS.find((t) => t.id === turnoSelecionado)?.nome}
+                    </Text>
+                  </View>
+                  <View style={styles.protocolRow}>
+                    <Text style={styles.protocolKey}>Estúdio:</Text>
+                    <Text style={styles.protocolVal}>
+                      {artista.nomeEstudio} ({artista.cidade})
+                    </Text>
+                  </View>
+                  <View style={styles.protocolRow}>
+                    <Text style={styles.protocolKey}>Saldo Restante:</Text>
+                    <Text style={styles.protocolVal}>
+                      R$ {saldoRestanteEstudio.toFixed(2)} (no estúdio)
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.anamneseCallout}>
+                  <View style={styles.anamneseCalloutHeader}>
+                    <FileHeart size={18} color="#f3c21a" />
+                    <Text style={styles.anamneseCalloutTitle}>Próximo Passo: Ficha de Saúde</Text>
+                  </View>
+                  <Text style={styles.anamneseCalloutText}>
+                    Por exigência da Vigilância Sanitária e segurança do procedimento, complete e assine sua <Text style={{ color: '#f3c21a', fontWeight: '700' }}>Ficha de Anamnese</Text> na aba <Text style={{ color: '#fff', fontWeight: '700' }}>Meus Agendamentos</Text> antes do dia da sessão.
                   </Text>
-                  <Text style={styles.protocolStudio}>{artista.nomeEstudio} • {artista.cidade}</Text>
                 </View>
 
                 <Pressable
-                  style={styles.btnFinalSuccess}
+                  style={styles.btnFinishAll}
                   onPress={() => {
                     onSucesso();
                     onClose();
                   }}
                 >
-                  <Text style={styles.btnFinalSuccessText}>Ver Meus Agendamentos</Text>
+                  <Text style={styles.btnFinishAllText}>Ir para Meus Agendamentos</Text>
                 </Pressable>
               </View>
             )}
           </ScrollView>
 
-          {/* Rodapé de Ação (Etapas 1, 2, 3) */}
-          {etapa < 4 && (
+          {/* Rodapé de Ação para Etapas 1 e 2 */}
+          {etapa < 3 && (
             <View style={styles.footer}>
-              <Pressable style={styles.btnNext} onPress={avancarEtapa} disabled={carregando}>
+              <View style={styles.footerPriceCol}>
+                <Text style={styles.footerPriceLabel}>Total Estimado:</Text>
+                <Text style={styles.footerPriceVal}>R$ {valorTotalEstimado.toFixed(2)}</Text>
+              </View>
+
+              <Pressable
+                style={styles.btnNext}
+                onPress={etapa === 1 ? avancarParaTurnos : avancarParaSinalPix}
+                disabled={carregando}
+              >
                 {carregando ? (
                   <ActivityIndicator color="#111" size="small" />
                 ) : (
                   <>
                     <Text style={styles.btnNextText}>
-                      {etapa === 3 ? `Pagar Sinal (R$ ${valorSinalCalculado})` : 'Continuar'}
+                      {etapa === 1 ? 'Escolher Turno' : `Pagar Sinal (R$ ${valorSinalCalculado})`}
                     </Text>
                     <ChevronRight size={18} color="#111" />
                   </>
@@ -556,31 +1215,35 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   container: {
-    maxHeight: '92%',
-    backgroundColor: '#0c0c0c',
+    maxHeight: '94%',
+    backgroundColor: '#0c0c0e',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     borderWidth: 1,
     borderColor: '#222',
-    paddingTop: 16,
-    paddingBottom: 24,
+    paddingTop: 14,
+    paddingBottom: 20,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingBottom: 12,
+    paddingBottom: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#1a1a1a',
+    borderBottomColor: '#1a1a1f',
   },
   backBtn: {
     width: 34,
     height: 34,
     borderRadius: 10,
-    backgroundColor: '#181818',
+    backgroundColor: '#18181e',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  progressWrap: {
+    alignItems: 'center',
+    gap: 4,
   },
   progressPills: {
     flexDirection: 'row',
@@ -591,7 +1254,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   pillActive: {
-    width: 24,
+    width: 26,
     backgroundColor: '#f3c21a',
   },
   pillDone: {
@@ -600,13 +1263,20 @@ const styles = StyleSheet.create({
   },
   pillIdle: {
     width: 10,
-    backgroundColor: '#262626',
+    backgroundColor: '#262630',
+  },
+  progressText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#888',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   closeBtn: {
     width: 34,
     height: 34,
     borderRadius: 10,
-    backgroundColor: '#181818',
+    backgroundColor: '#18181e',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -618,8 +1288,8 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   stepHeader: {
-    gap: 2,
-    marginBottom: 4,
+    gap: 3,
+    marginBottom: 2,
   },
   stepTitle: {
     color: '#fff',
@@ -630,13 +1300,352 @@ const styles = StyleSheet.create({
   stepSub: {
     color: '#9ca3af',
     fontSize: 12,
+    lineHeight: 18,
+  },
+  categoryToggleRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginVertical: 4,
+  },
+  categoryBtn: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  categoryBtnActive: {
+    backgroundColor: '#f3c21a',
+    borderColor: '#f3c21a',
+  },
+  categoryBtnIdle: {
+    backgroundColor: '#121216',
+    borderColor: '#24242e',
+  },
+  categoryBtnTitle: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  categoryBtnTitleActive: {
+    color: '#111',
+  },
+  categoryBtnSub: {
+    color: '#888',
+    fontSize: 10,
+  },
+  categoryBtnSubActive: {
+    color: '#333',
+    fontWeight: '600',
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 6,
   },
   sectionLabel: {
     color: '#9ca3af',
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 0.6,
+  },
+  badgeInfo: {
+    backgroundColor: '#1b1b22',
+    color: '#f3c21a',
+    fontSize: 9,
+    fontWeight: '800',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#33333f',
+  },
+  flashSection: {
+    gap: 10,
+  },
+  flashesHorizontalScroll: {
+    gap: 10,
+    paddingVertical: 4,
+  },
+  flashCard: {
+    width: 140,
+    borderRadius: 14,
+    borderWidth: 1,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  flashCardActive: {
+    borderColor: '#f3c21a',
+    backgroundColor: '#18181f',
+  },
+  flashCardIdle: {
+    borderColor: '#22222a',
+    backgroundColor: '#111115',
+  },
+  flashImage: {
+    width: '100%',
+    height: 120,
+    backgroundColor: '#1a1a22',
+  },
+  checkPill: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#f3c21a',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  flashCardContent: {
+    padding: 8,
+    gap: 3,
+  },
+  flashTitle: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  flashMeta: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  flashPrice: {
+    color: '#f3c21a',
+    fontSize: 12,
+    fontWeight: '900',
+  },
+  flashDuration: {
+    color: '#888',
+    fontSize: 9,
+  },
+  emptyBox: {
+    padding: 20,
+    borderRadius: 12,
+    backgroundColor: '#121216',
+    alignItems: 'center',
+  },
+  emptyText: {
+    color: '#666',
+    fontSize: 11,
+  },
+  tagsRow: {
+    gap: 8,
+    paddingVertical: 4,
+  },
+  tagPill: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  tagPillActive: {
+    backgroundColor: '#f3c21a',
+    borderColor: '#f3c21a',
+  },
+  tagPillIdle: {
+    backgroundColor: '#121216',
+    borderColor: '#22222b',
+  },
+  tagPillText: {
+    color: '#888',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  tagPillTextActive: {
+    color: '#111',
+    fontWeight: '800',
+  },
+  exclusiveSection: {
+    gap: 10,
+  },
+  uploadSlotsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 4,
+  },
+  uploadSlotEmpty: {
+    flex: 1,
+    height: 100,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderColor: '#383848',
+    backgroundColor: '#111116',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 3,
+    padding: 6,
+  },
+  uploadIconWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#1b1b24',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  uploadSlotTitle: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  uploadSlotSub: {
+    color: '#888',
+    fontSize: 9,
+  },
+  uploadSlotFilled: {
+    flex: 1,
+    height: 100,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#f3c21a',
+    overflow: 'hidden',
+    position: 'relative',
+    backgroundColor: '#000',
+  },
+  uploadSlotImage: {
+    width: '100%',
+    height: '100%',
+  },
+  slotBadge: {
+    position: 'absolute',
+    bottom: 4,
+    left: 4,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  slotBadgeText: {
+    color: '#f3c21a',
+    fontSize: 9,
+    fontWeight: '800',
+  },
+  btnRemovePhoto: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: 'rgba(239, 68, 68, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  uploadActionsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 4,
+  },
+  btnUploadPrincipal: {
+    flex: 2,
+    backgroundColor: '#f3c21a',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 6,
+  },
+  btnUploadPrincipalText: {
+    color: '#111',
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  btnToggleUrlLink: {
+    flex: 1,
+    backgroundColor: '#171720',
+    borderWidth: 1,
+    borderColor: '#2e2e3e',
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderRadius: 10,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 4,
+  },
+  btnToggleUrlLinkText: {
+    color: '#f3c21a',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  customUrlInputWrap: {
+    flexDirection: 'row',
+    gap: 6,
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  customUrlInput: {
+    flex: 1,
+    backgroundColor: '#121216',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#2c2c38',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    color: '#fff',
+    fontSize: 12,
+  },
+  customUrlConfirmBtn: {
+    backgroundColor: '#f3c21a',
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sizeGrid: {
+    gap: 6,
+  },
+  sizeBtn: {
+    paddingVertical: 9,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  sizeBtnActive: {
+    backgroundColor: '#f3c21a',
+    borderColor: '#f3c21a',
+  },
+  sizeBtnIdle: {
+    backgroundColor: '#121216',
+    borderColor: '#22222b',
+  },
+  sizeBtnText: {
+    color: '#9ca3af',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  sizeBtnTextActive: {
+    color: '#111',
+    fontWeight: '900',
+  },
+  inputGroup: {
+    gap: 6,
+  },
+  inputLabel: {
+    color: '#9ca3af',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  textArea: {
+    backgroundColor: '#121216',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#22222b',
+    padding: 12,
+    color: '#fff',
+    fontSize: 12,
+    textAlignVertical: 'top',
   },
   daysRow: {
     gap: 8,
@@ -656,8 +1665,8 @@ const styles = StyleSheet.create({
     borderColor: '#f3c21a',
   },
   dayCardIdle: {
-    backgroundColor: '#131313',
-    borderColor: '#242424',
+    backgroundColor: '#131318',
+    borderColor: '#22222b',
   },
   dayWeekText: {
     fontSize: 9,
@@ -677,287 +1686,270 @@ const styles = StyleSheet.create({
   dayTextActive: {
     color: '#111',
   },
-  timesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  shiftsList: {
     gap: 8,
   },
-  timeSlot: {
-    width: '31%',
-    height: 42,
-    borderRadius: 10,
+  shiftCard: {
+    borderRadius: 14,
     borderWidth: 1,
+    padding: 12,
+  },
+  shiftCardActive: {
+    backgroundColor: '#181820',
+    borderColor: '#f3c21a',
+  },
+  shiftCardIdle: {
+    backgroundColor: '#121216',
+    borderColor: '#22222b',
+  },
+  shiftCardLeft: {
     flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
-    gap: 6,
-  },
-  timeSlotActive: {
-    backgroundColor: '#f3c21a',
-    borderColor: '#f3c21a',
-  },
-  timeSlotIdle: {
-    backgroundColor: '#131313',
-    borderColor: '#242424',
-  },
-  timeSlotText: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#fff',
-  },
-  timeSlotTextActive: {
-    color: '#111',
-  },
-  infoSummaryBox: {
-    backgroundColor: '#141414',
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#222',
-  },
-  infoSummaryText: {
-    color: '#f3c21a',
-    fontSize: 12,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  inputGroup: {
-    gap: 6,
-  },
-  inputLabel: {
-    color: '#9ca3af',
-    fontSize: 11,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-  textArea: {
-    minHeight: 80,
-    backgroundColor: '#141414',
-    borderWidth: 1,
-    borderColor: '#242424',
-    borderRadius: 12,
-    padding: 12,
-    color: '#fff',
-    fontSize: 13,
-    textAlignVertical: 'top',
-  },
-  tagWrap: {
-    gap: 6,
-    paddingVertical: 2,
-  },
-  tagPill: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  tagPillActive: {
-    backgroundColor: '#f3c21a',
-    borderColor: '#f3c21a',
-  },
-  tagPillIdle: {
-    backgroundColor: '#141414',
-    borderColor: '#242424',
-  },
-  tagPillText: {
-    color: '#888',
-    fontSize: 11,
-    fontWeight: '800',
-  },
-  tagPillTextActive: {
-    color: '#111',
-  },
-  sizeOptions: {
-    gap: 6,
-  },
-  sizeOption: {
-    height: 42,
-    borderRadius: 10,
-    borderWidth: 1,
-    paddingHorizontal: 14,
-    justifyContent: 'center',
-  },
-  sizeOptionActive: {
-    backgroundColor: 'rgba(243, 194, 26, 0.15)',
-    borderColor: '#f3c21a',
-  },
-  sizeOptionIdle: {
-    backgroundColor: '#141414',
-    borderColor: '#242424',
-  },
-  sizeOptionText: {
-    color: '#888',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  sizeOptionTextActive: {
-    color: '#f3c21a',
-    fontWeight: '900',
-  },
-  anamneseList: {
-    gap: 8,
-  },
-  anamneseItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#141414',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#222',
-    padding: 12,
-  },
-  anamneseTextCol: {
-    flex: 1,
-    paddingRight: 10,
-  },
-  anamneseQuestion: {
-    color: '#d1d5db',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  toggleBtn: {
-    width: 44,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#262626',
-    padding: 2,
-    justifyContent: 'center',
-  },
-  toggleBtnOn: {
-    backgroundColor: '#f3c21a',
-  },
-  toggleCircle: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#666',
-  },
-  toggleCircleOn: {
-    backgroundColor: '#111',
-    alignSelf: 'flex-end',
-  },
-  detailInput: {
-    backgroundColor: '#101010',
-    borderWidth: 1,
-    borderColor: '#2e2e2e',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    color: '#fff',
-    fontSize: 12,
-  },
-  alertNotice: {
-    flexDirection: 'row',
-    gap: 8,
-    backgroundColor: 'rgba(245, 158, 11, 0.08)',
-    borderRadius: 10,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(245, 158, 11, 0.2)',
-  },
-  alertNoticeText: {
-    color: '#f59e0b',
-    fontSize: 10,
-    flex: 1,
-    lineHeight: 14,
-  },
-  mpCard: {
-    backgroundColor: '#141414',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#282828',
-    padding: 16,
     gap: 12,
   },
-  mpHeader: {
+  shiftIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    backgroundColor: '#1a1a22',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  shiftIconWrapActive: {
+    backgroundColor: '#f3c21a',
+  },
+  shiftTitleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#222',
-    paddingBottom: 10,
   },
-  mpLogoWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  mpLogoText: {
-    color: '#009ee3',
+  shiftTitle: {
+    color: '#fff',
     fontSize: 13,
-    fontWeight: '900',
+    fontWeight: '800',
   },
-  mpSinalVal: {
+  shiftTitleActive: {
     color: '#f3c21a',
-    fontSize: 18,
-    fontWeight: '900',
   },
-  qrCodeWrap: {
-    alignItems: 'center',
-    paddingVertical: 10,
+  shiftBadge: {
+    backgroundColor: '#1c1c24',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
   },
-  qrCodeMock: {
-    width: 180,
-    height: 180,
-    borderRadius: 16,
-    backgroundColor: '#101010',
-    borderWidth: 1,
-    borderColor: 'rgba(243, 194, 26, 0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 6,
+  shiftBadgeActive: {
+    backgroundColor: '#f3c21a',
   },
-  qrCodeMockText: {
-    color: '#888',
+  shiftBadgeText: {
+    color: '#9ca3af',
     fontSize: 9,
     fontWeight: '800',
-    letterSpacing: 0.8,
   },
-  copyPixButton: {
-    minHeight: 46,
-    backgroundColor: '#f3c21a',
+  shiftBadgeTextActive: {
+    color: '#111',
+  },
+  shiftHours: {
+    color: '#f3c21a',
+    fontSize: 11,
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  shiftSub: {
+    color: '#888',
+    fontSize: 10,
+    marginTop: 1,
+  },
+  summaryBar: {
+    backgroundColor: '#15151c',
     borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#262633',
+    padding: 10,
     flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
   },
-  copyPixText: {
-    color: '#111',
+  summaryBarText: {
+    color: '#fff',
     fontSize: 11,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontWeight: '700',
+    textTransform: 'capitalize',
   },
-  copyPixTextDone: {
-    color: '#065f46',
-  },
-  protectionNotice: {
+  holdBanner: {
+    backgroundColor: '#18150c',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#543f07',
+    padding: 12,
     flexDirection: 'row',
-    gap: 6,
-    backgroundColor: 'rgba(16, 185, 129, 0.08)',
-    borderRadius: 8,
-    padding: 8,
+    justifyContent: 'space-between',
     alignItems: 'center',
   },
-  protectionNoticeText: {
-    color: '#10b981',
-    fontSize: 10,
+  holdBannerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
     flex: 1,
-    fontWeight: '600',
   },
-  btnSimularConfirmacao: {
-    height: 48,
-    backgroundColor: '#10b981',
+  holdBannerTitle: {
+    color: '#f3c21a',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  holdBannerSub: {
+    color: '#aaa',
+    fontSize: 10,
+  },
+  holdTimerBadge: {
+    backgroundColor: '#f3c21a',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  holdTimerBadgeText: {
+    color: '#111',
+    fontSize: 13,
+    fontWeight: '900',
+    fontVariant: ['tabular-nums'],
+  },
+  financialCard: {
+    backgroundColor: '#121216',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#22222b',
+    padding: 14,
+    gap: 8,
+  },
+  finCardHeader: {
+    color: '#888',
+    fontSize: 10,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  finRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  finRowHighlight: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#19181f',
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#322c15',
+  },
+  finLabel: {
+    color: '#aaa',
+    fontSize: 12,
+  },
+  finLabelHighlight: {
+    color: '#f3c21a',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  finSubHighlight: {
+    color: '#888',
+    fontSize: 9,
+  },
+  finValTotal: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  finValHighlight: {
+    color: '#f3c21a',
+    fontSize: 16,
+    fontWeight: '900',
+  },
+  finValRestante: {
+    color: '#10b981',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  finDivider: {
+    height: 1,
+    backgroundColor: '#1f1f28',
+    marginVertical: 2,
+  },
+  pixBox: {
+    backgroundColor: '#111115',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#22222c',
+    padding: 14,
+    gap: 10,
+    alignItems: 'center',
+  },
+  pixHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  pixHeaderText: {
+    color: '#009ee3',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  qrCodeWrapper: {
+    padding: 10,
+    backgroundColor: '#000',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#262633',
+  },
+  qrMock: {
+    alignItems: 'center',
+    gap: 6,
+  },
+  qrMockLabel: {
+    color: '#666',
+    fontSize: 8,
+    fontWeight: '800',
+    letterSpacing: 1,
+  },
+  copyPixBtn: {
+    backgroundColor: '#f3c21a',
+    width: '100%',
+    paddingVertical: 12,
     borderRadius: 12,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
   },
-  btnSimularConfirmacaoText: {
+  copyPixBtnText: {
     color: '#111',
     fontSize: 12,
+    fontWeight: '800',
+  },
+  copyPixBtnTextDone: {
+    color: '#10b981',
+  },
+  safeNotice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  safeNoticeText: {
+    color: '#888',
+    fontSize: 10,
+  },
+  btnConfirmDeposit: {
+    backgroundColor: '#10b981',
+    borderRadius: 14,
+    paddingVertical: 14,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+  },
+  btnConfirmDepositText: {
+    color: '#111',
+    fontSize: 13,
     fontWeight: '900',
     textTransform: 'uppercase',
   },
@@ -965,40 +1957,38 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: 'rgba(243, 194, 26, 0.1)',
-    borderWidth: 1,
-    borderColor: 'rgba(243, 194, 26, 0.3)',
+    backgroundColor: '#18170c',
+    borderWidth: 2,
+    borderColor: '#f3c21a',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   successTitle: {
     color: '#fff',
     fontSize: 22,
     fontWeight: '900',
-    fontStyle: 'italic',
+    letterSpacing: -0.5,
   },
   successSub: {
     color: '#9ca3af',
     fontSize: 12,
     textAlign: 'center',
     lineHeight: 18,
-    paddingHorizontal: 20,
-    marginTop: 4,
+    paddingHorizontal: 10,
   },
   protocolCard: {
-    backgroundColor: '#141414',
+    width: '100%',
+    backgroundColor: '#121217',
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#242424',
-    padding: 16,
-    width: '100%',
-    alignItems: 'center',
-    gap: 4,
-    marginTop: 14,
+    borderColor: '#242430',
+    padding: 14,
+    gap: 6,
+    marginTop: 10,
   },
   protocolLabel: {
-    color: '#6b7280',
+    color: '#888',
     fontSize: 10,
     fontWeight: '800',
     textTransform: 'uppercase',
@@ -1010,53 +2000,97 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   protocolDivider: {
-    width: '100%',
     height: 1,
-    backgroundColor: '#222',
-    marginVertical: 6,
+    backgroundColor: '#20202a',
+    marginVertical: 4,
   },
-  protocolDate: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '700',
+  protocolRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  protocolStudio: {
+  protocolKey: {
     color: '#888',
     fontSize: 11,
   },
-  btnFinalSuccess: {
-    height: 48,
-    backgroundColor: '#f3c21a',
-    borderRadius: 12,
-    width: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 16,
+  protocolVal: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '700',
   },
-  btnFinalSuccessText: {
+  anamneseCallout: {
+    width: '100%',
+    backgroundColor: '#1b170c',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#4d390a',
+    padding: 14,
+    gap: 6,
+    marginTop: 10,
+  },
+  anamneseCalloutHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  anamneseCalloutTitle: {
+    color: '#f3c21a',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  anamneseCalloutText: {
+    color: '#bbb',
+    fontSize: 11,
+    lineHeight: 17,
+  },
+  btnFinishAll: {
+    width: '100%',
+    backgroundColor: '#f3c21a',
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 14,
+  },
+  btnFinishAllText: {
     color: '#111',
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '900',
     textTransform: 'uppercase',
   },
   footer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 10,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#1a1a20',
+  },
+  footerPriceCol: {
+    gap: 1,
+  },
+  footerPriceLabel: {
+    color: '#888',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  footerPriceVal: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '900',
   },
   btnNext: {
-    height: 48,
-    borderRadius: 12,
     backgroundColor: '#f3c21a',
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    borderRadius: 12,
     flexDirection: 'row',
-    justifyContent: 'center',
     alignItems: 'center',
     gap: 6,
   },
   btnNextText: {
     color: '#111',
-    fontSize: 12,
-    fontWeight: '900',
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
+    fontSize: 13,
+    fontWeight: '800',
   },
 });

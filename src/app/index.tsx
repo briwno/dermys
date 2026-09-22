@@ -214,7 +214,14 @@ export default function TelaInicial() {
         return <DashboardArtista perfil={perfil} onLogout={encerrarSessao} activeTab={activeTab} />;
       }
 
-      return <DashboardCliente perfil={perfil} onLogout={encerrarSessao} activeTab={activeTab} />;
+      return (
+        <DashboardCliente
+          perfil={perfil}
+          onLogout={encerrarSessao}
+          activeTab={activeTab}
+          onNavegarAba={setActiveTab}
+        />
+      );
     };
 
     return (
