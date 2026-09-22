@@ -230,10 +230,10 @@ export default function TelaInicial() {
       onSetPerfil={setPerfil}
       onSetActiveTab={setActiveTab}
       perfilAtual={perfil}
+      activeTab={activeTab}
     >
       <DeviceFrameWrapper>
         {renderConteudo()}
-        <DebugFloatingButton />
         <DebugMenuModal />
       </DeviceFrameWrapper>
     </DebugProvider>

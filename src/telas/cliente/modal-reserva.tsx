@@ -20,10 +20,10 @@ import {
   Sparkles,
   X,
 } from 'lucide-react-native';
+import { AppModal } from '@/components/ui/app-modal';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -194,7 +194,7 @@ export function ModalReservaCliente({ visivel, artista, onClose, onSucesso }: Mo
   });
 
   return (
-    <Modal visible={visivel} transparent animationType="slide" onRequestClose={onClose}>
+    <AppModal visible={visivel} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.container}>
           {/* Header */}
@@ -545,7 +545,7 @@ export function ModalReservaCliente({ visivel, artista, onClose, onSucesso }: Mo
           )}
         </View>
       </View>
-    </Modal>
+    </AppModal>
   );
 }
 

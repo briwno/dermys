@@ -2,13 +2,13 @@ import type { ReciboFiscal } from '@/types/financeiro';
 import { Check, Copy, FileText, ShieldCheck, X } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { AppModal } from '@/components/ui/app-modal';
 
 interface ReciboFiscalModalProps {
   visivel: boolean;
@@ -27,7 +27,7 @@ export function ReciboFiscalModal({ visivel, recibo, onClose }: ReciboFiscalModa
   };
 
   return (
-    <Modal visible={visivel} transparent animationType="slide" onRequestClose={onClose}>
+    <AppModal visible={visivel} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.container}>
           {/* Header */}
@@ -144,7 +144,7 @@ export function ReciboFiscalModal({ visivel, recibo, onClose }: ReciboFiscalModa
           </View>
         </View>
       </View>
-    </Modal>
+    </AppModal>
   );
 }
 

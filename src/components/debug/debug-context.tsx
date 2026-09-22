@@ -20,7 +20,10 @@ interface DebugContextData {
   setMenuAberto: (aberto: boolean) => void;
   alternarMenu: () => void;
   personaAtivaId: string | null;
+  perfilAtual: PerfilUsuario | null;
   carregandoPersona: boolean;
+  activeTab: string;
+  navegarParaAba: (aba: any) => void;
   trocarPersona: (persona: PersonaTeste) => Promise<void>;
   deslogarParaAuth: () => void;
 }
@@ -32,13 +35,15 @@ interface DebugProviderProps {
   onSetPerfil?: (perfil: PerfilUsuario | null) => void;
   onSetActiveTab?: (tab: any) => void;
   perfilAtual?: PerfilUsuario | null;
+  activeTab?: string;
 }
 
 export function DebugProvider({
   children,
   onSetPerfil,
   onSetActiveTab,
-  perfilAtual,
+  perfilAtual = null,
+  activeTab = 'home',
 }: DebugProviderProps) {
   // No ambiente Web, inicia com a moldura de celular ativada por padrão para teste imediato
   const [modoMoldura, setModoMolduraState] = useState<boolean>(Platform.OS === 'web');
@@ -95,6 +100,12 @@ export function DebugProvider({
 
   const alternarMenu = () => {
     setMenuAberto((prev) => !prev);
+  };
+
+  const navegarParaAba = (aba: any) => {
+    if (onSetActiveTab) {
+      onSetActiveTab(aba);
+    }
   };
 
   // Troca instantânea de perfil para qualquer artista/estúdio ou cliente populado
@@ -166,7 +177,10 @@ export function DebugProvider({
         setMenuAberto,
         alternarMenu,
         personaAtivaId,
+        perfilAtual,
         carregandoPersona,
+        activeTab,
+        navegarParaAba,
         trocarPersona,
         deslogarParaAuth,
       }}

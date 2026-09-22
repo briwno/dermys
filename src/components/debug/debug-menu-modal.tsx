@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   Image,
   Modal,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,16 +13,34 @@ import {
 import {
   AlertTriangle,
   ArrowRight,
+  Calendar,
   Check,
   CheckCircle2,
+  Clock,
+  Compass,
+  Database,
+  DollarSign,
   FileCheck,
+  FileText,
+  Home,
+  LayoutGrid,
+  Lock,
   LogOut,
+  Maximize2,
+  MessageSquare,
+  Palette,
+  RefreshCw,
+  Send,
+  ShieldCheck,
   Smartphone,
+  Trash2,
   User,
   Users,
+  Wrench,
   X,
   Zap,
 } from 'lucide-react-native';
+import { DebugService } from '@/services/debug-service';
 import { useDebug } from './debug-context';
 import { MODELOS_DISPOSITIVOS, PERSONAS_TESTE, type ModeloDispositivo, type PersonaTeste } from './types';
 
@@ -36,15 +55,94 @@ export function DebugMenuModal() {
     menuAberto,
     setMenuAberto,
     personaAtivaId,
+    perfilAtual,
+    activeTab,
+    navegarParaAba,
     carregandoPersona,
     trocarPersona,
     deslogarParaAuth,
   } = useDebug();
 
-  const [abaAtiva, setAbaAtiva] = useState<'dispositivo' | 'personas' | 'eventos'>('personas');
+  const [abaAtiva, setAbaAtiva] = useState<'personas' | 'navegacao' | 'dispositivo' | 'simulador'>('personas');
   const [mensagemStatus, setMensagemStatus] = useState<string | null>(null);
+  const [executandoAcao, setExecutandoAcao] = useState(false);
 
   if (!menuAberto) return null;
+
+  const isArtista = perfilAtual?.role === 'artista' || perfilAtual?.tipo_perfil === 'artista';
+
+  const exibirFeedback = (msg: string) => {
+    setMensagemStatus(msg);
+    setTimeout(() => setMensagemStatus(null), 3500);
+  };
+
+  const handleCriarAgendamentoTeste = async () => {
+    setExecutandoAcao(true);
+    try {
+      const clienteId = '99999999-9999-9999-9999-999999999999'; // Mariana Costa
+      const artistaId = isArtista ? (perfilAtual?.id || '11111111-1111-1111-1111-111111111111') : '11111111-1111-1111-1111-111111111111';
+      const ag = await DebugService.criarAgendamentoTeste(clienteId, artistaId, 'Fine Line Botânica');
+      if (ag) {
+        exibirFeedback('Novo agendamento de teste criado no Supabase com sucesso!');
+      } else {
+        exibirFeedback('Aviso: Não foi possível criar agendamento de teste.');
+      }
+    } catch {
+      exibirFeedback('Erro ao criar agendamento.');
+    } finally {
+      setExecutandoAcao(false);
+    }
+  };
+
+  const handleCriarTransacaoTeste = async () => {
+    setExecutandoAcao(true);
+    try {
+      const clienteId = '99999999-9999-9999-9999-999999999999';
+      const artistaId = isArtista ? (perfilAtual?.id || '11111111-1111-1111-1111-111111111111') : '11111111-1111-1111-1111-111111111111';
+      const tr = await DebugService.criarTransacaoTeste(clienteId, artistaId, 'SINAL');
+      if (tr) {
+        exibirFeedback('Nova transação de sinal (R$ 150) criada no extrato financeiro!');
+      } else {
+        exibirFeedback('Aviso: Não foi possível criar transação.');
+      }
+    } catch {
+      exibirFeedback('Erro ao criar transação.');
+    } finally {
+      setExecutandoAcao(false);
+    }
+  };
+
+  const handleEnviarMensagemTeste = async () => {
+    setExecutandoAcao(true);
+    try {
+      const clienteId = '99999999-9999-9999-9999-999999999999';
+      const artistaId = '11111111-1111-1111-1111-111111111111';
+      const msg = await DebugService.enviarMensagemTeste(
+        clienteId,
+        artistaId,
+        `Olá! Mensagem de teste enviada em tempo real às ${new Date().toLocaleTimeString('pt-BR')}`
+      );
+      if (msg) {
+        exibirFeedback('Mensagem em tempo real enviada via Supabase Realtime!');
+      }
+    } catch {
+      exibirFeedback('Erro ao enviar mensagem.');
+    } finally {
+      setExecutandoAcao(false);
+    }
+  };
+
+  const handleLimparCache = async () => {
+    setExecutandoAcao(true);
+    try {
+      await DebugService.limparCacheLocal();
+      exibirFeedback('Cache local do AsyncStorage limpo com sucesso.');
+    } catch {
+      exibirFeedback('Erro ao limpar cache.');
+    } finally {
+      setExecutandoAcao(false);
+    }
+  };
 
   const handleSimularAlertaMei = (tipo: 'normal' | 'alerta' | 'estourado') => {
     let msg = '';
@@ -55,13 +153,7 @@ export function DebugMenuModal() {
     } else {
       msg = 'Alerta Crítico: Limite de R$ 81.000,00 do MEI ultrapassado!';
     }
-    setMensagemStatus(msg);
-    setTimeout(() => setMensagemStatus(null), 3500);
-  };
-
-  const handleEmitirNfseRapida = () => {
-    setMensagemStatus('Simulação: NFS-e emitida com sucesso no provedor fiscal.');
-    setTimeout(() => setMensagemStatus(null), 3500);
+    exibirFeedback(msg);
   };
 
   return (
@@ -73,11 +165,11 @@ export function DebugMenuModal() {
     >
       <View style={styles.modalBackdrop}>
         <View style={styles.modalCard}>
-          {/* Header do Menu */}
+          {/* Header */}
           <View style={styles.modalHeader}>
             <View>
-              <Text style={styles.modalTitle}>Ambiente de Testes</Text>
-              <Text style={styles.modalSubtitle}>Troca de perfis e visualizador de dispositivo</Text>
+              <Text style={styles.modalTitle}>Central de Testes & Desenvolvimento</Text>
+              <Text style={styles.modalSubtitle}>Dermys Developer Tools • Ações, Personas e Simuladores</Text>
             </View>
 
             <TouchableOpacity
@@ -89,20 +181,25 @@ export function DebugMenuModal() {
             </TouchableOpacity>
           </View>
 
-          {/* Abas */}
+          {/* Abas Superiores */}
           <View style={styles.tabsRow}>
             <TouchableOpacity
               style={[styles.tabButton, abaAtiva === 'personas' && styles.tabButtonActive]}
               onPress={() => setAbaAtiva('personas')}
             >
               <Users size={14} color={abaAtiva === 'personas' ? '#f3c21a' : '#777'} />
-              <Text
-                style={[
-                  styles.tabButtonText,
-                  abaAtiva === 'personas' && styles.tabButtonTextActive,
-                ]}
-              >
+              <Text style={[styles.tabButtonText, abaAtiva === 'personas' && styles.tabButtonTextActive]}>
                 Perfis ({PERSONAS_TESTE.length})
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.tabButton, abaAtiva === 'navegacao' && styles.tabButtonActive]}
+              onPress={() => setAbaAtiva('navegacao')}
+            >
+              <Compass size={14} color={abaAtiva === 'navegacao' ? '#f3c21a' : '#777'} />
+              <Text style={[styles.tabButtonText, abaAtiva === 'navegacao' && styles.tabButtonTextActive]}>
+                Navegação Rápida
               </Text>
             </TouchableOpacity>
 
@@ -111,33 +208,23 @@ export function DebugMenuModal() {
               onPress={() => setAbaAtiva('dispositivo')}
             >
               <Smartphone size={14} color={abaAtiva === 'dispositivo' ? '#f3c21a' : '#777'} />
-              <Text
-                style={[
-                  styles.tabButtonText,
-                  abaAtiva === 'dispositivo' && styles.tabButtonTextActive,
-                ]}
-              >
-                Moldura
+              <Text style={[styles.tabButtonText, abaAtiva === 'dispositivo' && styles.tabButtonTextActive]}>
+                Moldura & Zoom
               </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.tabButton, abaAtiva === 'eventos' && styles.tabButtonActive]}
-              onPress={() => setAbaAtiva('eventos')}
+              style={[styles.tabButton, abaAtiva === 'simulador' && styles.tabButtonActive]}
+              onPress={() => setAbaAtiva('simulador')}
             >
-              <Zap size={14} color={abaAtiva === 'eventos' ? '#f3c21a' : '#777'} />
-              <Text
-                style={[
-                  styles.tabButtonText,
-                  abaAtiva === 'eventos' && styles.tabButtonTextActive,
-                ]}
-              >
-                Simulações Fiscais
+              <Zap size={14} color={abaAtiva === 'simulador' ? '#f3c21a' : '#777'} />
+              <Text style={[styles.tabButtonText, abaAtiva === 'simulador' && styles.tabButtonTextActive]}>
+                Simuladores & Dados
               </Text>
             </TouchableOpacity>
           </View>
 
-          {/* Banner de Feedback */}
+          {/* Feedback Banner */}
           {mensagemStatus && (
             <View style={styles.feedbackBanner}>
               <CheckCircle2 size={15} color="#f3c21a" />
@@ -145,12 +232,12 @@ export function DebugMenuModal() {
             </View>
           )}
 
-          {/* Conteúdo */}
+          {/* Conteúdo da Aba */}
           <ScrollView style={styles.modalContentScroll} showsVerticalScrollIndicator={false}>
             {/* ABA 1: PERSONAS */}
             {abaAtiva === 'personas' && (
               <View style={styles.tabContentStack}>
-                <Text style={styles.sectionTitle}>Perfis Populados no Banco</Text>
+                <Text style={styles.sectionTitle}>Perfis Populados no Banco Supabase</Text>
 
                 {carregandoPersona ? (
                   <View style={styles.loadingPersonaWrap}>
@@ -230,14 +317,110 @@ export function DebugMenuModal() {
               </View>
             )}
 
-            {/* ABA 2: MOLDURA */}
+            {/* ABA 2: NAVEGAÇÃO RÁPIDA */}
+            {abaAtiva === 'navegacao' && (
+              <View style={styles.tabContentStack}>
+                <Text style={styles.sectionTitle}>Atalhos de Telas do Aplicativo</Text>
+                <Text style={styles.sectionSubtitle}>
+                  Alterne diretamente para qualquer aba ou fluxo da aplicação:
+                </Text>
+
+                <View style={styles.navGrid}>
+                  <TouchableOpacity
+                    style={[styles.navCard, activeTab === 'home' && styles.navCardActive]}
+                    onPress={() => {
+                      navegarParaAba('home');
+                      setMenuAberto(false);
+                    }}
+                  >
+                    <Home size={18} color="#f3c21a" />
+                    <View style={styles.navCardInfo}>
+                      <Text style={styles.navCardTitle}>Feed / Início (Cliente)</Text>
+                      <Text style={styles.navCardSub}>Vitrine de flashes, busca e filtros regionais</Text>
+                    </View>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.navCard, activeTab === 'dashboard' && styles.navCardActive]}
+                    onPress={() => {
+                      navegarParaAba('dashboard');
+                      setMenuAberto(false);
+                    }}
+                  >
+                    <LayoutGrid size={18} color="#f3c21a" />
+                    <View style={styles.navCardInfo}>
+                      <Text style={styles.navCardTitle}>Dashboard do Tatuador</Text>
+                      <Text style={styles.navCardSub}>Visão geral do estúdio, métricas e flashes</Text>
+                    </View>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.navCard, (activeTab === 'schedule' || activeTab === 'bookings') && styles.navCardActive]}
+                    onPress={() => {
+                      navegarParaAba(isArtista ? 'schedule' : 'bookings');
+                      setMenuAberto(false);
+                    }}
+                  >
+                    <Calendar size={18} color="#f3c21a" />
+                    <View style={styles.navCardInfo}>
+                      <Text style={styles.navCardTitle}>Agenda / Agendamentos</Text>
+                      <Text style={styles.navCardSub}>Controle de sessões, reservas e status</Text>
+                    </View>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.navCard, activeTab === 'financial' && styles.navCardActive]}
+                    onPress={() => {
+                      navegarParaAba('financial');
+                      setMenuAberto(false);
+                    }}
+                  >
+                    <DollarSign size={18} color="#f3c21a" />
+                    <View style={styles.navCardInfo}>
+                      <Text style={styles.navCardTitle}>Painel Fiscal & Financeiro</Text>
+                      <Text style={styles.navCardSub}>NFS-e, Termômetro MEI e Relatório PDF</Text>
+                    </View>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.navCard, activeTab === 'chat' && styles.navCardActive]}
+                    onPress={() => {
+                      navegarParaAba('chat');
+                      setMenuAberto(false);
+                    }}
+                  >
+                    <MessageSquare size={18} color="#f3c21a" />
+                    <View style={styles.navCardInfo}>
+                      <Text style={styles.navCardTitle}>Chat em Tempo Real</Text>
+                      <Text style={styles.navCardSub}>Mensagens instantâneas com clientes e artistas</Text>
+                    </View>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.navCard, activeTab === 'profile' && styles.navCardActive]}
+                    onPress={() => {
+                      navegarParaAba('profile');
+                      setMenuAberto(false);
+                    }}
+                  >
+                    <User size={18} color="#f3c21a" />
+                    <View style={styles.navCardInfo}>
+                      <Text style={styles.navCardTitle}>Perfil do Usuário</Text>
+                      <Text style={styles.navCardSub}>Dados cadastrais, bio, estilos e fotos</Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+
+            {/* ABA 3: MOLDURA & DISPOSITIVOS */}
             {abaAtiva === 'dispositivo' && (
               <View style={styles.tabContentStack}>
                 <View style={styles.settingCard}>
                   <View style={styles.settingTextWrap}>
                     <Text style={styles.settingTitle}>Moldura de Smartphone</Text>
                     <Text style={styles.settingDescription}>
-                      Exibe o chassi de celular para teste de responsividade
+                      Exibe o chassi de celular para teste de responsividade no desktop
                     </Text>
                   </View>
                   <TouchableOpacity
@@ -295,7 +478,7 @@ export function DebugMenuModal() {
                 </View>
 
                 <View style={styles.settingGroup}>
-                  <Text style={styles.groupLabel}>Escala de Exibição</Text>
+                  <Text style={styles.groupLabel}>Escala de Exibição (Zoom)</Text>
                   <View style={styles.scaleButtonsRow}>
                     {[
                       { label: '75%', val: 0.75 },
@@ -326,16 +509,62 @@ export function DebugMenuModal() {
               </View>
             )}
 
-            {/* ABA 3: SIMULAÇÕES FISCAIS */}
-            {abaAtiva === 'eventos' && (
+            {/* ABA 4: SIMULADORES & DADOS */}
+            {abaAtiva === 'simulador' && (
               <View style={styles.tabContentStack}>
-                <Text style={styles.sectionTitle}>Simulações do Módulo Fiscal</Text>
+                <Text style={styles.sectionTitle}>Ações Rápidas de Teste no Banco de Dados</Text>
 
+                {/* Criação de Agendamento */}
                 <View style={styles.simCard}>
-                  <Text style={styles.simCardTitle}>Termômetro Fiscal MEI (R$ 81.000)</Text>
+                  <Text style={styles.simCardTitle}>1. Criar Agendamento de Teste Instantâneo</Text>
                   <Text style={styles.simCardDesc}>
-                    Dispare alertas no painel do artista para testar faixas de teto:
+                    Insere uma solicitação de reserva pendente no Supabase entre cliente e artista.
                   </Text>
+                  <TouchableOpacity
+                    style={styles.simActionPrimaryBtn}
+                    onPress={handleCriarAgendamentoTeste}
+                    disabled={executandoAcao}
+                  >
+                    <Calendar size={13} color="#000" />
+                    <Text style={styles.simActionPrimaryBtnText}>Inserir Agendamento</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Criação de Transação Financeira */}
+                <View style={styles.simCard}>
+                  <Text style={styles.simCardTitle}>2. Criar Transação de Sinal (PIX)</Text>
+                  <Text style={styles.simCardDesc}>
+                    Insere uma transação de R$ 150 em custódia no extrato financeiro.
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.simActionPrimaryBtn}
+                    onPress={handleCriarTransacaoTeste}
+                    disabled={executandoAcao}
+                  >
+                    <DollarSign size={13} color="#000" />
+                    <Text style={styles.simActionPrimaryBtnText}>Inserir Transação Financeira</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Enviar Mensagem Realtime */}
+                <View style={styles.simCard}>
+                  <Text style={styles.simCardTitle}>3. Enviar Mensagem de Teste no Chat</Text>
+                  <Text style={styles.simCardDesc}>
+                    Dispara uma mensagem em tempo real para verificar a sincronização do WebSocket.
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.simActionPrimaryBtn}
+                    onPress={handleEnviarMensagemTeste}
+                    disabled={executandoAcao}
+                  >
+                    <Send size={13} color="#000" />
+                    <Text style={styles.simActionPrimaryBtnText}>Disparar Mensagem Realtime</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Termômetro Fiscal */}
+                <View style={styles.simCard}>
+                  <Text style={styles.simCardTitle}>4. Testar Alertas do Termômetro MEI</Text>
                   <View style={styles.simActionsRow}>
                     <TouchableOpacity
                       style={[styles.simActionBtn, styles.simActionBtnGreen]}
@@ -355,20 +584,21 @@ export function DebugMenuModal() {
                       style={[styles.simActionBtn, styles.simActionBtnRed]}
                       onPress={() => handleSimularAlertaMei('estourado')}
                     >
-                      <Text style={styles.simActionBtnTextRed}>Limite Excedido</Text>
+                      <Text style={styles.simActionBtnTextRed}>Excedido 100%</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
 
+                {/* Limpeza de Cache */}
                 <View style={styles.simCard}>
-                  <Text style={styles.simCardTitle}>Emissão de Nota Fiscal de Teste</Text>
+                  <Text style={styles.simCardTitle}>5. Limpeza de Cache Local</Text>
                   <TouchableOpacity
-                    style={styles.simPrimaryBtn}
-                    onPress={handleEmitirNfseRapida}
-                    activeOpacity={0.8}
+                    style={styles.simActionDangerBtn}
+                    onPress={handleLimparCache}
+                    disabled={executandoAcao}
                   >
-                    <FileCheck size={14} color="#000" />
-                    <Text style={styles.simPrimaryBtnText}>Simular Emissão NFS-e</Text>
+                    <Trash2 size={13} color="#ef4444" />
+                    <Text style={styles.simActionDangerBtnText}>Limpar AsyncStorage Local</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -391,8 +621,8 @@ const styles = StyleSheet.create({
   },
   modalCard: {
     width: '100%',
-    maxWidth: 620,
-    maxHeight: '88%',
+    maxWidth: 680,
+    maxHeight: '90%',
     backgroundColor: '#121214',
     borderRadius: 14,
     borderWidth: 1,
@@ -469,7 +699,7 @@ const styles = StyleSheet.create({
   },
   modalContentScroll: {
     padding: 16,
-    maxHeight: 480,
+    maxHeight: 520,
   },
   tabContentStack: {
     gap: 12,
@@ -479,7 +709,11 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 13,
     fontWeight: '700',
-    marginBottom: 2,
+  },
+  sectionSubtitle: {
+    color: '#777788',
+    fontSize: 11,
+    marginTop: -4,
   },
   personasListWrap: {
     gap: 6,
@@ -597,6 +831,36 @@ const styles = StyleSheet.create({
   loadingPersonaText: {
     color: '#777788',
     fontSize: 11,
+  },
+  navGrid: {
+    gap: 8,
+  },
+  navCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#16161c',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#242430',
+    padding: 12,
+    gap: 12,
+  },
+  navCardActive: {
+    borderColor: '#f3c21a',
+    backgroundColor: '#1c1c24',
+  },
+  navCardInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  navCardTitle: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  navCardSub: {
+    color: '#777788',
+    fontSize: 10,
   },
   settingCard: {
     flexDirection: 'row',
@@ -728,6 +992,39 @@ const styles = StyleSheet.create({
   simCardDesc: {
     color: '#777788',
     fontSize: 10,
+    lineHeight: 14,
+  },
+  simActionPrimaryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#f3c21a',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+  },
+  simActionPrimaryBtnText: {
+    color: '#000000',
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  simActionDangerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.3)',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+  },
+  simActionDangerBtnText: {
+    color: '#ef4444',
+    fontSize: 11,
+    fontWeight: '700',
   },
   simActionsRow: {
     flexDirection: 'row',
@@ -766,19 +1063,5 @@ const styles = StyleSheet.create({
     color: '#ef4444',
     fontSize: 10,
     fontWeight: '700',
-  },
-  simPrimaryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    backgroundColor: '#f3c21a',
-    paddingVertical: 8,
-    borderRadius: 6,
-  },
-  simPrimaryBtnText: {
-    color: '#000000',
-    fontSize: 11,
-    fontWeight: '800',
   },
 });

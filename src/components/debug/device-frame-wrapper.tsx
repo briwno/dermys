@@ -9,12 +9,12 @@ import {
 } from 'react-native';
 import {
   Battery,
-  Maximize2,
-  Smartphone,
   Wifi,
 } from 'lucide-react-native';
 import { useDebug } from './debug-context';
-import { MODELOS_DISPOSITIVOS, type ModeloDispositivo } from './types';
+import { DevTopBar } from './dev-top-bar';
+import { MODELOS_DISPOSITIVOS } from './types';
+import { ModalHostProvider } from '@/components/ui/app-modal-context';
 
 interface DeviceFrameWrapperProps {
   children: ReactNode;
@@ -23,16 +23,12 @@ interface DeviceFrameWrapperProps {
 export function DeviceFrameWrapper({ children }: DeviceFrameWrapperProps) {
   const {
     modoMoldura,
-    setModoMoldura,
     modelo,
-    setModelo,
     escala,
-    setEscala,
     alternarMenu,
   } = useDebug();
 
   const [larguraJanela, setLarguraJanela] = useState(Dimensions.get('window').width);
-  const [alturaJanela, setAlturaJanela] = useState(Dimensions.get('window').height);
   const [horaAtual, setHoraAtual] = useState('09:41');
 
   // Atualiza relógio da barra de status simulada
@@ -53,122 +49,33 @@ export function DeviceFrameWrapper({ children }: DeviceFrameWrapperProps) {
   useEffect(() => {
     const sub = Dimensions.addEventListener('change', ({ window }) => {
       setLarguraJanela(window.width);
-      setAlturaJanela(window.height);
     });
     return () => sub?.remove();
   }, []);
 
   const config = MODELOS_DISPOSITIVOS[modelo] || MODELOS_DISPOSITIVOS.iphone_16_pro;
-
-  // Se estiver em tela cheia, ou em dispositivo mobile real pequeno, renderiza direto
   const isMobileReal = Platform.OS !== 'web' || larguraJanela < 600;
+
+  // VISUALIZAÇÃO NÃO-MOBILE (TELA CHEIA / DESKTOP NORMAL) COM BARRA SUPERIOR
   if (!modoMoldura || modelo === 'full' || isMobileReal) {
-    return <View style={styles.fullscreenContainer}>{children}</View>;
+    return (
+      <View style={styles.fullscreenContainer}>
+        {Platform.OS === 'web' && <DevTopBar />}
+        <View style={styles.fullscreenBody}>
+          <ModalHostProvider>{children}</ModalHostProvider>
+        </View>
+      </View>
+    );
   }
 
   const alturaChassis = config.altura + config.larguraBorda * 2;
   const larguraChassis = config.largura + config.larguraBorda * 2;
 
-  const escalasDisponiveis = [
-    { label: '75%', valor: 0.75 },
-    { label: '85%', valor: 0.85 },
-    { label: '92%', valor: 0.92 },
-    { label: '100%', valor: 1.0 },
-  ];
-
+  // VISUALIZAÇÃO COM MOLDURA DE CELULAR REALISTA + BARRA SUPERIOR
   return (
     <View style={styles.desktopCanvas}>
-      {/* Barra Superior do Simulador */}
-      <View style={styles.topControlBar}>
-        <View style={styles.brandTitleWrap}>
-          <Text style={styles.brandTitle}>DERMYS</Text>
-          <Text style={styles.brandSubtitle}>SIMULADOR MOBILE</Text>
-        </View>
-
-        {/* Seletor Rápido de Dispositivo */}
-        <View style={styles.devicePillsWrap}>
-          <TouchableOpacity
-            style={[
-              styles.devicePill,
-              modelo === 'iphone_16_pro' && styles.devicePillActive,
-            ]}
-            onPress={() => setModelo('iphone_16_pro')}
-          >
-            <Text
-              style={[
-                styles.devicePillText,
-                modelo === 'iphone_16_pro' && styles.devicePillTextActive,
-              ]}
-            >
-              iPhone 16 Pro
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.devicePill,
-              modelo === 'galaxy_s24' && styles.devicePillActive,
-            ]}
-            onPress={() => setModelo('galaxy_s24')}
-          >
-            <Text
-              style={[
-                styles.devicePillText,
-                modelo === 'galaxy_s24' && styles.devicePillTextActive,
-              ]}
-            >
-              Galaxy S24
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.devicePill,
-              modelo === 'iphone_se' && styles.devicePillActive,
-            ]}
-            onPress={() => setModelo('iphone_se')}
-          >
-            <Text
-              style={[
-                styles.devicePillText,
-                modelo === 'iphone_se' && styles.devicePillTextActive,
-              ]}
-            >
-              iPhone SE
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Controle de Escala / Zoom */}
-        <View style={styles.zoomControlWrap}>
-          {escalasDisponiveis.map((item) => (
-            <TouchableOpacity
-              key={item.label}
-              style={[styles.zoomPill, escala === item.valor && styles.zoomPillActive]}
-              onPress={() => setEscala(item.valor)}
-            >
-              <Text
-                style={[
-                  styles.zoomPillText,
-                  escala === item.valor && styles.zoomPillTextActive,
-                ]}
-              >
-                {item.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Botão de Alternar para Tela Cheia */}
-        <TouchableOpacity
-          style={styles.fullscreenToggleBtn}
-          onPress={() => setModoMoldura(false)}
-          activeOpacity={0.8}
-        >
-          <Maximize2 size={13} color="#f3c21a" />
-          <Text style={styles.fullscreenToggleText}>Tela Cheia</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Barra de Ferramentas Superior Fixa */}
+      <DevTopBar />
 
       {/* Área Central com o Chassis do Smartphone */}
       <View style={styles.viewportStage}>
@@ -182,7 +89,7 @@ export function DeviceFrameWrapper({ children }: DeviceFrameWrapperProps) {
             },
           ]}
         >
-          {/* Botões Laterais Físicos */}
+          {/* Botões Laterais Físicos do Smartphone */}
           <View style={styles.buttonActionLeft} />
           <View style={styles.buttonVolumeUp} />
           <View style={styles.buttonVolumeDown} />
@@ -211,37 +118,39 @@ export function DeviceFrameWrapper({ children }: DeviceFrameWrapperProps) {
                 },
               ]}
             >
-              {/* Barra de Status */}
-              <View style={styles.statusBar}>
-                <Text style={styles.statusTimeText}>{horaAtual}</Text>
+              <ModalHostProvider>
+                {/* Barra de Status */}
+                <View style={styles.statusBar}>
+                  <Text style={styles.statusTimeText}>{horaAtual}</Text>
 
-                {/* Dynamic Island ou Punchhole */}
-                {config.temDynamicIsland ? (
-                  <TouchableOpacity
-                    style={styles.dynamicIsland}
-                    activeOpacity={0.9}
-                    onPress={alternarMenu}
-                  >
-                    <View style={styles.cameraLens} />
-                  </TouchableOpacity>
-                ) : config.tipoNotch === 'punchhole' ? (
-                  <View style={styles.punchholeCamera} />
-                ) : null}
+                  {/* Dynamic Island ou Punchhole */}
+                  {config.temDynamicIsland ? (
+                    <TouchableOpacity
+                      style={styles.dynamicIsland}
+                      activeOpacity={0.9}
+                      onPress={alternarMenu}
+                    >
+                      <View style={styles.cameraLens} />
+                    </TouchableOpacity>
+                  ) : config.tipoNotch === 'punchhole' ? (
+                    <View style={styles.punchholeCamera} />
+                  ) : null}
 
-                <View style={styles.statusIconsWrap}>
-                  <Wifi size={12} color="#ffffff" />
-                  <Text style={styles.statusNetworkText}>5G</Text>
-                  <Battery size={14} color="#ffffff" />
+                  <View style={styles.statusIconsWrap}>
+                    <Wifi size={12} color="#ffffff" />
+                    <Text style={styles.statusNetworkText}>5G</Text>
+                    <Battery size={14} color="#ffffff" />
+                  </View>
                 </View>
-              </View>
 
-              {/* Conteúdo Real da Aplicação */}
-              <View style={styles.appViewport}>{children}</View>
+                {/* Conteúdo Real do Aplicativo Dermys */}
+                <View style={styles.appViewport}>{children}</View>
 
-              {/* Home Indicator */}
-              <View style={styles.homeIndicatorWrap} pointerEvents="none">
-                <View style={styles.homeIndicatorBar} />
-              </View>
+                {/* Barra de Home Indicator */}
+                <View style={styles.homeIndicatorWrap} pointerEvents="none">
+                  <View style={styles.homeIndicatorBar} />
+                </View>
+              </ModalHostProvider>
             </View>
           </View>
         </View>
@@ -257,6 +166,11 @@ const styles = StyleSheet.create({
     height: '100%',
     backgroundColor: '#050505',
   },
+  fullscreenBody: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+  },
   desktopCanvas: {
     flex: 1,
     width: '100%',
@@ -265,104 +179,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-start',
     overflow: 'hidden',
-  },
-  topControlBar: {
-    width: '100%',
-    height: 46,
-    backgroundColor: '#111114',
-    borderBottomWidth: 1,
-    borderBottomColor: '#1c1c22',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    zIndex: 100,
-  },
-  brandTitleWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  brandTitle: {
-    color: '#f3c21a',
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 1,
-  },
-  brandSubtitle: {
-    color: '#666677',
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  devicePillsWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#17171c',
-    padding: 3,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#24242c',
-  },
-  devicePill: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  devicePillActive: {
-    backgroundColor: '#f3c21a',
-  },
-  devicePillText: {
-    color: '#888899',
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  devicePillTextActive: {
-    color: '#000000',
-    fontWeight: '800',
-  },
-  zoomControlWrap: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-    backgroundColor: '#17171c',
-    padding: 3,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#24242c',
-  },
-  zoomPill: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  zoomPillActive: {
-    backgroundColor: '#2b2b36',
-  },
-  zoomPillText: {
-    color: '#777788',
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  zoomPillTextActive: {
-    color: '#f3c21a',
-    fontWeight: '800',
-  },
-  fullscreenToggleBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#1a1a22',
-    borderWidth: 1,
-    borderColor: '#282834',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-  },
-  fullscreenToggleText: {
-    color: '#cccccc',
-    fontSize: 11,
-    fontWeight: '700',
   },
   viewportStage: {
     flex: 1,

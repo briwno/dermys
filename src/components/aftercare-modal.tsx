@@ -1,13 +1,13 @@
 import { AlertCircle, CheckCircle2, ShieldCheck, Sparkles, X } from 'lucide-react-native';
 import React from 'react';
 import {
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { AppModal } from '@/components/ui/app-modal';
 
 interface AftercareModalProps {
   visivel: boolean;
@@ -40,7 +40,7 @@ export function AftercareModal({ visivel, onClose, artistaNome }: AftercareModal
   ];
 
   return (
-    <Modal visible={visivel} transparent animationType="slide" onRequestClose={onClose}>
+    <AppModal visible={visivel} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.container}>
           {/* Header */}
@@ -79,8 +79,9 @@ export function AftercareModal({ visivel, onClose, artistaNome }: AftercareModal
               </View>
             ))}
 
+            {/* Aviso de Alerta */}
             <View style={styles.alertBox}>
-              <AlertCircle size={16} color="#f59e0b" />
+              <AlertCircle size={18} color="#ef4444" />
               <Text style={styles.alertText}>
                 Em caso de vermelhidão excessiva após o 5º dia, calor excessivo ou secreções, entre em
                 contato imediatamente com o seu tatuador pelo chat.
@@ -96,7 +97,7 @@ export function AftercareModal({ visivel, onClose, artistaNome }: AftercareModal
           </View>
         </View>
       </View>
-    </Modal>
+    </AppModal>
   );
 }
 

@@ -22,7 +22,6 @@ import {
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -31,6 +30,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { AppModal } from '@/components/ui/app-modal';
 
 interface PropsConfigFiscalModal {
   visivel: boolean;
@@ -141,7 +141,7 @@ export function ConfigFiscalModal({
   };
 
   return (
-    <Modal visible={visivel} transparent animationType="slide" onRequestClose={onClose}>
+    <AppModal visible={visivel} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.container}>
           {/* Header */}
@@ -440,7 +440,7 @@ export function ConfigFiscalModal({
           </View>
         </View>
       </View>
-    </Modal>
+    </AppModal>
   );
 }
 

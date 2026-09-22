@@ -15,13 +15,13 @@ import {
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { AppModal } from '@/components/ui/app-modal';
 
 interface PropsRelatorioDasnModal {
   visivel: boolean;
@@ -64,7 +64,7 @@ export function RelatorioDasnModal({
   };
 
   return (
-    <Modal visible={visivel} transparent animationType="slide" onRequestClose={onClose}>
+    <AppModal visible={visivel} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.container}>
           {/* Header */}
@@ -214,7 +214,7 @@ export function RelatorioDasnModal({
           </View>
         </View>
       </View>
-    </Modal>
+    </AppModal>
   );
 }
 

@@ -25,7 +25,6 @@ import {
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -33,6 +32,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { AppModal } from '@/components/ui/app-modal';
 
 export interface ItemAgendaCompleto {
   id: string;
@@ -442,7 +442,7 @@ export function ArtistaAgendaTab() {
       )}
 
       {/* Modal de Finalização de Sessão & Cobrança MP */}
-      <Modal
+      <AppModal
         visible={!!itemFinalizando}
         transparent
         animationType="slide"
@@ -562,10 +562,10 @@ export function ArtistaAgendaTab() {
             </View>
           </View>
         </View>
-      </Modal>
+      </AppModal>
 
       {/* Modal de Detalhes da Anamnese e Briefing */}
-      <Modal
+      <AppModal
         visible={!!itemAnamnese}
         transparent
         animationType="fade"
@@ -626,7 +626,7 @@ export function ArtistaAgendaTab() {
             </View>
           </View>
         </View>
-      </Modal>
+      </AppModal>
 
       {/* Recibo Fiscal Modal */}
       <ReciboFiscalModal

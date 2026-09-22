@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -8,6 +7,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { AppModal } from '@/components/ui/app-modal';
 import {
   CheckCircle,
   Copy,
@@ -111,7 +111,7 @@ export function RelatorioFiscalPdfModal({
   };
 
   return (
-    <Modal visible={visivel} transparent animationType="fade" onRequestClose={onClose}>
+    <AppModal visible={visivel} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.modalBackdrop}>
         <View style={styles.modalContainer}>
           {/* Header Superior da Barra de Ações */}
@@ -388,7 +388,7 @@ export function RelatorioFiscalPdfModal({
           </ScrollView>
         </View>
       </View>
-    </Modal>
+    </AppModal>
   );
 }
 

@@ -19,7 +19,6 @@ import {
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -27,6 +26,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { AppModal } from '@/components/ui/app-modal';
 
 interface PropsEmissaoNfseModal {
   visivel: boolean;
@@ -129,7 +129,7 @@ export function EmissaoNfseModal({
   };
 
   return (
-    <Modal visible={visivel} transparent animationType="slide" onRequestClose={onClose}>
+    <AppModal visible={visivel} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.container}>
           {/* Header */}
@@ -321,7 +321,7 @@ export function EmissaoNfseModal({
           </View>
         </View>
       </View>
-    </Modal>
+    </AppModal>
   );
 }
 

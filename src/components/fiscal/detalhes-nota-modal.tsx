@@ -22,7 +22,6 @@ import React, { useState } from 'react';
 import {
   ActivityIndicator,
   Linking,
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -30,6 +29,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { AppModal } from '@/components/ui/app-modal';
 
 interface PropsDetalhesNotaModal {
   visivel: boolean;
@@ -101,7 +101,7 @@ export function DetalhesNotaModal({
   };
 
   return (
-    <Modal visible={visivel} transparent animationType="slide" onRequestClose={onClose}>
+    <AppModal visible={visivel} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.container}>
           {/* Header */}
@@ -363,7 +363,7 @@ export function DetalhesNotaModal({
           </View>
         </View>
       </View>
-    </Modal>
+    </AppModal>
   );
 }
 
