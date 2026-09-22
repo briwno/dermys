@@ -1,5 +1,5 @@
 import { Logo } from '@/components/logo';
-import { iniciarLoginGoogle } from '@/services/auth-oauth';
+import { AUTH_REDIRECT_URL, iniciarLoginGoogle } from '@/services/auth-oauth';
 import { supabase } from '@/services/supabase';
 import {
   normalizarPerfil,
@@ -344,10 +344,17 @@ export function TelaAutenticacao({
 
     try {
       if (modo === 'cadastro') {
+        const redirectOrigin =
+          typeof window !== 'undefined' && window.location?.origin
+            ? window.location.origin
+            : AUTH_REDIRECT_URL;
+        const emailRedirectTo = `${redirectOrigin.replace(/\/+$/, '')}/auth/callback`;
+
         const { data, error: erroCadastro } = await supabase.auth.signUp({
           email: emailFormatado,
           password: formulario.senha,
           options: {
+            emailRedirectTo,
             data: {
               nome_exibicao: formulario.nomeCompleto,
               full_name: formulario.nomeCompleto,

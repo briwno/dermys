@@ -4,7 +4,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { Platform } from 'react-native';
 
 export const AUTH_REDIRECT_URL =
-  process.env.EXPO_PUBLIC_AUTH_REDIRECT_URL || 'https://vercel-redirect-silk-six.vercel.app';
+  process.env.EXPO_PUBLIC_AUTH_REDIRECT_URL || 'https://dermys.vercel.app';
 
 // 1. Extração compacta unificando ?query e #hash em 3 linhas
 export function extrairParametrosDeUrl(url: string): Record<string, string> {
@@ -34,10 +34,25 @@ export async function processarRetornoOAuthUrl(url: string) {
   return session?.user || null;
 }
 
-// 3. Inicia OAuth com detecção dinâmica (Expo Go ou App Nativo)
+// 3. Inicia OAuth com detecção dinâmica (Web localhost/produção ou App Nativo/Expo Go)
 export async function iniciarLoginGoogle() {
-  const localAppUrl = Linking.createURL('/auth/callback');
-  const redirectTo = `${AUTH_REDIRECT_URL}?app_url=${encodeURIComponent(localAppUrl)}`;
+  let redirectTo: string;
+  let localAppUrl: string | undefined;
+
+  if (Platform.OS === 'web') {
+    // No ambiente Web, usa dinamicamente a origem atual (seja http://localhost:... ou https://dermys.vercel.app)
+    const origin =
+      typeof window !== 'undefined' && window.location?.origin
+        ? window.location.origin
+        : AUTH_REDIRECT_URL;
+    redirectTo = `${origin.replace(/\/+$/, '')}/auth/callback`;
+  } else {
+    // No ambiente Mobile (Expo Go ou App Compilado)
+    localAppUrl = Linking.createURL('/auth/callback');
+    const baseUrl = (process.env.EXPO_PUBLIC_AUTH_REDIRECT_URL || 'https://dermys.vercel.app').replace(/\/+$/, '');
+    const baseRedirect = baseUrl.endsWith('/auth/callback') ? baseUrl : `${baseUrl}/auth/callback`;
+    redirectTo = `${baseRedirect}?app_url=${encodeURIComponent(localAppUrl)}`;
+  }
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
