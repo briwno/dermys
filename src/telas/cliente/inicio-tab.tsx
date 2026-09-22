@@ -175,11 +175,14 @@ const TAGS = [
   'Oriental',
 ];
 
+import type { PerfilUsuario } from '@/types/auth';
+
 interface PropsClienteInicioTab {
   onNavegarAba?: (aba: BottomNavTab, contatoId?: string) => void;
+  perfil?: PerfilUsuario | null;
 }
 
-export function ClienteInicioTab({ onNavegarAba }: PropsClienteInicioTab) {
+export function ClienteInicioTab({ onNavegarAba, perfil }: PropsClienteInicioTab) {
   const [consulta, setConsulta] = useState('');
   const [tagSelecionada, setTagSelecionada] = useState<string>('Todos');
   const [artistasFeed, setArtistasFeed] = useState<ItemArtistaFeedData[]>([]);
@@ -568,6 +571,7 @@ export function ClienteInicioTab({ onNavegarAba }: PropsClienteInicioTab) {
         visivel={modalReservaAberto}
         artista={artistaParaReserva}
         flashInicial={flashSelecionado}
+        perfilAtual={perfil}
         onClose={() => {
           setModalReservaAberto(false);
           setFlashSelecionado(null);

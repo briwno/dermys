@@ -144,6 +144,26 @@ export function DebugMenuModal() {
     }
   };
 
+  const handleAvancarTempoDebug = async () => {
+    setExecutandoAcao(true);
+    try {
+      const clienteId = '99999999-9999-9999-9999-999999999999'; // Mariana Costa
+      const artistaId = isArtista
+        ? perfilAtual?.id || '11111111-1111-1111-1111-111111111111'
+        : '11111111-1111-1111-1111-111111111111'; // Camila Rossi
+      const res = await DebugService.avancarTempoEConcluirSessao(artistaId, clienteId);
+      if (res?.sucesso) {
+        exibirFeedback(`⏱️ Tempo avançado! Sessão concluída e ${res.numeroNotaFiscal} gerada no Chat.`);
+      } else {
+        exibirFeedback('Aviso: Falha ao avançar tempo no simulador.');
+      }
+    } catch {
+      exibirFeedback('Erro ao avançar tempo.');
+    } finally {
+      setExecutandoAcao(false);
+    }
+  };
+
   const handleSimularAlertaMei = (tipo: 'normal' | 'alerta' | 'estourado') => {
     let msg = '';
     if (tipo === 'normal') {
@@ -589,9 +609,25 @@ export function DebugMenuModal() {
                   </View>
                 </View>
 
+                {/* Avançar no Tempo: Conclusão de Sessão & NFS-e */}
+                <View style={styles.simCard}>
+                  <Text style={styles.simCardTitle}>5. ⏱️ Avançar no Tempo (Dia da Sessão & NFS-e)</Text>
+                  <Text style={styles.simCardDesc}>
+                    Simula a chegada do dia do atendimento, valida a anamnese, conclui o procedimento e gera o documento fiscal com envio automático no chat.
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.simActionPrimaryBtn}
+                    onPress={handleAvancarTempoDebug}
+                    disabled={executandoAcao}
+                  >
+                    <Clock size={13} color="#000" />
+                    <Text style={styles.simActionPrimaryBtnText}>Simular Conclusão & Gerar NFS-e</Text>
+                  </TouchableOpacity>
+                </View>
+
                 {/* Limpeza de Cache */}
                 <View style={styles.simCard}>
-                  <Text style={styles.simCardTitle}>5. Limpeza de Cache Local</Text>
+                  <Text style={styles.simCardTitle}>6. Limpeza de Cache Local</Text>
                   <TouchableOpacity
                     style={styles.simActionDangerBtn}
                     onPress={handleLimparCache}

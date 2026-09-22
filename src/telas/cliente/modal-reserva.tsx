@@ -52,6 +52,8 @@ import {
   View,
 } from 'react-native';
 
+import type { PerfilUsuario } from '@/types/auth';
+
 interface ModalReservaProps {
   visivel: boolean;
   artista: CartaoArtista | null;
@@ -65,6 +67,7 @@ interface ModalReservaProps {
   onClose: () => void;
   onSucesso: () => void;
   onRedirecionarChat?: (artistaId: string) => void;
+  perfilAtual?: PerfilUsuario | null;
 }
 
 export type TipoSessao = 'flash' | 'exclusivo';
@@ -149,6 +152,7 @@ export function ModalReservaCliente({
   onClose,
   onSucesso,
   onRedirecionarChat,
+  perfilAtual,
 }: ModalReservaProps) {
   // Etapas: 1 = Briefing do Projeto, 2 = Data & Turno, 3 = Sinal Pix (Hold 30m), 4 = Sucesso
   const [etapa, setEtapa] = useState<1 | 2 | 3 | 4>(1);
@@ -422,19 +426,31 @@ export function ModalReservaCliente({
 
   /**
    * FASE 1: Disparo do Envio do Briefing
-   * Cria o agendamento com status: 'request', envia card briefing no chat e redireciona para o chat!
+   * Cria o agendamento inicial, envia card briefing no chat e redireciona para o chat!
    */
   const handleEnviarBriefingParaChat = async () => {
     if (!artista) return;
     setCarregando(true);
 
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      let clienteId = perfilAtual?.id || perfilAtual?.uid;
 
-      const clienteId =
-        session?.user?.id || '99999999-9999-9999-9999-999999999999';
+      if (!clienteId) {
+        try {
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
+          if (session?.user?.id) {
+            clienteId = session.user.id;
+          }
+        } catch {
+          // silencioso
+        }
+      }
+
+      if (!clienteId) {
+        clienteId = '99999999-9999-9999-9999-999999999999';
+      }
 
       const descricaoFinal =
         tipoSessao === 'flash'
@@ -442,31 +458,33 @@ export function ModalReservaCliente({
           : descricaoArte ||
             `[Projeto Exclusivo] Tatuagem ${artista.estilo} (${localCorpo}, ~${tamanhoNumericoCm}cm)`;
 
-      // 1. Salva agendamento inicial com status 'request'
-      let bookingId: string | undefined = undefined;
-      const { data: agendamentoCriado, error: errAgendamento } = await supabase
-        .from('agendamentos')
-        .insert({
-          cliente_id: clienteId,
-          artista_id: artista.id,
-          estilo: artista.estilo,
-          descricao: descricaoFinal,
-          local_corpo: localCorpo,
-          tamanho_cm: `${tamanhoNumericoCm} cm (${tamanhoCm})`,
-          tipo_sessao: tipoSessao,
-          referencias_urls: referenciasUrls,
-          status: 'request',
-          sinal_pago: false,
-          valor_total: valorTotalEstimado,
-          valor_sinal: valorSinalCalculado,
-        })
-        .select('id')
-        .single();
+      // 1. Salva agendamento inicial com status 'PENDENTE' (ou gera ID de fallback)
+      let bookingId: string = `REQ-${Date.now().toString().slice(-6)}`;
+      try {
+        const { data: agendamentoCriado, error: errAgendamento } = await supabase
+          .from('agendamentos')
+          .insert({
+            cliente_id: clienteId,
+            artista_id: artista.id,
+            estilo: artista.estilo,
+            descricao: descricaoFinal,
+            local_corpo: localCorpo,
+            tamanho_cm: `${tamanhoNumericoCm} cm (${tamanhoCm})`,
+            tipo_sessao: tipoSessao,
+            referencias_urls: referenciasUrls,
+            status: 'PENDENTE',
+            sinal_pago: false,
+            valor_total: valorTotalEstimado,
+            valor_sinal: valorSinalCalculado,
+          })
+          .select('id')
+          .single();
 
-      if (errAgendamento) {
-        console.warn('Aviso ao criar registro de agendamento:', errAgendamento);
-      } else if (agendamentoCriado?.id) {
-        bookingId = agendamentoCriado.id;
+        if (!errAgendamento && agendamentoCriado?.id) {
+          bookingId = agendamentoCriado.id;
+        }
+      } catch (errAg) {
+        console.warn('Registro agendamento fallback:', errAg);
       }
 
       // 2. Dispara card de Briefing no chat
@@ -499,6 +517,10 @@ export function ModalReservaCliente({
       }
     } catch (err) {
       console.warn('Erro ao enviar briefing:', err);
+      onClose();
+      if (onRedirecionarChat && artista?.id) {
+        onRedirecionarChat(artista.id);
+      }
     } finally {
       setCarregando(false);
     }

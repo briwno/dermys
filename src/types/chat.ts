@@ -3,7 +3,8 @@ export type TipoCardMensagem =
   | 'briefing'
   | 'quote'
   | 'deposit_confirmed'
-  | 'anamnese_card';
+  | 'anamnese_card'
+  | 'session_completed';
 
 export interface CardBriefingPayload {
   agendamentoId?: string;
@@ -41,8 +42,22 @@ export interface CardDepositPayload {
 export interface CardAnamnesePayload {
   agendamentoId: string;
   clienteNome?: string;
-  statusFicha: 'pendente' | 'preenchida' | 'com_alerta';
+  statusFicha: 'pendente' | 'preenchida' | 'assinada' | 'com_alerta';
   temAlertaSaude?: boolean;
+}
+
+export interface CardSessionCompletedPayload {
+  agendamentoId: string;
+  valorTotal: number;
+  valorSinalPago: number;
+  valorRestantePago: number;
+  metodoPagamentoRestante: string;
+  numeroNotaFiscal?: string;
+  codigoVerificacaoNfse?: string;
+  dataRealizacao: string;
+  estilo?: string;
+  urlPdf?: string;
+  tomadorNome?: string;
 }
 
 export interface MensagemChat {
@@ -58,7 +73,8 @@ export interface MensagemChat {
     | CardBriefingPayload
     | CardQuotePayload
     | CardDepositPayload
-    | CardAnamnesePayload;
+    | CardAnamnesePayload
+    | CardSessionCompletedPayload;
 }
 
 export interface ConversaResumo {

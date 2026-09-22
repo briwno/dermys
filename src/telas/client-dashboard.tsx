@@ -37,6 +37,16 @@ export function DashboardCliente({
     }
   };
 
+  if (activeTab === 'chat') {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.chatWrapper}>
+          <ClienteMensagensTab perfil={perfil} contatoInicialId={chatContatoId} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -53,11 +63,10 @@ export function DashboardCliente({
         </View>
 
         {/* Conteúdo Dinâmico por Aba */}
-        {activeTab === 'home' && <ClienteInicioTab onNavegarAba={onNavegarAba} />}
-        {activeTab === 'bookings' && <ClienteAgendamentosTab />}
-        {activeTab === 'chat' && (
-          <ClienteMensagensTab perfil={perfil} contatoInicialId={chatContatoId} />
+        {activeTab === 'home' && (
+          <ClienteInicioTab onNavegarAba={onNavegarAba} perfil={perfil} />
         )}
+        {activeTab === 'bookings' && <ClienteAgendamentosTab perfil={perfil} />}
         {activeTab === 'profile' && <ClientePerfilTab perfil={perfil} />}
       </ScrollView>
     </SafeAreaView>
@@ -68,6 +77,9 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#050505',
+  },
+  chatWrapper: {
+    flex: 1,
   },
   content: {
     paddingHorizontal: 18,

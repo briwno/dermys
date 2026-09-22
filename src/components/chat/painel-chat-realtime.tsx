@@ -1,5 +1,9 @@
+import { AftercareModal } from '@/components/aftercare-modal';
+import { PERSONAS_TESTE } from '@/components/debug/types';
+import { DanfseDocumentoModal } from '@/components/fiscal/danfse-documento-modal';
 import { AppModal } from '@/components/ui/app-modal';
 import { ChatService } from '@/services/chat-service';
+import { FiscalService } from '@/services/fiscal/fiscal-service';
 import { criarCobrancaSinal } from '@/services/mercadopago';
 import { supabase } from '@/services/supabase';
 import type { PerfilUsuario } from '@/types/auth';
@@ -8,9 +12,11 @@ import type {
   CardBriefingPayload,
   CardDepositPayload,
   CardQuotePayload,
+  CardSessionCompletedPayload,
   ConversaResumo,
   MensagemChat,
 } from '@/types/chat';
+import type { ReciboFiscal } from '@/types/financeiro';
 import {
   AlertCircle,
   ArrowLeft,
@@ -123,6 +129,18 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
   const [pixCopiado, setPixCopiado] = useState(false);
   const [processandoPagamento, setProcessandoPagamento] = useState(false);
 
+  // Form de Conclusão de Sessão & Emissão Fiscal (Fase 6)
+  const [modalConcluirSessaoAberto, setModalConcluirSessaoAberto] = useState(false);
+  const [metodoPagamentoSaldo, setMetodoPagamentoSaldo] = useState<'pix' | 'cartao' | 'dinheiro'>('pix');
+  const [emitirNfseAutomatica, setEmitirNfseAutomatica] = useState(true);
+  const [concluindoSessao, setConcluindoSessao] = useState(false);
+  const [feedbackAviso, setFeedbackAviso] = useState<string | null>(null);
+
+  // Modais de Recibo e Guia de Cicatrização (Aftercare)
+  const [modalReciboAberto, setModalReciboAberto] = useState(false);
+  const [reciboAtivo, setReciboAtivo] = useState<ReciboFiscal | null>(null);
+  const [modalAftercareAberto, setModalAftercareAberto] = useState(false);
+
   const flatListRef = useRef<FlatList>(null);
 
   // 1. Carrega lista de conversas ao montar
@@ -143,21 +161,35 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
               abrirConversa(achado);
             } else {
               // Busca perfil do contato se não tiver mensagem ainda
-              const { data: p } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', contatoInicialId)
-                .maybeSingle();
+              let p: any = null;
+              try {
+                const { data } = await supabase
+                  .from('profiles')
+                  .select('*')
+                  .eq('id', contatoInicialId)
+                  .maybeSingle();
+                p = data;
+              } catch {
+                // silencioso
+              }
 
-              if (p && montado) {
+              const persona = PERSONAS_TESTE.find((pt) => pt.id === contatoInicialId);
+              const nomeFinal = p?.nome_exibicao || persona?.nome || 'Usuário Dermys';
+              const fotoFinal = p?.foto_url || persona?.avatarUrl;
+              const tipoFinal = (p?.tipo_perfil || persona?.tipo || 'artista') as any;
+              const estudioFinal = p?.nome_estudio || persona?.estudio;
+              const estiloFinal = p?.estilo_principal || persona?.estilo;
+              const cidadeFinal = p?.cidade || persona?.cidade;
+
+              if (montado) {
                 const novaConversa: ConversaResumo = {
-                  contato_id: p.id,
-                  nome: p.nome_exibicao || 'Usuário',
-                  foto_url: p.foto_url,
-                  tipo_perfil: (p.tipo_perfil as any) || 'artista',
-                  nome_estudio: p.nome_estudio,
-                  estilo_principal: p.estilo_principal,
-                  cidade: p.cidade,
+                  contato_id: contatoInicialId,
+                  nome: nomeFinal,
+                  foto_url: fotoFinal,
+                  tipo_perfil: tipoFinal,
+                  nome_estudio: estudioFinal,
+                  estilo_principal: estiloFinal,
+                  cidade: cidadeFinal,
                   ultima_mensagem: 'Iniciar conversa...',
                   data_ultima_mensagem: new Date().toISOString(),
                   nao_lidas: 0,
@@ -182,6 +214,13 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
     };
   }, [usuarioId, contatoInicialId]);
 
+  const adicionarOuAtualizarMensagem = (novaMsg: MensagemChat) => {
+    setMensagens((prev) => {
+      const lista = [...prev, novaMsg];
+      return ChatService.deduplicarListaMensagens(lista);
+    });
+  };
+
   // 2. Inscreve canal Realtime
   useEffect(() => {
     if (!usuarioId || !conversaAtiva) return;
@@ -190,10 +229,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
       usuarioId,
       conversaAtiva.contato_id,
       (novaMensagem) => {
-        setMensagens((prev) => {
-          if (prev.some((m) => m.id === novaMensagem.id)) return prev;
-          return [...prev, novaMensagem];
-        });
+        adicionarOuAtualizarMensagem(novaMensagem);
 
         setConversas((prev) =>
           prev.map((c) =>
@@ -278,7 +314,9 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
 
       if (confirmada) {
         setMensagens((prev) =>
-          prev.map((m) => (m.id === idTemp ? { ...confirmada, status_envio: 'enviado' } : m))
+          ChatService.deduplicarListaMensagens(
+            prev.map((m) => (m.id === idTemp ? { ...confirmada, status_envio: 'enviado' } : m))
+          )
         );
       }
     } catch {
@@ -300,7 +338,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
       const valorSinal = Number(sinalPersonalizado) || Math.round(valorTotal * 0.3);
 
       const payloadQuote: CardQuotePayload = {
-        agendamentoId: `REQ-${Date.now().toString().slice(-6)}`,
+        agendamentoId: ultimoBriefing?.card_payload?.agendamentoId || `REQ-${Date.now().toString().slice(-6)}`,
         valorTotal,
         duracaoEstimada: duracaoSelecionada,
         valorSinal,
@@ -315,7 +353,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
       );
 
       if (msg) {
-        setMensagens((prev) => [...prev, msg]);
+        adicionarOuAtualizarMensagem(msg);
       }
 
       setModalPropostaAberto(false);
@@ -367,7 +405,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
 
   // FASE 4: Confirmação de Sinal Pago
   const handleConfirmarSinalNoChat = async () => {
-    if (!conversaAtiva || !quoteAtivoParaReserva) return;
+    if (!conversaAtiva || !quoteAtivoParaReserva || processandoPagamento) return;
     setProcessandoPagamento(true);
 
     try {
@@ -379,17 +417,17 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
         protocoloReserva: `DERM-${Date.now().toString().slice(-6)}`,
       };
 
-      // Dispara card de confirmação de sinal
+      // Dispara card de confirmação de sinal (deduplicado)
       const msgSinal = await ChatService.enviarConfirmacaoSinal(
         usuarioId,
         conversaAtiva.contato_id,
         payloadDeposit
       );
       if (msgSinal) {
-        setMensagens((prev) => [...prev, msgSinal]);
+        adicionarOuAtualizarMensagem(msgSinal);
       }
 
-      // Dispara card solicitando preenchimento da Anamnese
+      // Dispara card solicitando preenchimento da Anamnese (deduplicado)
       const payloadAnamnese: CardAnamnesePayload = {
         agendamentoId: quoteAtivoParaReserva.agendamentoId,
         clienteNome: perfilAtual.nome_exibicao || 'Cliente',
@@ -401,7 +439,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
         payloadAnamnese
       );
       if (msgAnamnese) {
-        setMensagens((prev) => [...prev, msgAnamnese]);
+        adicionarOuAtualizarMensagem(msgAnamnese);
       }
 
       setModalReservaAberto(false);
@@ -449,7 +487,10 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
         const msgTexto = temAlerta
           ? '🩺 Ficha de Saúde assinada! (Aviso: Contém observação de sensibilidade/saúde)'
           : '✅ Ficha de Anamnese & Saúde assinada e validada digitalmente!';
-        await ChatService.enviarMensagem(usuarioId, conversaAtiva.contato_id, msgTexto);
+        const msgEnv = await ChatService.enviarMensagem(usuarioId, conversaAtiva.contato_id, msgTexto);
+        if (msgEnv) {
+          adicionarOuAtualizarMensagem(msgEnv);
+        }
       }
 
       setModalAnamneseAberto(false);
@@ -458,6 +499,172 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
     } finally {
       setSalvandoAnamnese(false);
     }
+  };
+
+  // Análise do Estado do Fluxo de Atendimento
+  const ultimoBriefing = [...mensagens].reverse().find((m) => m.tipo_mensagem === 'briefing');
+  const ultimaProposta = [...mensagens].reverse().find((m) => m.tipo_mensagem === 'quote');
+  const ultimoSinal = [...mensagens].reverse().find((m) => m.tipo_mensagem === 'deposit_confirmed');
+  const ultimaAnamnese = [...mensagens].reverse().find((m) => m.tipo_mensagem === 'anamnese_card');
+  const ultimaSessaoConcluida = [...mensagens].reverse().find((m) => m.tipo_mensagem === 'session_completed');
+
+  const temAnamneseAssinada = mensagens.some(
+    (m) =>
+      m.conteudo?.includes('Ficha de Anamnese & Saúde assinada') ||
+      m.conteudo?.includes('Ficha de Saúde assinada')
+  );
+
+  // A opção de enviar proposta só deve aparecer quando há briefing E ainda não houve proposta / sinal / conclusão
+  const podeEnviarProposta =
+    isArtista && Boolean(ultimoBriefing) && !ultimaProposta && !ultimoSinal && !ultimaSessaoConcluida;
+
+  // A sessão está pronta para confirmação de atendimento quando o sinal/reserva estiver travada e ainda não foi concluída
+  const sessaoProntaParaFinalizar = Boolean(ultimoSinal && !ultimaSessaoConcluida);
+
+  // FASE 6: Avançar no tempo para o dia da sessão (Simulador / Debug)
+  const handleAvancarNoTempoSimulacao = () => {
+    setFeedbackAviso('⏱️ Avançado no tempo para o dia marcado! Atendimento pronto para conclusão.');
+    setModalConcluirSessaoAberto(true);
+    setTimeout(() => setFeedbackAviso(null), 4000);
+  };
+
+  // FASE 6: Confirmar realização da sessão e emitir documento fiscal (NFS-e / Recibo)
+  const handleConfirmarRealizacaoSessao = async () => {
+    if (!conversaAtiva) return;
+    setConcluindoSessao(true);
+    try {
+      const quotePayload = ultimaProposta?.card_payload as CardQuotePayload | undefined;
+      const depositPayload = ultimoSinal?.card_payload as CardDepositPayload | undefined;
+
+      const valorTotal = quotePayload?.valorTotal || 800;
+      const valorSinal = depositPayload?.valorSinal || quotePayload?.valorSinal || Math.round(valorTotal * 0.3);
+      const valorRestante = Math.max(0, valorTotal - valorSinal);
+      const agendamentoId =
+        quotePayload?.agendamentoId ||
+        depositPayload?.agendamentoId ||
+        `AG-${Date.now().toString().slice(-6)}`;
+
+      let numeroNfse: string | undefined = undefined;
+      let codigoVerificacao: string | undefined = undefined;
+      let urlPdf: string | undefined = undefined;
+
+      if (emitirNfseAutomatica) {
+        try {
+          const nf = await FiscalService.emitirNotaFiscal({
+            artistaId: usuarioId,
+            clienteId: conversaAtiva.contato_id,
+            agendamentoId,
+            valorServico: valorTotal,
+            descricaoServico: `Procedimento de Tatuagem Autoral (${conversaAtiva.estilo_principal || 'Fine Line'})`,
+            tomador: {
+              nome: conversaAtiva.nome,
+            },
+          });
+          if (nf) {
+            numeroNfse = nf.numero_documento;
+            codigoVerificacao = nf.codigo_verificacao;
+            urlPdf = nf.url_pdf;
+          }
+        } catch (errNf) {
+          console.warn('Emissão fiscal fallback:', errNf);
+          numeroNfse = `NFS-${new Date().getFullYear()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+          codigoVerificacao = `VER-${Date.now().toString(16).toUpperCase()}`;
+        }
+      } else {
+        numeroNfse = `REC-${new Date().getFullYear()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+        codigoVerificacao = `AUT-${Date.now().toString(16).toUpperCase()}`;
+      }
+
+      // Atualiza banco de dados
+      try {
+        await supabase
+          .from('agendamentos')
+          .update({
+            status: 'CONCLUIDO',
+            valor_total: valorTotal,
+          })
+          .match({ artista_id: usuarioId, cliente_id: conversaAtiva.contato_id });
+      } catch {
+        // segue para chat
+      }
+
+      // 1. Envia Card de Sessão Concluída no chat
+      const payloadSession: CardSessionCompletedPayload = {
+        agendamentoId,
+        valorTotal,
+        valorSinalPago: valorSinal,
+        valorRestantePago: valorRestante,
+        metodoPagamentoRestante:
+          metodoPagamentoSaldo === 'pix'
+            ? 'PIX'
+            : metodoPagamentoSaldo === 'cartao'
+            ? 'Cartão de Débito/Crédito'
+            : 'Dinheiro',
+        numeroNotaFiscal: numeroNfse,
+        codigoVerificacaoNfse: codigoVerificacao,
+        dataRealizacao: new Date().toLocaleDateString('pt-BR'),
+        estilo: conversaAtiva.estilo_principal || 'Fine Line',
+        urlPdf,
+        tomadorNome: conversaAtiva.nome,
+      };
+
+      const msgConclusao = await ChatService.enviarConclusaoSessao(
+        usuarioId,
+        conversaAtiva.contato_id,
+        payloadSession
+      );
+
+      if (msgConclusao) {
+        adicionarOuAtualizarMensagem(msgConclusao);
+      }
+
+      // 2. Envia mensagem de cuidados de pós-procedimento
+      const msgAftercare = await ChatService.enviarMensagem(
+        usuarioId,
+        conversaAtiva.contato_id,
+        '✨ Procedimento concluído com sucesso! Lembre-se de seguir o Guia de Cicatrização (Aftercare) para a melhor fixação dos pigmentos.'
+      );
+      if (msgAftercare) {
+        adicionarOuAtualizarMensagem(msgAftercare);
+      }
+
+      setModalConcluirSessaoAberto(false);
+      setFeedbackAviso('✅ Procedimento finalizado e documento fiscal emitido com sucesso!');
+      setTimeout(() => setFeedbackAviso(null), 4000);
+    } catch (err) {
+      console.warn('Erro ao concluir sessão:', err);
+    } finally {
+      setConcluindoSessao(false);
+    }
+  };
+
+  // Abrir visualização do Recibo Fiscal
+  const handleAbrirReciboCard = (s: CardSessionCompletedPayload) => {
+    const reciboObj: ReciboFiscal = {
+      numeroRecibo: s.numeroNotaFiscal || `REC-${Date.now()}`,
+      dataEmissao: s.dataRealizacao || new Date().toLocaleDateString('pt-BR'),
+      agendamentoId: s.agendamentoId,
+      artistaNome: isArtista
+        ? perfilAtual.nome_exibicao || 'Tatuador Dermys'
+        : conversaAtiva?.nome || 'Tatuador Dermys',
+      artistaDocumento: perfilAtual.cpf_cnpj || '54.321.987/0001-23',
+      artistaEstudio: perfilAtual.nome_estudio || conversaAtiva?.nome_estudio || 'Estúdio Particular',
+      clienteNome:
+        s.tomadorNome ||
+        (!isArtista ? perfilAtual.nome_exibicao || 'Cliente' : conversaAtiva?.nome || 'Cliente'),
+      clienteDocumento: '***.***.***-**',
+      descricaoServico: `Procedimento de Tatuagem ${s.estilo || 'Autoral'}`,
+      estilo: s.estilo || 'Fine Line',
+      valorSinal: s.valorSinalPago,
+      valorFinal: s.valorRestantePago,
+      valorTotal: s.valorTotal,
+      formaPagamento: `Sinal Mercado Pago + Saldo ${s.metodoPagamentoRestante}`,
+      codigoAutenticacao: s.codigoVerificacaoNfse || `AUT-${Date.now()}`,
+      regimeTributario: 'MEI',
+      tributosEstimados: 0,
+    };
+    setReciboAtivo(reciboObj);
+    setModalReciboAberto(true);
   };
 
   const formatarHora = (iso: string) => {
@@ -773,7 +980,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                     )}
 
                     {/* Ação do Tatuador: Responder com Proposta */}
-                    {isArtista && !isMe && (
+                    {podeEnviarProposta && !isMe && (
                       <Pressable
                         style={styles.btnCardActionPrimary}
                         onPress={() => setModalPropostaAberto(true)}
@@ -814,7 +1021,9 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                         </Text>
                       </View>
                       <View style={styles.statusBadgeGreen}>
-                        <Text style={styles.statusBadgeGreenText}>Fase 3 • Orçamento</Text>
+                        <Text style={styles.statusBadgeGreenText}>
+                          {ultimoSinal ? 'Proposta Aceita' : 'Fase 3 • Orçamento'}
+                        </Text>
                       </View>
                     </View>
 
@@ -848,7 +1057,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                     )}
 
                     {/* BOTÃO EM DESTAQUE PARA O CLIENTE: [ Escolher Data & Reservar ] */}
-                    {!isArtista && (
+                    {!isArtista && !ultimoSinal && (
                       <Pressable
                         style={styles.btnBookFromQuote}
                         onPress={() => handleAbrirReservaQuote(q)}
@@ -902,6 +1111,8 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
             // 4. CARD DE FICHA DE ANAMNESE (Fase 5)
             if (item.tipo_mensagem === 'anamnese_card' && item.card_payload) {
               const a = item.card_payload as CardAnamnesePayload;
+              const assinada = temAnamneseAssinada || a.statusFicha === 'assinada';
+
               return (
                 <View key={item.id} style={styles.cardContainerWrapper}>
                   {mostrarData && (
@@ -914,7 +1125,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
 
                   <View style={styles.anamneseCard}>
                     <View style={styles.anamneseCardHeader}>
-                      <HeartPulse size={20} color="#f3c21a" />
+                      <HeartPulse size={20} color={assinada ? '#10b981' : '#f3c21a'} />
                       <View style={{ flex: 1 }}>
                         <Text style={styles.anamneseCardTitle}>
                           Fase 5 • Ficha de Saúde (Anamnese)
@@ -925,7 +1136,14 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                       </View>
                     </View>
 
-                    {!isArtista && (
+                    {assinada ? (
+                      <View style={styles.anamneseSignedBadge}>
+                        <ShieldCheck size={16} color="#10b981" />
+                        <Text style={styles.anamneseSignedBadgeText}>
+                          Ficha de Saúde Assinada & Validada Digitalmente
+                        </Text>
+                      </View>
+                    ) : !isArtista ? (
                       <Pressable
                         style={styles.btnPreencherAnamneseChat}
                         onPress={() => {
@@ -935,10 +1153,94 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                       >
                         <FileHeart size={16} color="#111" />
                         <Text style={styles.btnPreencherAnamneseChatText}>
-                          [ Preencher Ficha de Saúde (Anamnese) ]
+                          Preencher Ficha de Saúde (Anamnese)
                         </Text>
                       </Pressable>
+                    ) : (
+                      <View style={styles.anamnesePendenteBadge}>
+                        <Clock size={15} color="#f3c21a" />
+                        <Text style={styles.anamnesePendenteBadgeText}>
+                          Aguardando preenchimento e assinatura pelo cliente
+                        </Text>
+                      </View>
                     )}
+                  </View>
+                </View>
+              );
+            }
+
+            // 5. CARD DE SESSÃO CONCLUÍDA & FISCAL (Fase 6)
+            if (item.tipo_mensagem === 'session_completed' && item.card_payload) {
+              const s = item.card_payload as CardSessionCompletedPayload;
+              return (
+                <View key={item.id} style={styles.cardContainerWrapper}>
+                  {mostrarData && (
+                    <View style={styles.dateSeparatorWrap}>
+                      <Text style={styles.dateSeparatorText}>
+                        {formatarDataHeader(item.criado_em)}
+                      </Text>
+                    </View>
+                  )}
+
+                  <View style={styles.sessionCompletedCard}>
+                    <View style={styles.sessionCompletedHeader}>
+                      <View style={styles.cardHeaderIconWrapGold}>
+                        <Sparkles size={18} color="#f3c21a" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.sessionCompletedTitle}>
+                          🎉 Sessão Concluída & Liquidada
+                        </Text>
+                        <Text style={styles.sessionCompletedSub}>
+                          Procedimento realizado em {s.dataRealizacao}
+                        </Text>
+                      </View>
+                      <View style={styles.statusBadgeGold}>
+                        <Text style={styles.statusBadgeGoldText}>Fase 6 • Finalizado</Text>
+                      </View>
+                    </View>
+
+                    {/* Detalhamento Financeiro Liquidado */}
+                    <View style={styles.completedFinBox}>
+                      <View style={styles.quoteFinRow}>
+                        <Text style={styles.quoteFinLabel}>Valor Total do Serviço:</Text>
+                        <Text style={styles.completedFinValTotal}>
+                          R$ {s.valorTotal.toFixed(2)}
+                        </Text>
+                      </View>
+                      <View style={styles.completedFinRowBreakdown}>
+                        <Text style={styles.completedFinSubText}>
+                          Sinal: R$ {s.valorSinalPago.toFixed(2)} (MP) • Saldo: R$ {s.valorRestantePago.toFixed(2)} ({s.metodoPagamentoRestante})
+                        </Text>
+                      </View>
+                      {s.numeroNotaFiscal && (
+                        <View style={styles.nfseDocRow}>
+                          <FileText size={14} color="#10b981" />
+                          <Text style={styles.nfseDocText}>
+                            Doc Fiscal: {s.numeroNotaFiscal} (Cod: {s.codigoVerificacaoNfse || 'AUT'})
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+
+                    {/* Botões de Ação */}
+                    <View style={styles.completedActionsRow}>
+                      <Pressable
+                        style={styles.btnVerReciboChat}
+                        onPress={() => handleAbrirReciboCard(s)}
+                      >
+                        <FileText size={15} color="#111" />
+                        <Text style={styles.btnVerReciboChatText}>Ver Nota / Recibo</Text>
+                      </Pressable>
+
+                      <Pressable
+                        style={styles.btnVerAftercareChat}
+                        onPress={() => setModalAftercareAberto(true)}
+                      >
+                        <ShieldCheck size={15} color="#10b981" />
+                        <Text style={styles.btnVerAftercareChatText}>Cuidados Pós</Text>
+                      </Pressable>
+                    </View>
                   </View>
                 </View>
               );
@@ -1005,8 +1307,15 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
         />
       )}
 
-      {/* BARRA DE AÇÃO DO TATUADOR (Fase 3): + Enviar Proposta */}
-      {isArtista && (
+      {/* Toast de Feedback */}
+      {feedbackAviso && (
+        <View style={styles.feedbackToastWrap}>
+          <Text style={styles.feedbackToastText}>{feedbackAviso}</Text>
+        </View>
+      )}
+
+      {/* BARRA DE AÇÃO 1 (Fase 3): + Enviar Proposta (Somente quando há briefing pendente) */}
+      {podeEnviarProposta && (
         <View style={styles.artistActionBar}>
           <Pressable
             style={styles.btnPropostaArtist}
@@ -1014,6 +1323,29 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
           >
             <DollarSign size={16} color="#111" />
             <Text style={styles.btnPropostaArtistText}>+ Enviar Proposta de Orçamento</Text>
+          </Pressable>
+        </View>
+      )}
+
+      {/* BARRA DE AÇÃO 2 (Fase 6): Sessão Confirmada -> Confirmar Realização & Avançar no Tempo */}
+      {isArtista && sessaoProntaParaFinalizar && (
+        <View style={styles.sessionReadyActionBar}>
+          <Pressable
+            style={styles.btnConfirmarSessaoArtist}
+            onPress={() => setModalConcluirSessaoAberto(true)}
+          >
+            <CheckCircle2 size={16} color="#111" />
+            <Text style={styles.btnConfirmarSessaoArtistText}>
+              Confirmar Realização & Emitir NFS-e
+            </Text>
+          </Pressable>
+
+          <Pressable
+            style={styles.btnAvancarTempoDebug}
+            onPress={handleAvancarNoTempoSimulacao}
+          >
+            <Clock size={14} color="#f3c21a" />
+            <Text style={styles.btnAvancarTempoDebugText}>⏱️ Avançar no Tempo</Text>
           </Pressable>
         </View>
       )}
@@ -1486,6 +1818,152 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
           </View>
         </View>
       </AppModal>
+
+      {/* MODAL 4: CONCLUIR SESSÃO & EMITIR NFS-E (Fase 6) */}
+      <AppModal
+        visible={modalConcluirSessaoAberto}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setModalConcluirSessaoAberto(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <View>
+                <Text style={styles.modalTitle}>Concluir Sessão & Emitir NFS-e</Text>
+                <Text style={styles.modalSub}>
+                  Finalize o procedimento de {conversaAtiva?.nome} e gere a documentação fiscal
+                </Text>
+              </View>
+              <Pressable
+                style={styles.modalCloseBtn}
+                onPress={() => setModalConcluirSessaoAberto(false)}
+              >
+                <X size={18} color="#888" />
+              </Pressable>
+            </View>
+
+            <ScrollView contentContainerStyle={{ gap: 14, paddingVertical: 10 }}>
+              {/* Resumo Financeiro da Sessão */}
+              <View style={styles.resumoFinModalWrap}>
+                <View style={styles.resumoFinRowModal}>
+                  <Text style={styles.resumoFinModalLabel}>Valor Total do Procedimento:</Text>
+                  <Text style={styles.resumoFinModalValTotal}>
+                    R$ {Number((ultimaProposta?.card_payload as CardQuotePayload)?.valorTotal || 800).toFixed(2)}
+                  </Text>
+                </View>
+
+                <View style={styles.resumoFinRowModal}>
+                  <Text style={styles.resumoFinModalLabel}>Sinal já Pago (Mercado Pago):</Text>
+                  <Text style={styles.resumoFinModalValSinal}>
+                    - R$ {Number((ultimoSinal?.card_payload as CardDepositPayload)?.valorSinal || 240).toFixed(2)}
+                  </Text>
+                </View>
+
+                <View style={styles.dividerFinModal} />
+
+                <View style={styles.resumoFinRowModalHighlight}>
+                  <Text style={styles.resumoFinModalLabelHighlight}>Saldo a Liquidar Hoje:</Text>
+                  <Text style={styles.resumoFinModalValHighlight}>
+                    R$ {Math.max(
+                      0,
+                      Number((ultimaProposta?.card_payload as CardQuotePayload)?.valorTotal || 800) -
+                        Number((ultimoSinal?.card_payload as CardDepositPayload)?.valorSinal || 240)
+                    ).toFixed(2)}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Forma de Pagamento do Saldo Restante */}
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Forma de Pagamento do Saldo Restante</Text>
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  {[
+                    { id: 'pix', label: 'PIX Presencial' },
+                    { id: 'cartao', label: 'Cartão' },
+                    { id: 'dinheiro', label: 'Dinheiro' },
+                  ].map((m) => {
+                    const isSel = metodoPagamentoSaldo === m.id;
+                    return (
+                      <Pressable
+                        key={m.id}
+                        onPress={() => setMetodoPagamentoSaldo(m.id as any)}
+                        style={[
+                          styles.metodoSaldoItem,
+                          isSel && styles.metodoSaldoItemActive,
+                        ]}
+                      >
+                        <Text
+                          style={[
+                            styles.metodoSaldoText,
+                            isSel && styles.metodoSaldoTextActive,
+                          ]}
+                        >
+                          {m.label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
+
+              {/* Opção de Emissão de Nota Fiscal (NFS-e) */}
+              <Pressable
+                style={styles.nfseCheckOption}
+                onPress={() => setEmitirNfseAutomatica(!emitirNfseAutomatica)}
+              >
+                <View
+                  style={[
+                    styles.checkSquare,
+                    emitirNfseAutomatica && styles.checkSquareActive,
+                  ]}
+                >
+                  {emitirNfseAutomatica && <Check size={12} color="#111" />}
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.nfseCheckTitle}>Emitir Nota Fiscal de Serviço (NFS-e)</Text>
+                  <Text style={styles.nfseCheckSub}>
+                    Gera e registra a NFS-e eletrônica oficial e disponibiliza o recibo no chat
+                  </Text>
+                </View>
+              </Pressable>
+            </ScrollView>
+
+            <Pressable
+              style={styles.btnConfirmarConclusao}
+              onPress={handleConfirmarRealizacaoSessao}
+              disabled={concluindoSessao}
+            >
+              {concluindoSessao ? (
+                <ActivityIndicator color="#111" size="small" />
+              ) : (
+                <>
+                  <Sparkles size={18} color="#111" />
+                  <Text style={styles.btnConfirmarConclusaoText}>
+                    Confirmar Realização & Emitir NFS-e
+                  </Text>
+                </>
+              )}
+            </Pressable>
+          </View>
+        </View>
+      </AppModal>
+
+      {/* MODAL 5: NFS-E / RECIBO FISCAL DANFSE V1.0 */}
+      <DanfseDocumentoModal
+        visivel={modalReciboAberto}
+        dadosNotaOuRecibo={reciboAtivo}
+        perfilTatuador={isArtista ? perfilAtual : conversaAtiva}
+        perfilCliente={!isArtista ? perfilAtual : conversaAtiva}
+        onClose={() => setModalReciboAberto(false)}
+      />
+
+      {/* MODAL 6: GUIA DE CICATRIZAÇÃO (AFTERCARE) */}
+      <AftercareModal
+        visivel={modalAftercareAberto}
+        artistaNome={isArtista ? perfilAtual.nome_exibicao : conversaAtiva?.nome}
+        onClose={() => setModalAftercareAberto(false)}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -2121,6 +2599,40 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     textTransform: 'uppercase',
   },
+  anamneseSignedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginTop: 4,
+  },
+  anamneseSignedBadgeText: {
+    color: '#10b981',
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  anamnesePendenteBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(243, 194, 26, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(243, 194, 26, 0.3)',
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginTop: 4,
+  },
+  anamnesePendenteBadgeText: {
+    color: '#f3c21a',
+    fontSize: 11,
+    fontWeight: '700',
+  },
   artistActionBar: {
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -2447,5 +2959,281 @@ const styles = StyleSheet.create({
     fontSize: 11,
     flex: 1,
     lineHeight: 16,
+  },
+  feedbackToastWrap: {
+    backgroundColor: '#1b1b22',
+    borderTopWidth: 1,
+    borderTopColor: '#f3c21a',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+  },
+  feedbackToastText: {
+    color: '#f3c21a',
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  sessionReadyActionBar: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: '#0e0e12',
+    borderTopWidth: 1,
+    borderTopColor: '#1c1c24',
+    flexDirection: 'row',
+    gap: 8,
+  },
+  btnConfirmarSessaoArtist: {
+    flex: 1,
+    backgroundColor: '#10b981',
+    borderRadius: 10,
+    paddingVertical: 11,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 6,
+  },
+  btnConfirmarSessaoArtistText: {
+    color: '#111',
+    fontSize: 12,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  btnAvancarTempoDebug: {
+    backgroundColor: '#191812',
+    borderWidth: 1,
+    borderColor: '#543f07',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 11,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 6,
+  },
+  btnAvancarTempoDebugText: {
+    color: '#f3c21a',
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  sessionCompletedCard: {
+    backgroundColor: '#121216',
+    borderWidth: 1,
+    borderColor: '#3a331a',
+    borderRadius: 14,
+    padding: 14,
+    gap: 10,
+  },
+  sessionCompletedHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  cardHeaderIconWrapGold: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    backgroundColor: 'rgba(243, 194, 26, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(243, 194, 26, 0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sessionCompletedTitle: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  sessionCompletedSub: {
+    color: '#999',
+    fontSize: 10,
+    marginTop: 1,
+  },
+  statusBadgeGold: {
+    backgroundColor: 'rgba(243, 194, 26, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(243, 194, 26, 0.4)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  statusBadgeGoldText: {
+    color: '#f3c21a',
+    fontSize: 9,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  completedFinBox: {
+    backgroundColor: '#17171d',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#242430',
+    padding: 10,
+    gap: 6,
+  },
+  completedFinValTotal: {
+    color: '#10b981',
+    fontSize: 14,
+    fontWeight: '900',
+  },
+  completedFinRowBreakdown: {
+    paddingTop: 4,
+    borderTopWidth: 1,
+    borderTopColor: '#22222e',
+  },
+  completedFinSubText: {
+    color: '#888',
+    fontSize: 10,
+  },
+  nfseDocRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 2,
+  },
+  nfseDocText: {
+    color: '#10b981',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  completedActionsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  btnVerReciboChat: {
+    flex: 1,
+    backgroundColor: '#f3c21a',
+    borderRadius: 8,
+    paddingVertical: 9,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 6,
+  },
+  btnVerReciboChatText: {
+    color: '#111',
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  btnVerAftercareChat: {
+    flex: 1,
+    backgroundColor: 'rgba(16, 185, 129, 0.12)',
+    borderWidth: 1,
+    borderColor: '#10b981',
+    borderRadius: 8,
+    paddingVertical: 9,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 6,
+  },
+  btnVerAftercareChatText: {
+    color: '#10b981',
+    fontSize: 11,
+    fontWeight: '800',
+  },
+  resumoFinModalWrap: {
+    backgroundColor: '#14141c',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#242434',
+    padding: 12,
+    gap: 8,
+  },
+  resumoFinRowModal: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  resumoFinModalLabel: {
+    color: '#aaa',
+    fontSize: 11,
+  },
+  resumoFinModalValTotal: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  resumoFinModalValSinal: {
+    color: '#10b981',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  dividerFinModal: {
+    height: 1,
+    backgroundColor: '#262638',
+  },
+  resumoFinRowModalHighlight: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  resumoFinModalLabelHighlight: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  resumoFinModalValHighlight: {
+    color: '#f3c21a',
+    fontSize: 16,
+    fontWeight: '900',
+  },
+  metodoSaldoItem: {
+    flex: 1,
+    backgroundColor: '#14141c',
+    borderWidth: 1,
+    borderColor: '#262636',
+    borderRadius: 8,
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  metodoSaldoItemActive: {
+    backgroundColor: '#1d190d',
+    borderColor: '#f3c21a',
+  },
+  metodoSaldoText: {
+    color: '#888',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  metodoSaldoTextActive: {
+    color: '#f3c21a',
+    fontWeight: '800',
+  },
+  nfseCheckOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: '#14141c',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#242434',
+    padding: 10,
+  },
+  nfseCheckTitle: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  nfseCheckSub: {
+    color: '#888',
+    fontSize: 10,
+    marginTop: 1,
+  },
+  btnConfirmarConclusao: {
+    backgroundColor: '#10b981',
+    borderRadius: 12,
+    paddingVertical: 14,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 6,
+  },
+  btnConfirmarConclusaoText: {
+    color: '#111',
+    fontSize: 13,
+    fontWeight: '900',
+    textTransform: 'uppercase',
   },
 });

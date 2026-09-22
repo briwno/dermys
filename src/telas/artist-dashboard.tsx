@@ -40,6 +40,16 @@ export function DashboardArtista({
     }
   };
 
+  if (activeTab === 'chat') {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.chatWrapper}>
+          <ArtistaMensagensTab perfil={perfil} contatoInicialId={chatContatoId} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -60,9 +70,6 @@ export function DashboardArtista({
         {activeTab === 'dashboard' && <ArtistaDashboardTab perfil={perfil} />}
         {activeTab === 'schedule' && <ArtistaAgendaTab />}
         {activeTab === 'financial' && <ArtistaFinanceiroTab perfil={perfil} />}
-        {activeTab === 'chat' && (
-          <ArtistaMensagensTab perfil={perfil} contatoInicialId={chatContatoId} />
-        )}
         {activeTab === 'profile' && <ArtistaPerfilTab perfil={perfil} />}
       </ScrollView>
     </SafeAreaView>
@@ -73,6 +80,9 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#050505',
+  },
+  chatWrapper: {
+    flex: 1,
   },
   content: {
     paddingHorizontal: 18,

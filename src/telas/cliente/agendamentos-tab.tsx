@@ -64,7 +64,13 @@ export interface ItemAgendamentoCliente {
   temAlertaSaude?: boolean;
 }
 
-export function ClienteAgendamentosTab() {
+import type { PerfilUsuario } from '@/types/auth';
+
+export interface ClienteAgendamentosTabProps {
+  perfil?: PerfilUsuario | null;
+}
+
+export function ClienteAgendamentosTab({ perfil }: ClienteAgendamentosTabProps = {}) {
   const [agendamentos, setAgendamentos] = useState<ItemAgendamentoCliente[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [filtro, setFiltro] = useState<'todos' | 'ativos' | 'concluidos'>('todos');
@@ -93,14 +99,22 @@ export function ClienteAgendamentosTab() {
 
   useEffect(() => {
     carregarAgendamentos();
-  }, []);
+  }, [perfil?.id]);
 
   const carregarAgendamentos = async () => {
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session?.user) return;
+      let clienteId = perfil?.id || perfil?.uid;
+      if (!clienteId) {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (session?.user?.id) {
+          clienteId = session.user.id;
+        }
+      }
+      if (!clienteId) {
+        clienteId = '99999999-9999-9999-9999-999999999999';
+      }
 
       // 1. Busca agendamentos do cliente
       const { data, error } = await supabase
@@ -123,7 +137,7 @@ export function ClienteAgendamentosTab() {
           sinal_pago,
           artista:profiles!agendamentos_artista_id_fkey(nome_exibicao, nome_estudio, cidade)
         `)
-        .eq('cliente_id', session.user.id)
+        .eq('cliente_id', clienteId)
         .order('data_horario', { ascending: false });
 
       if (!error && data) {
@@ -131,7 +145,7 @@ export function ClienteAgendamentosTab() {
         const { data: fichasData } = await supabase
           .from('fichas_anamnese')
           .select('id, agendamento_id, artista_id, assinado, tem_alerta_saude')
-          .eq('cliente_id', session.user.id);
+          .eq('cliente_id', clienteId);
 
         const fichasPorAgendamento = new Map<string, any>();
         if (fichasData) {

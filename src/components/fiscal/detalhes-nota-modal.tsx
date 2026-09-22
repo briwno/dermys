@@ -1,3 +1,7 @@
+import {
+  imprimirOuBaixarPdfDanfse,
+  montarDadosDanfse,
+} from '@/services/fiscal/danfse-generator';
 import { FiscalService } from '@/services/fiscal/fiscal-service';
 import type { NotaFiscalRegistro } from '@/types/fiscal';
 import {
@@ -69,8 +73,11 @@ export function DetalhesNotaModal({
   };
 
   const abrirPdf = () => {
-    if (nota.url_pdf) {
+    if (nota.url_pdf && nota.url_pdf.startsWith('http')) {
       Linking.openURL(nota.url_pdf).catch(() => {});
+    } else {
+      const danfse = montarDadosDanfse(nota);
+      imprimirOuBaixarPdfDanfse(danfse);
     }
   };
 
@@ -337,12 +344,10 @@ export function DetalhesNotaModal({
               <Text style={styles.btnZapText}>WhatsApp</Text>
             </Pressable>
 
-            {nota.url_pdf && (
-              <Pressable style={styles.btnAction} onPress={abrirPdf}>
-                <Download size={15} color="#f3c21a" />
-                <Text style={styles.btnActionText}>PDF</Text>
-              </Pressable>
-            )}
+            <Pressable style={styles.btnAction} onPress={abrirPdf}>
+              <Download size={15} color="#f3c21a" />
+              <Text style={styles.btnActionText}>PDF</Text>
+            </Pressable>
 
             {nota.url_xml && (
               <Pressable style={styles.btnAction} onPress={abrirXml}>
