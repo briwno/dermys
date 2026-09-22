@@ -9,7 +9,6 @@ import {
   DebugProvider,
   DeviceFrameWrapper,
 } from '@/components/debug';
-import { USAR_MOCK_AUTH } from '@/constants/feature-flags';
 import { processarRetornoOAuthUrl } from '@/services/auth-oauth';
 import { supabase } from '@/services/supabase';
 import { DashboardArtista } from '@/telas/artist-dashboard';
@@ -54,7 +53,6 @@ export default function TelaInicial() {
         return norm;
       }
 
-      // Perfil inexistente ou com campos obrigatórios pendentes
       setPerfil(null);
       setDadosIncompletos(dbProfile || null);
 
@@ -79,9 +77,8 @@ export default function TelaInicial() {
 
       return null;
     } catch {
-      // silencioso
+      return null;
     }
-    return null;
   };
 
   useEffect(() => {
@@ -97,24 +94,22 @@ export default function TelaInicial() {
           }
         }
       } catch {
-        // silencioso
+        // ignora se URL inicial for inválida
       }
     }
 
     async function verificarSessao() {
       try {
-        if (!USAR_MOCK_AUTH) {
-          await processarUrlInicial();
+        await processarUrlInicial();
 
-          const {
-            data: { session },
-          } = await supabase.auth.getSession();
-          if (session?.user && montado) {
-            await carregarPerfilUsuario(session.user.id, session.user);
-          }
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (session?.user && montado) {
+          await carregarPerfilUsuario(session.user.id, session.user);
         }
       } catch {
-        // silencioso
+        // prossegue sem sessão ativa
       } finally {
         if (montado) setInicializando(false);
       }
@@ -122,7 +117,6 @@ export default function TelaInicial() {
 
     verificarSessao();
 
-    // Listener de deep links enquanto o app estiver em execução
     const linkingSub = Linking.addEventListener('url', async ({ url }) => {
       if (url && montado) {
         try {
@@ -131,7 +125,7 @@ export default function TelaInicial() {
             await carregarPerfilUsuario(user.id, user);
           }
         } catch {
-          // silencioso
+          // falha de deep link silenciosa
         }
       }
     });
@@ -170,11 +164,8 @@ export default function TelaInicial() {
 
   const encerrarSessao = async () => {
     setSaindo(true);
-
     try {
-      if (!USAR_MOCK_AUTH) {
-        await supabase.auth.signOut();
-      }
+      await supabase.auth.signOut();
       setPerfil(null);
       setSessaoAuth(null);
       setDadosIncompletos(null);

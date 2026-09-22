@@ -6,14 +6,12 @@ import { Platform } from 'react-native';
 export const AUTH_REDIRECT_URL =
   process.env.EXPO_PUBLIC_AUTH_REDIRECT_URL || 'https://dermys.vercel.app';
 
-// 1. Extração compacta unificando ?query e #hash em 3 linhas
 export function extrairParametrosDeUrl(url: string): Record<string, string> {
   const query = url.split('?')[1]?.split('#')[0] || '';
   const hash = url.split('#')[1] || '';
   return Object.fromEntries(new URLSearchParams(`${query}&${hash}`).entries());
 }
 
-// 2. Processa PKCE (code) ou Implicit Flow (tokens)
 export async function processarRetornoOAuthUrl(url: string) {
   if (!url) return null;
   const { code, access_token, refresh_token } = extrairParametrosDeUrl(url);
@@ -30,26 +28,28 @@ export async function processarRetornoOAuthUrl(url: string) {
     return data.user;
   }
 
-  const { data: { session } } = await supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
   return session?.user || null;
 }
 
-// 3. Inicia OAuth com detecção dinâmica (Web localhost/produção ou App Nativo/Expo Go)
 export async function iniciarLoginGoogle() {
   let redirectTo: string;
   let localAppUrl: string | undefined;
 
   if (Platform.OS === 'web') {
-    // No ambiente Web, usa dinamicamente a origem atual (seja http://localhost:... ou https://dermys.vercel.app)
     const origin =
       typeof window !== 'undefined' && window.location?.origin
         ? window.location.origin
         : AUTH_REDIRECT_URL;
     redirectTo = `${origin.replace(/\/+$/, '')}/auth/callback`;
   } else {
-    // No ambiente Mobile (Expo Go ou App Compilado)
     localAppUrl = Linking.createURL('/auth/callback');
-    const baseUrl = (process.env.EXPO_PUBLIC_AUTH_REDIRECT_URL || 'https://dermys.vercel.app').replace(/\/+$/, '');
+    const baseUrl = (process.env.EXPO_PUBLIC_AUTH_REDIRECT_URL || 'https://dermys.vercel.app').replace(
+      /\/+$/,
+      '',
+    );
     const baseRedirect = baseUrl.endsWith('/auth/callback') ? baseUrl : `${baseUrl}/auth/callback`;
     redirectTo = `${baseRedirect}?app_url=${encodeURIComponent(localAppUrl)}`;
   }
@@ -64,20 +64,21 @@ export async function iniciarLoginGoogle() {
   });
 
   if (error) throw error;
-  if (!data?.url) throw new Error('Falha ao gerar URL de autenticação.');
+  if (!data?.url) throw new Error('Não foi possível iniciar o login com Google.');
 
   if (Platform.OS === 'web') {
     if (typeof window !== 'undefined') window.location.href = data.url;
     return null;
   }
 
-  // O browser escuta a mesma URL gerada para o ambiente atual (exp:// ou dermys://)
   const result = await WebBrowser.openAuthSessionAsync(data.url, localAppUrl);
 
   if (result.type === 'success' && result.url) {
     return await processarRetornoOAuthUrl(result.url);
   }
 
-  const { data: { session } } = await supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
   return session?.user || null;
 }
