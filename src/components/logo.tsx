@@ -1,7 +1,8 @@
 import React from 'react';
 import Svg, { G, Line, Path, Rect } from 'react-native-svg';
+import { tc } from '@/theme';
 
-export function Logo({ size = 180, color = '#FACC15' }: { size?: number; color?: string }) {
+export function Logo({ size = 180, color = tc('#FACC15') }: { size?: number; color?: string }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 100 100" fill="none">
       <Path

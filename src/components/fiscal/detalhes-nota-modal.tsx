@@ -34,6 +34,7 @@ import {
   View,
 } from 'react-native';
 import { AppModal } from '@/components/ui/app-modal';
+import { createThemedStyles, tc } from '@/theme';
 
 interface PropsDetalhesNotaModal {
   visivel: boolean;
@@ -115,7 +116,7 @@ export function DetalhesNotaModal({
           <View style={styles.header}>
             <View style={styles.headerLeft}>
               <View style={styles.iconWrap}>
-                <FileCheck2 size={20} color="#f3c21a" />
+                <FileCheck2 size={20} color={tc('#f3c21a')} />
               </View>
               <View>
                 <Text style={styles.title}>
@@ -127,7 +128,7 @@ export function DetalhesNotaModal({
               </View>
             </View>
             <Pressable style={styles.closeBtn} onPress={onClose}>
-              <X size={18} color="#9ca3af" />
+              <X size={18} color={tc('#9ca3af')} />
             </Pressable>
           </View>
 
@@ -147,13 +148,13 @@ export function DetalhesNotaModal({
               ]}
             >
               {isAutorizada ? (
-                <ShieldCheck size={18} color="#10b981" />
+                <ShieldCheck size={18} color={tc('#10b981')} />
               ) : isProcessando ? (
-                <Clock size={18} color="#f3c21a" />
+                <Clock size={18} color={tc('#f3c21a')} />
               ) : isRejeitada ? (
-                <AlertCircle size={18} color="#ef4444" />
+                <AlertCircle size={18} color={tc('#ef4444')} />
               ) : (
-                <XCircle size={18} color="#9ca3af" />
+                <XCircle size={18} color={tc('#9ca3af')} />
               )}
               <View style={{ flex: 1 }}>
                 <Text
@@ -262,7 +263,7 @@ export function DetalhesNotaModal({
             {nota.dados_split && (
               <View style={styles.splitCard}>
                 <View style={styles.splitHeader}>
-                  <Percent size={14} color="#f3c21a" />
+                  <Percent size={14} color={tc('#f3c21a')} />
                   <Text style={styles.splitTitle}>Split de Pagamento (Sem Bitributação)</Text>
                 </View>
                 <View style={styles.row}>
@@ -273,13 +274,13 @@ export function DetalhesNotaModal({
                 </View>
                 <View style={styles.row}>
                   <Text style={styles.rowLabel}>Taxa Intermediação Dermys (10%):</Text>
-                  <Text style={[styles.rowValue, { color: '#ef4444' }]}>
+                  <Text style={[styles.rowValue, { color: tc('#ef4444') }]}>
                     - R$ {nota.dados_split.valorTaxaPlataforma?.toFixed(2)}
                   </Text>
                 </View>
                 <View style={styles.rowTotal}>
                   <Text style={styles.totalLabel}>Repasse Líquido Artista:</Text>
-                  <Text style={[styles.totalValue, { color: '#10b981' }]}>
+                  <Text style={[styles.totalValue, { color: tc('#10b981') }]}>
                     R$ {nota.dados_split.valorLiquidoArtista?.toFixed(2)}
                   </Text>
                 </View>
@@ -291,8 +292,8 @@ export function DetalhesNotaModal({
               <View style={styles.row}>
                 <Text style={styles.authLabel}>Código de Autenticação Digital:</Text>
                 <Pressable style={styles.btnCopy} onPress={copiarCodigo}>
-                  {copiado ? <Check size={12} color="#10b981" /> : <Copy size={12} color="#f3c21a" />}
-                  <Text style={[styles.btnCopyText, copiado && { color: '#10b981' }]}>
+                  {copiado ? <Check size={12} color={tc('#10b981')} /> : <Copy size={12} color={tc('#f3c21a')} />}
+                  <Text style={[styles.btnCopyText, copiado && { color: tc('#10b981') }]}>
                     {copiado ? 'Copiado' : 'Copiar'}
                   </Text>
                 </Pressable>
@@ -311,7 +312,7 @@ export function DetalhesNotaModal({
                   value={motivoCancelamento}
                   onChangeText={setMotivoCancelamento}
                   placeholder="Justificativa do cancelamento"
-                  placeholderTextColor="#666"
+                  placeholderTextColor={tc('#666')}
                   style={styles.cancelInput}
                 />
                 <View style={styles.cancelActionsRow}>
@@ -327,7 +328,7 @@ export function DetalhesNotaModal({
                     disabled={cancelando}
                   >
                     {cancelando ? (
-                      <ActivityIndicator color="#fff" size="small" />
+                      <ActivityIndicator color={tc('#fff')} size="small" />
                     ) : (
                       <Text style={styles.btnCancelConfirmText}>Confirmar Cancelamento</Text>
                     )}
@@ -340,18 +341,18 @@ export function DetalhesNotaModal({
           {/* Rodapé de Ações */}
           <View style={styles.footer}>
             <Pressable style={styles.btnZap} onPress={abrirWhatsApp}>
-              <Send size={15} color="#111" />
+              <Send size={15} color={tc('#111')} />
               <Text style={styles.btnZapText}>WhatsApp</Text>
             </Pressable>
 
             <Pressable style={styles.btnAction} onPress={abrirPdf}>
-              <Download size={15} color="#f3c21a" />
+              <Download size={15} color={tc('#f3c21a')} />
               <Text style={styles.btnActionText}>PDF</Text>
             </Pressable>
 
             {nota.url_xml && (
               <Pressable style={styles.btnAction} onPress={abrirXml}>
-                <FileCode size={15} color="#f3c21a" />
+                <FileCode size={15} color={tc('#f3c21a')} />
                 <Text style={styles.btnActionText}>XML</Text>
               </Pressable>
             )}
@@ -361,7 +362,7 @@ export function DetalhesNotaModal({
                 style={styles.btnCancelDoc}
                 onPress={() => setExibirFormCancelamento(true)}
               >
-                <Ban size={15} color="#ef4444" />
+                <Ban size={15} color={tc('#ef4444')} />
                 <Text style={styles.btnCancelDocText}>Cancelar</Text>
               </Pressable>
             )}
@@ -372,7 +373,7 @@ export function DetalhesNotaModal({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.85)',

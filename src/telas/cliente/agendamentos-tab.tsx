@@ -39,6 +39,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { createThemedStyles, tc } from '@/theme';
 
 export interface ItemAgendamentoCliente {
   id: string;
@@ -340,7 +341,7 @@ export function ClienteAgendamentosTab({ perfil }: ClienteAgendamentosTabProps =
         <View style={styles.anamneseAlertBanner}>
           <View style={styles.anamneseAlertHeader}>
             <View style={styles.anamneseIconWrap}>
-              <HeartPulse size={18} color="#f3c21a" />
+              <HeartPulse size={18} color={tc('#f3c21a')} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.anamneseAlertTitle}>Ficha de Saúde Pré-Sessão</Text>
@@ -354,7 +355,7 @@ export function ClienteAgendamentosTab({ perfil }: ClienteAgendamentosTabProps =
             style={styles.btnCompletarAnamneseBanner}
             onPress={() => abrirModalAnamnese(agendamentoPendenteAnamnese)}
           >
-            <FileHeart size={14} color="#111" />
+            <FileHeart size={14} color={tc('#111')} />
             <Text style={styles.btnCompletarAnamneseBannerText}>Preencher Ficha Agora</Text>
           </Pressable>
         </View>
@@ -384,7 +385,7 @@ export function ClienteAgendamentosTab({ perfil }: ClienteAgendamentosTabProps =
 
       {/* Lista de Agendamentos */}
       {carregando ? (
-        <ActivityIndicator color="#f3c21a" style={{ marginTop: 20 }} />
+        <ActivityIndicator color={tc('#f3c21a')} style={{ marginTop: 20 }} />
       ) : agendamentosFiltrados.length === 0 ? (
         <View style={styles.emptyWrap}>
           <Text style={styles.emptyTitle}>Nenhum agendamento encontrado</Text>
@@ -457,17 +458,17 @@ export function ClienteAgendamentosTab({ perfil }: ClienteAgendamentosTabProps =
               <View style={styles.pillsRow}>
                 <View style={styles.turnoPill}>
                   {item.turno === 'manha' ? (
-                    <Sun size={11} color="#f3c21a" />
+                    <Sun size={11} color={tc('#f3c21a')} />
                   ) : item.turno === 'diaria' ? (
-                    <Zap size={11} color="#f3c21a" />
+                    <Zap size={11} color={tc('#f3c21a')} />
                   ) : (
-                    <Sunset size={11} color="#f3c21a" />
+                    <Sunset size={11} color={tc('#f3c21a')} />
                   )}
                   <Text style={styles.turnoPillText}>{turnoTexto}</Text>
                 </View>
 
                 <View style={styles.typePill}>
-                  <Sparkles size={11} color="#9ca3af" />
+                  <Sparkles size={11} color={tc('#9ca3af')} />
                   <Text style={styles.typePillText}>
                     {item.tipoSessao === 'flash' ? 'Flash Autoral' : 'Projeto Exclusivo'}
                   </Text>
@@ -477,13 +478,13 @@ export function ClienteAgendamentosTab({ perfil }: ClienteAgendamentosTabProps =
               {/* Data, Horário e Detalhes do Briefing */}
               <View style={styles.gridInfo}>
                 <View style={styles.infoLine}>
-                  <Calendar size={13} color="#f3c21a" />
+                  <Calendar size={13} color={tc('#f3c21a')} />
                   <Text style={styles.infoText}>
                     {item.data} às {item.horario}
                   </Text>
                 </View>
                 <View style={styles.infoLine}>
-                  <Sparkles size={13} color="#f3c21a" />
+                  <Sparkles size={13} color={tc('#f3c21a')} />
                   <Text style={styles.infoText}>
                     {item.estilo} • {item.localCorpo || 'Corpo'} ({item.tamanhoCm || 'Médio'})
                   </Text>
@@ -513,15 +514,15 @@ export function ClienteAgendamentosTab({ perfil }: ClienteAgendamentosTabProps =
               >
                 <View style={styles.anamneseStatusLeft}>
                   {item.anamneseAssinada ? (
-                    <CheckCircle2 size={16} color="#10b981" />
+                    <CheckCircle2 size={16} color={tc('#10b981')} />
                   ) : (
-                    <AlertCircle size={16} color="#f3c21a" />
+                    <AlertCircle size={16} color={tc('#f3c21a')} />
                   )}
                   <View>
                     <Text
                       style={[
                         styles.anamneseStatusTitle,
-                        item.anamneseAssinada && { color: '#10b981' },
+                        item.anamneseAssinada && { color: tc('#10b981') },
                       ]}
                     >
                       {item.anamneseAssinada
@@ -551,7 +552,7 @@ export function ClienteAgendamentosTab({ perfil }: ClienteAgendamentosTabProps =
                 <View style={styles.finRow}>
                   <Text style={styles.finLabel}>Sinal de Reserva:</Text>
                   <View style={styles.sinalPaidRow}>
-                    <ShieldCheck size={13} color="#10b981" />
+                    <ShieldCheck size={13} color={tc('#10b981')} />
                     <Text style={styles.sinalPaidText}>R$ {item.valorSinal} (Pago via MP)</Text>
                   </View>
                 </View>
@@ -573,14 +574,14 @@ export function ClienteAgendamentosTab({ perfil }: ClienteAgendamentosTabProps =
                     style={styles.btnAftercare}
                     onPress={() => abrirGuiaAftercare(item.artistaNome)}
                   >
-                    <ShieldCheck size={13} color="#10b981" />
+                    <ShieldCheck size={13} color={tc('#10b981')} />
                     <Text style={styles.btnAftercareText}>Guia Pós-Tattoo</Text>
                   </Pressable>
                 )}
 
                 {(isConcluido || isConfirmado) && (
                   <Pressable style={styles.btnRecibo} onPress={() => abrirRecibo(item)}>
-                    <FileText size={13} color="#f3c21a" />
+                    <FileText size={13} color={tc('#f3c21a')} />
                     <Text style={styles.btnReciboText}>Recibo Fiscal</Text>
                   </Pressable>
                 )}
@@ -590,7 +591,7 @@ export function ClienteAgendamentosTab({ perfil }: ClienteAgendamentosTabProps =
                     style={styles.btnCancelar}
                     onPress={() => cancelarAgendamento(item.id)}
                   >
-                    <X size={13} color="#ef4444" />
+                    <X size={13} color={tc('#ef4444')} />
                     <Text style={styles.btnCancelarText}>Cancelar</Text>
                   </Pressable>
                 )}
@@ -613,7 +614,7 @@ export function ClienteAgendamentosTab({ perfil }: ClienteAgendamentosTabProps =
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
               <View style={styles.modalHeaderLeft}>
-                <HeartPulse size={20} color="#f3c21a" />
+                <HeartPulse size={20} color={tc('#f3c21a')} />
                 <View>
                   <Text style={styles.modalTitle}>Ficha de Saúde & Biossegurança</Text>
                   <Text style={styles.modalSub}>
@@ -625,13 +626,13 @@ export function ClienteAgendamentosTab({ perfil }: ClienteAgendamentosTabProps =
                 style={styles.closeBtn}
                 onPress={() => setAgendamentoParaAnamnese(null)}
               >
-                <X size={18} color="#888" />
+                <X size={18} color={tc('#888')} />
               </Pressable>
             </View>
 
             <ScrollView contentContainerStyle={styles.modalScroll} showsVerticalScrollIndicator={false}>
               <View style={styles.anamneseInfoBox}>
-                <Info size={14} color="#f3c21a" />
+                <Info size={14} color={tc('#f3c21a')} />
                 <Text style={styles.anamneseInfoText}>
                   Exigência da Vigilância Sanitária para proteção da sua saúde e preparo da bancada pelo tatuador.
                 </Text>
@@ -655,7 +656,7 @@ export function ClienteAgendamentosTab({ perfil }: ClienteAgendamentosTabProps =
                     value={detalheAlergia}
                     onChangeText={setDetalheAlergia}
                     placeholder="Especifique a substância ou pomada..."
-                    placeholderTextColor="#666"
+                    placeholderTextColor={tc('#666')}
                     style={styles.detailInput}
                   />
                 )}
@@ -690,7 +691,7 @@ export function ClienteAgendamentosTab({ perfil }: ClienteAgendamentosTabProps =
                     value={detalheCondicao}
                     onChangeText={setDetalheCondicao}
                     placeholder="Detalhes médicos para conhecimento do artista..."
-                    placeholderTextColor="#666"
+                    placeholderTextColor={tc('#666')}
                     style={styles.detailInput}
                   />
                 )}
@@ -742,7 +743,7 @@ export function ClienteAgendamentosTab({ perfil }: ClienteAgendamentosTabProps =
                   onPress={() => setConcordouTermos(!concordouTermos)}
                 >
                   <View style={[styles.checkSquare, concordouTermos && styles.checkSquareActive]}>
-                    {concordouTermos && <Check size={12} color="#111" />}
+                    {concordouTermos && <Check size={12} color={tc('#111')} />}
                   </View>
                   <Text style={styles.legalText}>
                     Declaro sob as penas da lei que todas as informações prestadas são verídicas e autorizo o procedimento estético com agulhas descartáveis.
@@ -758,10 +759,10 @@ export function ClienteAgendamentosTab({ perfil }: ClienteAgendamentosTabProps =
                 disabled={salvandoAnamnese || !concordouTermos}
               >
                 {salvandoAnamnese ? (
-                  <ActivityIndicator color="#111" size="small" />
+                  <ActivityIndicator color={tc('#111')} size="small" />
                 ) : (
                   <>
-                    <CheckCircle2 size={16} color="#111" />
+                    <CheckCircle2 size={16} color={tc('#111')} />
                     <Text style={styles.btnAssinarFichaText}>Assinar Ficha Digitalmente</Text>
                   </>
                 )}
@@ -793,7 +794,7 @@ export function ClienteAgendamentosTab({ perfil }: ClienteAgendamentosTabProps =
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles({
   container: {
     gap: 14,
   },

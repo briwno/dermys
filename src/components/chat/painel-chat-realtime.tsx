@@ -63,6 +63,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { createThemedStyles, tc } from '@/theme';
 
 interface PainelChatRealtimeProps {
   perfilAtual: PerfilUsuario;
@@ -726,24 +727,24 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
         </View>
 
         <View style={styles.searchWrap}>
-          <Search size={16} color="#666" />
+          <Search size={16} color={tc('#666')} />
           <TextInput
             value={busca}
             onChangeText={setBusca}
             placeholder="Buscar por artista, estúdio ou cliente..."
-            placeholderTextColor="#666"
+            placeholderTextColor={tc('#666')}
             style={styles.searchInput}
           />
         </View>
 
         {carregandoConversas ? (
           <View style={styles.loadingWrap}>
-            <ActivityIndicator color="#f3c21a" size="small" />
+            <ActivityIndicator color={tc('#f3c21a')} size="small" />
             <Text style={styles.loadingText}>Carregando mensagens...</Text>
           </View>
         ) : conversasFiltradas.length === 0 ? (
           <View style={styles.emptyWrap}>
-            <MessageSquare size={32} color="#333" />
+            <MessageSquare size={32} color={tc('#333')} />
             <Text style={styles.emptyTitle}>Nenhuma conversa encontrada</Text>
             <Text style={styles.emptySubtitle}>
               {busca
@@ -767,7 +768,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                       <Image source={{ uri: item.foto_url }} style={styles.avatarImg} />
                     ) : (
                       <View style={styles.avatarFallback}>
-                        <User size={18} color="#f3c21a" />
+                        <User size={18} color={tc('#f3c21a')} />
                       </View>
                     )}
                     <View style={styles.onlineBadge} />
@@ -830,7 +831,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
           onPress={() => setConversaAtiva(null)}
           hitSlop={8}
         >
-          <ArrowLeft size={20} color="#fff" />
+          <ArrowLeft size={20} color={tc('#fff')} />
         </Pressable>
 
         <View style={styles.activeChatAvatarWrap}>
@@ -838,7 +839,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
             <Image source={{ uri: conversaAtiva.foto_url }} style={styles.activeChatAvatar} />
           ) : (
             <View style={styles.activeChatAvatarFallback}>
-              <User size={16} color="#f3c21a" />
+              <User size={16} color={tc('#f3c21a')} />
             </View>
           )}
           <View style={styles.onlineBadgeSmall} />
@@ -860,7 +861,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
             style={styles.topBtnProposta}
             onPress={() => setModalPropostaAberto(true)}
           >
-            <DollarSign size={14} color="#111" />
+            <DollarSign size={14} color={tc('#111')} />
             <Text style={styles.topBtnPropostaText}>Proposta</Text>
           </Pressable>
         )}
@@ -869,7 +870,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
       {/* Stream de Mensagens */}
       {carregandoMensagens ? (
         <View style={styles.loadingWrap}>
-          <ActivityIndicator color="#f3c21a" size="small" />
+          <ActivityIndicator color={tc('#f3c21a')} size="small" />
           <Text style={styles.loadingText}>Sincronizando conversa...</Text>
         </View>
       ) : (
@@ -906,7 +907,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                   <View style={styles.briefingCard}>
                     <View style={styles.briefingCardHeader}>
                       <View style={styles.cardHeaderIconWrap}>
-                        <FileText size={16} color="#f3c21a" />
+                        <FileText size={16} color={tc('#f3c21a')} />
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={styles.briefingCardTitle}>📋 Briefing do Projeto</Text>
@@ -949,16 +950,16 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                     {/* Tags: Local & Dimensões cm */}
                     <View style={styles.briefingMetaRow}>
                       <View style={styles.metaBadge}>
-                        <MapPin size={12} color="#f3c21a" />
+                        <MapPin size={12} color={tc('#f3c21a')} />
                         <Text style={styles.metaBadgeText}>{b.localCorpo}</Text>
                       </View>
                       <View style={styles.metaBadge}>
-                        <Ruler size={12} color="#f3c21a" />
+                        <Ruler size={12} color={tc('#f3c21a')} />
                         <Text style={styles.metaBadgeText}>{b.tamanhoCm}</Text>
                       </View>
                       {b.estilo && (
                         <View style={styles.metaBadge}>
-                          <Sparkles size={12} color="#f3c21a" />
+                          <Sparkles size={12} color={tc('#f3c21a')} />
                           <Text style={styles.metaBadgeText}>{b.estilo}</Text>
                         </View>
                       )}
@@ -967,7 +968,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                     {/* Disponibilidade Preferencial */}
                     {b.disponibilidadePreferencial && (
                       <View style={styles.availabilityBox}>
-                        <Clock size={12} color="#f3c21a" />
+                        <Clock size={12} color={tc('#f3c21a')} />
                         <Text style={styles.availabilityText}>
                           Disponibilidade: {b.disponibilidadePreferencial}
                         </Text>
@@ -985,7 +986,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                         style={styles.btnCardActionPrimary}
                         onPress={() => setModalPropostaAberto(true)}
                       >
-                        <DollarSign size={16} color="#111" />
+                        <DollarSign size={16} color={tc('#111')} />
                         <Text style={styles.btnCardActionPrimaryText}>
                           + Enviar Proposta de Orçamento
                         </Text>
@@ -1012,7 +1013,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                   <View style={styles.quoteCard}>
                     <View style={styles.quoteCardHeader}>
                       <View style={styles.cardHeaderIconWrapGreen}>
-                        <DollarSign size={18} color="#10b981" />
+                        <DollarSign size={18} color={tc('#10b981')} />
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={styles.quoteCardTitle}>💰 Proposta de Orçamento</Text>
@@ -1062,7 +1063,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                         style={styles.btnBookFromQuote}
                         onPress={() => handleAbrirReservaQuote(q)}
                       >
-                        <Calendar size={18} color="#111" />
+                        <Calendar size={18} color={tc('#111')} />
                         <Text style={styles.btnBookFromQuoteText}>
                           [ Escolher Data & Reservar ]
                         </Text>
@@ -1088,7 +1089,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
 
                   <View style={styles.depositConfirmedCard}>
                     <View style={styles.depositConfirmedHeader}>
-                      <CheckCircle2 size={24} color="#10b981" />
+                      <CheckCircle2 size={24} color={tc('#10b981')} />
                       <View style={{ flex: 1 }}>
                         <Text style={styles.depositConfirmedTitle}>
                           ✅ Sinal Confirmado com Sucesso!
@@ -1125,7 +1126,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
 
                   <View style={styles.anamneseCard}>
                     <View style={styles.anamneseCardHeader}>
-                      <HeartPulse size={20} color={assinada ? '#10b981' : '#f3c21a'} />
+                      <HeartPulse size={20} color={assinada ? tc('#10b981') : tc('#f3c21a')} />
                       <View style={{ flex: 1 }}>
                         <Text style={styles.anamneseCardTitle}>
                           Fase 5 • Ficha de Saúde (Anamnese)
@@ -1138,7 +1139,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
 
                     {assinada ? (
                       <View style={styles.anamneseSignedBadge}>
-                        <ShieldCheck size={16} color="#10b981" />
+                        <ShieldCheck size={16} color={tc('#10b981')} />
                         <Text style={styles.anamneseSignedBadgeText}>
                           Ficha de Saúde Assinada & Validada Digitalmente
                         </Text>
@@ -1151,14 +1152,14 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                           setModalAnamneseAberto(true);
                         }}
                       >
-                        <FileHeart size={16} color="#111" />
+                        <FileHeart size={16} color={tc('#111')} />
                         <Text style={styles.btnPreencherAnamneseChatText}>
                           Preencher Ficha de Saúde (Anamnese)
                         </Text>
                       </Pressable>
                     ) : (
                       <View style={styles.anamnesePendenteBadge}>
-                        <Clock size={15} color="#f3c21a" />
+                        <Clock size={15} color={tc('#f3c21a')} />
                         <Text style={styles.anamnesePendenteBadgeText}>
                           Aguardando preenchimento e assinatura pelo cliente
                         </Text>
@@ -1185,7 +1186,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                   <View style={styles.sessionCompletedCard}>
                     <View style={styles.sessionCompletedHeader}>
                       <View style={styles.cardHeaderIconWrapGold}>
-                        <Sparkles size={18} color="#f3c21a" />
+                        <Sparkles size={18} color={tc('#f3c21a')} />
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={styles.sessionCompletedTitle}>
@@ -1215,7 +1216,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                       </View>
                       {s.numeroNotaFiscal && (
                         <View style={styles.nfseDocRow}>
-                          <FileText size={14} color="#10b981" />
+                          <FileText size={14} color={tc('#10b981')} />
                           <Text style={styles.nfseDocText}>
                             Doc Fiscal: {s.numeroNotaFiscal} (Cod: {s.codigoVerificacaoNfse || 'AUT'})
                           </Text>
@@ -1229,7 +1230,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                         style={styles.btnVerReciboChat}
                         onPress={() => handleAbrirReciboCard(s)}
                       >
-                        <FileText size={15} color="#111" />
+                        <FileText size={15} color={tc('#111')} />
                         <Text style={styles.btnVerReciboChatText}>Ver Nota / Recibo</Text>
                       </Pressable>
 
@@ -1237,7 +1238,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                         style={styles.btnVerAftercareChat}
                         onPress={() => setModalAftercareAberto(true)}
                       >
-                        <ShieldCheck size={15} color="#10b981" />
+                        <ShieldCheck size={15} color={tc('#10b981')} />
                         <Text style={styles.btnVerAftercareChatText}>Cuidados Pós</Text>
                       </Pressable>
                     </View>
@@ -1290,11 +1291,11 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                       {isMe && (
                         <View style={styles.readReceiptWrap}>
                           {item.status_envio === 'enviando' ? (
-                            <Clock size={11} color="#999" />
+                            <Clock size={11} color={tc('#999')} />
                           ) : item.lida ? (
-                            <CheckCheck size={13} color="#f3c21a" />
+                            <CheckCheck size={13} color={tc('#f3c21a')} />
                           ) : (
-                            <Check size={13} color="#888" />
+                            <Check size={13} color={tc('#888')} />
                           )}
                         </View>
                       )}
@@ -1321,7 +1322,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
             style={styles.btnPropostaArtist}
             onPress={() => setModalPropostaAberto(true)}
           >
-            <DollarSign size={16} color="#111" />
+            <DollarSign size={16} color={tc('#111')} />
             <Text style={styles.btnPropostaArtistText}>+ Enviar Proposta de Orçamento</Text>
           </Pressable>
         </View>
@@ -1334,7 +1335,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
             style={styles.btnConfirmarSessaoArtist}
             onPress={() => setModalConcluirSessaoAberto(true)}
           >
-            <CheckCircle2 size={16} color="#111" />
+            <CheckCircle2 size={16} color={tc('#111')} />
             <Text style={styles.btnConfirmarSessaoArtistText}>
               Confirmar Realização & Emitir NFS-e
             </Text>
@@ -1344,7 +1345,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
             style={styles.btnAvancarTempoDebug}
             onPress={handleAvancarNoTempoSimulacao}
           >
-            <Clock size={14} color="#f3c21a" />
+            <Clock size={14} color={tc('#f3c21a')} />
             <Text style={styles.btnAvancarTempoDebugText}>⏱️ Avançar no Tempo</Text>
           </Pressable>
         </View>
@@ -1356,7 +1357,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
           value={textoInput}
           onChangeText={setTextoInput}
           placeholder="Digite sua mensagem..."
-          placeholderTextColor="#666"
+          placeholderTextColor={tc('#666')}
           style={styles.chatTextInput}
           multiline
           maxLength={1000}
@@ -1378,9 +1379,9 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
           disabled={!textoInput.trim() || enviando}
         >
           {enviando ? (
-            <ActivityIndicator color="#111" size="small" />
+            <ActivityIndicator color={tc('#111')} size="small" />
           ) : (
-            <Send size={18} color="#111" />
+            <Send size={18} color={tc('#111')} />
           )}
         </Pressable>
       </View>
@@ -1405,7 +1406,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                 style={styles.modalCloseBtn}
                 onPress={() => setModalPropostaAberto(false)}
               >
-                <X size={18} color="#888" />
+                <X size={18} color={tc('#888')} />
               </Pressable>
             </View>
 
@@ -1422,7 +1423,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                   }}
                   keyboardType="numeric"
                   placeholder="Ex: 800"
-                  placeholderTextColor="#666"
+                  placeholderTextColor={tc('#666')}
                   style={styles.modalInput}
                 />
               </View>
@@ -1466,7 +1467,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                   onChangeText={setSinalPersonalizado}
                   keyboardType="numeric"
                   placeholder="Ex: 240"
-                  placeholderTextColor="#666"
+                  placeholderTextColor={tc('#666')}
                   style={styles.modalInput}
                 />
               </View>
@@ -1478,7 +1479,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                   value={observacoesProposta}
                   onChangeText={setObservacoesProposta}
                   placeholder="Ex: Inclui criação exclusiva da arte e retoque em até 60 dias..."
-                  placeholderTextColor="#666"
+                  placeholderTextColor={tc('#666')}
                   multiline
                   numberOfLines={2}
                   style={styles.modalTextArea}
@@ -1492,10 +1493,10 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
               disabled={enviandoProposta}
             >
               {enviandoProposta ? (
-                <ActivityIndicator color="#111" size="small" />
+                <ActivityIndicator color={tc('#111')} size="small" />
               ) : (
                 <>
-                  <Send size={18} color="#111" />
+                  <Send size={18} color={tc('#111')} />
                   <Text style={styles.btnConfirmarPropostaText}>
                     Enviar Proposta Oficial no Chat
                   </Text>
@@ -1530,7 +1531,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                 style={styles.modalCloseBtn}
                 onPress={() => setModalReservaAberto(false)}
               >
-                <X size={18} color="#888" />
+                <X size={18} color={tc('#888')} />
               </Pressable>
             </View>
 
@@ -1622,10 +1623,10 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                   disabled={processandoPagamento}
                 >
                   {processandoPagamento ? (
-                    <ActivityIndicator color="#111" size="small" />
+                    <ActivityIndicator color={tc('#111')} size="small" />
                   ) : (
                     <>
-                      <QrCode size={18} color="#111" />
+                      <QrCode size={18} color={tc('#111')} />
                       <Text style={styles.btnConfirmarPropostaText}>
                         Pagar Sinal (R$ {quoteAtivoParaReserva?.valorSinal.toFixed(2)})
                       </Text>
@@ -1639,10 +1640,10 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
               <ScrollView contentContainerStyle={{ gap: 12, paddingVertical: 10 }}>
                 {/* Hold 30min */}
                 <View style={styles.holdBannerChat}>
-                  <Clock size={16} color="#f3c21a" />
+                  <Clock size={16} color={tc('#f3c21a')} />
                   <Text style={styles.holdBannerChatText}>
                     Horário bloqueado provisoriamente por mais{' '}
-                    <Text style={{ fontWeight: '900', color: '#fff' }}>
+                    <Text style={{ fontWeight: '900', color: tc('#fff') }}>
                       {formatoMinutosSegundos(segundosRestantesHold)} min
                     </Text>
                   </Text>
@@ -1650,7 +1651,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
 
                 {/* QR Code Pix */}
                 <View style={styles.pixCardChat}>
-                  <QrCode size={100} color="#f3c21a" />
+                  <QrCode size={100} color={tc('#f3c21a')} />
                   <Text style={styles.pixLabelChat}>PIX SEGURO EM CUSTÓDIA</Text>
                   <Text style={styles.pixValChat}>
                     R$ {quoteAtivoParaReserva?.valorSinal.toFixed(2)}
@@ -1663,7 +1664,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                       setTimeout(() => setPixCopiado(false), 2000);
                     }}
                   >
-                    <Copy size={14} color="#111" />
+                    <Copy size={14} color={tc('#111')} />
                     <Text style={styles.btnCopyPixChatText}>
                       {pixCopiado ? 'Chave Copiada!' : 'Copiar Chave Pix'}
                     </Text>
@@ -1676,10 +1677,10 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                   disabled={processandoPagamento}
                 >
                   {processandoPagamento ? (
-                    <ActivityIndicator color="#111" size="small" />
+                    <ActivityIndicator color={tc('#111')} size="small" />
                   ) : (
                     <>
-                      <CheckCircle2 size={18} color="#111" />
+                      <CheckCircle2 size={18} color={tc('#111')} />
                       <Text style={styles.btnFinalizarSinalChatText}>
                         Confirmar Pagamento do Sinal
                       </Text>
@@ -1712,7 +1713,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                 style={styles.modalCloseBtn}
                 onPress={() => setModalAnamneseAberto(false)}
               >
-                <X size={18} color="#888" />
+                <X size={18} color={tc('#888')} />
               </Pressable>
             </View>
 
@@ -1728,7 +1729,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                     temAlergia && styles.checkSquareActive,
                   ]}
                 >
-                  {temAlergia && <Check size={12} color="#111" />}
+                  {temAlergia && <Check size={12} color={tc('#111')} />}
                 </View>
                 <Text style={styles.anamneseCheckText}>
                   Possui alergia a pigmentos, látex ou pomadas cicatrizantes?
@@ -1739,7 +1740,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                   value={detalheAlergia}
                   onChangeText={setDetalheAlergia}
                   placeholder="Especifique a alergia..."
-                  placeholderTextColor="#666"
+                  placeholderTextColor={tc('#666')}
                   style={styles.modalInput}
                 />
               )}
@@ -1755,7 +1756,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                     temQueloide && styles.checkSquareActive,
                   ]}
                 >
-                  {temQueloide && <Check size={12} color="#111" />}
+                  {temQueloide && <Check size={12} color={tc('#111')} />}
                 </View>
                 <Text style={styles.anamneseCheckText}>
                   Histórico de queloides ou cicatrização hipertrófica?
@@ -1773,7 +1774,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                     usaAnticoagulante && styles.checkSquareActive,
                   ]}
                 >
-                  {usaAnticoagulante && <Check size={12} color="#111" />}
+                  {usaAnticoagulante && <Check size={12} color={tc('#111')} />}
                 </View>
                 <Text style={styles.anamneseCheckText}>
                   Faz uso contínuo de anticoagulantes ou aspirina?
@@ -1791,7 +1792,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                     isGestanteLactante && styles.checkSquareActive,
                   ]}
                 >
-                  {isGestanteLactante && <Check size={12} color="#111" />}
+                  {isGestanteLactante && <Check size={12} color={tc('#111')} />}
                 </View>
                 <Text style={styles.anamneseCheckText}>
                   Está gestante ou em período de lactação?
@@ -1805,10 +1806,10 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
               disabled={salvandoAnamnese}
             >
               {salvandoAnamnese ? (
-                <ActivityIndicator color="#111" size="small" />
+                <ActivityIndicator color={tc('#111')} size="small" />
               ) : (
                 <>
-                  <CheckCircle2 size={18} color="#111" />
+                  <CheckCircle2 size={18} color={tc('#111')} />
                   <Text style={styles.btnConfirmarPropostaText}>
                     Assinar & Enviar Ficha no Chat
                   </Text>
@@ -1839,7 +1840,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                 style={styles.modalCloseBtn}
                 onPress={() => setModalConcluirSessaoAberto(false)}
               >
-                <X size={18} color="#888" />
+                <X size={18} color={tc('#888')} />
               </Pressable>
             </View>
 
@@ -1918,7 +1919,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                     emitirNfseAutomatica && styles.checkSquareActive,
                   ]}
                 >
-                  {emitirNfseAutomatica && <Check size={12} color="#111" />}
+                  {emitirNfseAutomatica && <Check size={12} color={tc('#111')} />}
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.nfseCheckTitle}>Emitir Nota Fiscal de Serviço (NFS-e)</Text>
@@ -1935,10 +1936,10 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
               disabled={concluindoSessao}
             >
               {concluindoSessao ? (
-                <ActivityIndicator color="#111" size="small" />
+                <ActivityIndicator color={tc('#111')} size="small" />
               ) : (
                 <>
-                  <Sparkles size={18} color="#111" />
+                  <Sparkles size={18} color={tc('#111')} />
                   <Text style={styles.btnConfirmarConclusaoText}>
                     Confirmar Realização & Emitir NFS-e
                   </Text>
@@ -1968,7 +1969,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles({
   container: {
     flex: 1,
     backgroundColor: '#070707',

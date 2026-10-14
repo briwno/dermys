@@ -41,6 +41,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { createThemedStyles, tc } from '@/theme';
 
 interface PropsFinanceiroTab {
   perfil: PerfilUsuario;
@@ -241,7 +242,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
         <View style={[styles.cardHighlight, styles.cardHalf]}>
           <View style={styles.cardTopRow}>
             <Text style={styles.cardHighlightLabel}>Saldo Disponível</Text>
-            <Wallet size={15} color="#f3c21a" />
+            <Wallet size={15} color={tc('#f3c21a')} />
           </View>
           <Text style={styles.cardHighlightValue}>R$ {saldoLiberado.toFixed(2)}</Text>
           <Text style={styles.cardSubText}>Liberado Mercado Pago</Text>
@@ -250,7 +251,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
         <View style={[styles.cardHighlight, styles.cardHalf, styles.cardCustodia]}>
           <View style={styles.cardTopRow}>
             <Text style={styles.cardCustodiaLabel}>Em Custódia</Text>
-            <ShieldCheck size={15} color="#3b82f6" />
+            <ShieldCheck size={15} color={tc('#3b82f6')} />
           </View>
           <Text style={styles.cardCustodiaValue}>R$ {saldoCustodia.toFixed(2)}</Text>
           <Text style={styles.cardSubText}>Sinais de reservas futuras</Text>
@@ -263,7 +264,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
           style={[styles.fiscalActionBtn, styles.fiscalActionBtnPrimary]}
           onPress={() => setModalEmissaoAberto(true)}
         >
-          <Plus size={15} color="#111" />
+          <Plus size={15} color={tc('#111')} />
           <Text style={styles.fiscalActionBtnPrimaryText}>Emitir Nota / Recibo</Text>
         </Pressable>
 
@@ -271,7 +272,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
           style={styles.fiscalActionBtn}
           onPress={() => setModalPdfAberto(true)}
         >
-          <FileText size={15} color="#f3c21a" />
+          <FileText size={15} color={tc('#f3c21a')} />
           <Text style={styles.fiscalActionBtnText}>Relatório em PDF</Text>
         </Pressable>
 
@@ -279,7 +280,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
           style={styles.fiscalActionBtn}
           onPress={() => setModalConfigAberto(true)}
         >
-          <Settings size={15} color="#aaa" />
+          <Settings size={15} color={tc('#aaa')} />
           <Text style={styles.fiscalActionBtnText}>Dados Fiscais</Text>
         </Pressable>
       </View>
@@ -301,7 +302,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
         >
           <FileCheck2
             size={14}
-            color={secaoAtiva === 'NOTAS_FISCAIS' ? '#111' : '#888'}
+            color={secaoAtiva === 'NOTAS_FISCAIS' ? tc('#111') : tc('#888')}
           />
           <Text
             style={[
@@ -322,7 +323,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
         >
           <PieChart
             size={14}
-            color={secaoAtiva === 'TRANSACOES' ? '#111' : '#888'}
+            color={secaoAtiva === 'TRANSACOES' ? tc('#111') : tc('#888')}
           />
           <Text
             style={[
@@ -339,7 +340,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
       {secaoAtiva === 'NOTAS_FISCAIS' && (
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
-            <FileCheck2 size={16} color="#f3c21a" />
+            <FileCheck2 size={16} color={tc('#f3c21a')} />
             <Text style={styles.sectionTitle}>Histórico de Documentos Fiscais</Text>
           </View>
 
@@ -373,7 +374,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
 
           {/* Lista de Notas Fiscais */}
           {carregando ? (
-            <ActivityIndicator color="#f3c21a" style={{ marginVertical: 20 }} />
+            <ActivityIndicator color={tc('#f3c21a')} style={{ marginVertical: 20 }} />
           ) : notasFiltradas.length === 0 ? (
             <View style={styles.emptyWrap}>
               <Text style={styles.emptyTitle}>Nenhuma nota fiscal encontrada</Text>
@@ -398,13 +399,13 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
                   >
                     <View style={styles.transacaoIconWrap}>
                       {isAut ? (
-                        <ShieldCheck size={18} color="#10b981" />
+                        <ShieldCheck size={18} color={tc('#10b981')} />
                       ) : isProc ? (
-                        <Clock size={18} color="#f3c21a" />
+                        <Clock size={18} color={tc('#f3c21a')} />
                       ) : isRej ? (
-                        <AlertCircle size={18} color="#ef4444" />
+                        <AlertCircle size={18} color={tc('#ef4444')} />
                       ) : (
-                        <XCircle size={18} color="#888" />
+                        <XCircle size={18} color={tc('#888')} />
                       )}
                     </View>
 
@@ -474,7 +475,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
       {secaoAtiva === 'TRANSACOES' && (
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
-            <PieChart size={16} color="#f3c21a" />
+            <PieChart size={16} color={tc('#f3c21a')} />
             <Text style={styles.sectionTitle}>Extrato de Transações</Text>
           </View>
 
@@ -507,7 +508,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
 
           {/* Lista de Transações */}
           {carregando ? (
-            <ActivityIndicator color="#f3c21a" style={{ marginVertical: 20 }} />
+            <ActivityIndicator color={tc('#f3c21a')} style={{ marginVertical: 20 }} />
           ) : transacoesFiltradas.length === 0 ? (
             <View style={styles.emptyWrap}>
               <Text style={styles.emptyTitle}>Nenhuma transação nesta categoria</Text>
@@ -529,9 +530,9 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
                   >
                     <View style={styles.transacaoIconWrap}>
                       {isCustodia ? (
-                        <ShieldCheck size={18} color="#3b82f6" />
+                        <ShieldCheck size={18} color={tc('#3b82f6')} />
                       ) : (
-                        <ArrowDownLeft size={18} color="#10b981" />
+                        <ArrowDownLeft size={18} color={tc('#10b981')} />
                       )}
                     </View>
 
@@ -592,7 +593,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
       {/* Configurações de Pagamento e Chave PIX */}
       <View style={styles.sectionCard}>
         <View style={styles.sectionHeader}>
-          <QrCode size={16} color="#f3c21a" />
+          <QrCode size={16} color={tc('#f3c21a')} />
           <Text style={styles.sectionTitle}>Chave PIX & Sinal de Reserva</Text>
         </View>
 
@@ -602,7 +603,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
             value={chavePix}
             onChangeText={setChavePix}
             placeholder="Ex: CPF, CNPJ, E-mail ou Telefone"
-            placeholderTextColor="#666"
+            placeholderTextColor={tc('#666')}
             style={styles.input}
           />
         </View>
@@ -614,7 +615,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
             onChangeText={setPercentualSinal}
             keyboardType="numeric"
             placeholder="30"
-            placeholderTextColor="#666"
+            placeholderTextColor={tc('#666')}
             style={styles.input}
           />
         </View>
@@ -625,10 +626,10 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
           disabled={salvandoConfig}
         >
           {salvandoConfig ? (
-            <ActivityIndicator color="#111" size="small" />
+            <ActivityIndicator color={tc('#111')} size="small" />
           ) : salvoFeedback ? (
             <>
-              <Check size={16} color="#111" />
+              <Check size={16} color={tc('#111')} />
               <Text style={styles.saveBtnText}>Parâmetros Salvos!</Text>
             </>
           ) : (
@@ -699,7 +700,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles({
   container: {
     gap: 14,
   },

@@ -3,6 +3,7 @@ import type { PerfilUsuario } from '@/types/auth';
 import { Calendar, Clock, DollarSign, FileCheck2, FileText, ShieldCheck, TrendingUp, Users } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { createThemedStyles, tc } from '@/theme';
 
 interface PropsDashboardTab {
   perfil: PerfilUsuario;
@@ -91,10 +92,10 @@ export function ArtistaDashboardTab({ perfil }: PropsDashboardTab) {
   };
 
   const KPI = [
-    { label: 'Faturamento Líquido', value: `R$ ${faturamentoMes.toFixed(2)}`, icon: TrendingUp, color: '#10b981' },
-    { label: 'Sinais em Custódia (MP)', value: `R$ ${sinalCustodiaTotal.toFixed(2)}`, icon: ShieldCheck, color: '#3b82f6' },
-    { label: 'Agendamentos Ativos', value: String(totalAgendamentos), icon: Calendar, color: '#f3c21a' },
-    { label: 'Status Fiscal (MEI)', value: 'Regular', icon: FileCheck2, color: '#f3c21a' },
+    { label: 'Faturamento Líquido', value: `R$ ${faturamentoMes.toFixed(2)}`, icon: TrendingUp, color: tc('#10b981') },
+    { label: 'Sinais em Custódia (MP)', value: `R$ ${sinalCustodiaTotal.toFixed(2)}`, icon: ShieldCheck, color: tc('#3b82f6') },
+    { label: 'Agendamentos Ativos', value: String(totalAgendamentos), icon: Calendar, color: tc('#f3c21a') },
+    { label: 'Status Fiscal (MEI)', value: 'Regular', icon: FileCheck2, color: tc('#f3c21a') },
   ];
 
   return (
@@ -118,7 +119,7 @@ export function ArtistaDashboardTab({ perfil }: PropsDashboardTab) {
       {/* Banner de Proteção Mercado Pago */}
       <View style={styles.protectionBanner}>
         <View style={styles.shieldWrap}>
-          <ShieldCheck size={20} color="#10b981" />
+          <ShieldCheck size={20} color={tc('#10b981')} />
         </View>
         <View style={styles.protectionInfo}>
           <Text style={styles.protectionTitle}>Garantia de Comparecimento Ativa</Text>
@@ -133,7 +134,7 @@ export function ArtistaDashboardTab({ perfil }: PropsDashboardTab) {
         <Text style={styles.sectionTitle}>Próximos atendimentos</Text>
         <View style={styles.listWrap}>
           {carregando ? (
-            <ActivityIndicator color="#f3c21a" style={{ marginVertical: 10 }} />
+            <ActivityIndicator color={tc('#f3c21a')} style={{ marginVertical: 10 }} />
           ) : atendimentos.length === 0 ? (
             <Text style={styles.emptyText}>Nenhum atendimento agendado no momento.</Text>
           ) : (
@@ -144,7 +145,7 @@ export function ArtistaDashboardTab({ perfil }: PropsDashboardTab) {
                   <Text style={styles.itemStyle}>{item.estilo}</Text>
                 </View>
                 <View style={styles.timeRow}>
-                  <Clock size={12} color="#f3c21a" />
+                  <Clock size={12} color={tc('#f3c21a')} />
                   <Text style={styles.slotText}>{item.horario}</Text>
                 </View>
               </View>
@@ -156,7 +157,7 @@ export function ArtistaDashboardTab({ perfil }: PropsDashboardTab) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles({
   container: {
     gap: 14,
   },

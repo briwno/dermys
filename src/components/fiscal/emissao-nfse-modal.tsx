@@ -27,6 +27,7 @@ import {
   View,
 } from 'react-native';
 import { AppModal } from '@/components/ui/app-modal';
+import { createThemedStyles, tc } from '@/theme';
 
 interface PropsEmissaoNfseModal {
   visivel: boolean;
@@ -136,7 +137,7 @@ export function EmissaoNfseModal({
           <View style={styles.header}>
             <View style={styles.headerLeft}>
               <View style={styles.iconWrap}>
-                <FileCheck2 size={20} color="#f3c21a" />
+                <FileCheck2 size={20} color={tc('#f3c21a')} />
               </View>
               <View>
                 <Text style={styles.title}>Emissão de Documento Fiscal</Text>
@@ -144,7 +145,7 @@ export function EmissaoNfseModal({
               </View>
             </View>
             <Pressable style={styles.closeBtn} onPress={onClose}>
-              <X size={18} color="#9ca3af" />
+              <X size={18} color={tc('#9ca3af')} />
             </Pressable>
           </View>
 
@@ -156,7 +157,7 @@ export function EmissaoNfseModal({
                 style={[styles.typeBtn, tipoDoc === 'NFSE' && styles.typeBtnActive]}
                 onPress={() => setTipoDoc('NFSE')}
               >
-                <FileCheck2 size={16} color={tipoDoc === 'NFSE' ? '#111' : '#888'} />
+                <FileCheck2 size={16} color={tipoDoc === 'NFSE' ? tc('#111') : tc('#888')} />
                 <Text style={[styles.typeBtnText, tipoDoc === 'NFSE' && styles.typeBtnTextActive]}>
                   NFS-e (Nota Fiscal)
                 </Text>
@@ -166,7 +167,7 @@ export function EmissaoNfseModal({
                 style={[styles.typeBtn, tipoDoc === 'RECIBO_SIMPLES' && styles.typeBtnActive]}
                 onPress={() => setTipoDoc('RECIBO_SIMPLES')}
               >
-                <FileText size={16} color={tipoDoc === 'RECIBO_SIMPLES' ? '#111' : '#888'} />
+                <FileText size={16} color={tipoDoc === 'RECIBO_SIMPLES' ? tc('#111') : tc('#888')} />
                 <Text
                   style={[
                     styles.typeBtnText,
@@ -188,7 +189,7 @@ export function EmissaoNfseModal({
                   value={nomeCliente}
                   onChangeText={setNomeCliente}
                   placeholder="Nome completo do cliente"
-                  placeholderTextColor="#666"
+                  placeholderTextColor={tc('#666')}
                   style={styles.input}
                 />
               </View>
@@ -200,7 +201,7 @@ export function EmissaoNfseModal({
                     value={cpfCliente}
                     onChangeText={setCpfCliente}
                     placeholder="000.000.000-00"
-                    placeholderTextColor="#666"
+                    placeholderTextColor={tc('#666')}
                     style={styles.input}
                   />
                 </View>
@@ -211,7 +212,7 @@ export function EmissaoNfseModal({
                     value={telefoneCliente}
                     onChangeText={setTelefoneCliente}
                     placeholder="(11) 98888-8888"
-                    placeholderTextColor="#666"
+                    placeholderTextColor={tc('#666')}
                     style={styles.input}
                   />
                 </View>
@@ -223,7 +224,7 @@ export function EmissaoNfseModal({
                   value={emailCliente}
                   onChangeText={setEmailCliente}
                   placeholder="cliente@email.com"
-                  placeholderTextColor="#666"
+                  placeholderTextColor={tc('#666')}
                   style={styles.input}
                 />
               </View>
@@ -239,7 +240,7 @@ export function EmissaoNfseModal({
                   value={descricao}
                   onChangeText={setDescricao}
                   placeholder="Ex: Tatuagem Artística Fine Line no antebraço"
-                  placeholderTextColor="#666"
+                  placeholderTextColor={tc('#666')}
                   multiline
                   numberOfLines={3}
                   style={[styles.input, { minHeight: 64, textAlignVertical: 'top', paddingTop: 8 }]}
@@ -253,8 +254,8 @@ export function EmissaoNfseModal({
                   onChangeText={setValor}
                   keyboardType="numeric"
                   placeholder="350.00"
-                  placeholderTextColor="#666"
-                  style={[styles.input, { fontSize: 16, fontWeight: '900', color: '#f3c21a' }]}
+                  placeholderTextColor={tc('#666')}
+                  style={[styles.input, { fontSize: 16, fontWeight: '900', color: tc('#f3c21a') }]}
                 />
               </View>
             </View>
@@ -262,7 +263,7 @@ export function EmissaoNfseModal({
             {/* Resumo de Split e Não-Bitributação */}
             <View style={styles.splitCard}>
               <View style={styles.splitHeader}>
-                <Percent size={14} color="#f3c21a" />
+                <Percent size={14} color={tc('#f3c21a')} />
                 <Text style={styles.splitTitle}>Estrutura de Split & Tributação</Text>
               </View>
 
@@ -308,10 +309,10 @@ export function EmissaoNfseModal({
 
             <Pressable style={styles.emitBtn} onPress={handleEmitir} disabled={emitindo}>
               {emitindo ? (
-                <ActivityIndicator color="#111" size="small" />
+                <ActivityIndicator color={tc('#111')} size="small" />
               ) : (
                 <>
-                  <Send size={16} color="#111" />
+                  <Send size={16} color={tc('#111')} />
                   <Text style={styles.emitBtnText}>
                     {tipoDoc === 'NFSE' ? 'Emitir NFS-e Oficial' : 'Gerar Recibo Digital'}
                   </Text>
@@ -325,7 +326,7 @@ export function EmissaoNfseModal({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.85)',

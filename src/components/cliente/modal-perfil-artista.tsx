@@ -30,9 +30,11 @@ import {
   X,
   Zap,
 } from 'lucide-react-native';
+import { AnimatedScreenTransition } from '@/components/ui/animated-screen-transition';
 import { AppModal } from '@/components/ui/app-modal';
 import { LocalidadeService } from '@/services/localidade-service';
 import type { ItemPortfolio, PerfilArtistaCompleto, ReviewArtista } from '@/types/artista-detalhado';
+import { createThemedStyles, tc } from '@/theme';
 
 interface ModalPerfilArtistaProps {
   visivel: boolean;
@@ -82,7 +84,7 @@ export function ModalPerfilArtista({
             {/* Ações Superiores na Capa */}
             <View style={styles.topActionsBar}>
               <Pressable style={styles.circleBtn} onPress={onClose}>
-                <X size={18} color="#fff" />
+                <X size={18} color={tc('#fff')} />
               </Pressable>
 
               <View style={styles.topActionsRight}>
@@ -92,8 +94,8 @@ export function ModalPerfilArtista({
                 >
                   <Heart
                     size={16}
-                    color={curtido ? '#f43f5e' : '#fff'}
-                    fill={curtido ? '#f43f5e' : 'transparent'}
+                    color={curtido ? tc('#f43f5e') : tc('#fff')}
+                    fill={curtido ? tc('#f43f5e') : 'transparent'}
                   />
                 </Pressable>
               </View>
@@ -111,7 +113,7 @@ export function ModalPerfilArtista({
                   style={styles.avatarImage}
                 />
                 <View style={styles.verifiedBadge}>
-                  <ShieldCheck size={12} color="#000" />
+                  <ShieldCheck size={12} color={tc('#000')} />
                 </View>
               </View>
 
@@ -128,18 +130,18 @@ export function ModalPerfilArtista({
                 <View style={styles.metaPillsRow}>
                   {perfil.distanciaFormatada ? (
                     <View style={styles.distanceBadgePill}>
-                      <MapPin size={10} color="#000" />
+                      <MapPin size={10} color={tc('#000')} />
                       <Text style={styles.distanceBadgeText}>{perfil.distanciaFormatada}</Text>
                     </View>
                   ) : null}
 
                   <View style={styles.locationPill}>
-                    <MapPin size={11} color="#9ca3af" />
+                    <MapPin size={11} color={tc('#9ca3af')} />
                     <Text style={styles.locationText}>{perfil.cidade}</Text>
                   </View>
 
                   <View style={styles.ratingPill}>
-                    <Star size={11} color="#f3c21a" fill="#f3c21a" />
+                    <Star size={11} color={tc('#f3c21a')} fill={tc('#f3c21a')} />
                     <Text style={styles.ratingText}>
                       {perfil.notaMedia.toFixed(1)} ({perfil.totalAvaliacoes})
                     </Text>
@@ -186,7 +188,7 @@ export function ModalPerfilArtista({
             {/* Aviso de Agenda Fechada se aplicável */}
             {perfil.agendaAberta === false && (
               <View style={styles.agendaFechadaCallout}>
-                <Clock size={16} color="#f59e0b" />
+                <Clock size={16} color={tc('#f59e0b')} />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.agendaFechadaCalloutTitle}>Agenda Temporariamente Fechada</Text>
                   <Text style={styles.agendaFechadaCalloutSub}>
@@ -213,7 +215,7 @@ export function ModalPerfilArtista({
 
               <View style={styles.priceCard}>
                 <Text style={styles.priceCardLabel}>SINAL M. PAGO</Text>
-                <Text style={[styles.priceCardValue, { color: '#10b981' }]}>
+                <Text style={[styles.priceCardValue, { color: tc('#10b981') }]}>
                   R$ {perfil.valorSinalBase || 120}
                 </Text>
                 <Text style={styles.priceCardSub}>Reserva garantida</Text>
@@ -228,7 +230,7 @@ export function ModalPerfilArtista({
               {/* Tags de Estilos de Atuação */}
               <View style={styles.stylesTagsRow}>
                 <View style={[styles.stylePill, styles.stylePillPrimary]}>
-                  <Sparkles size={12} color="#f3c21a" />
+                  <Sparkles size={12} color={tc('#f3c21a')} />
                   <Text style={styles.stylePillPrimaryText}>{perfil.estilo}</Text>
                 </View>
                 {perfil.estilosSecundarios?.map((st, idx) => (
@@ -245,7 +247,7 @@ export function ModalPerfilArtista({
                 style={[styles.tabNavItem, abaAtiva === 'portfolio' && styles.tabNavItemActive]}
                 onPress={() => setAbaAtiva('portfolio')}
               >
-                <ImageIcon size={14} color={abaAtiva === 'portfolio' ? '#f3c21a' : '#888'} />
+                <ImageIcon size={14} color={abaAtiva === 'portfolio' ? tc('#f3c21a') : tc('#888')} />
                 <Text style={[styles.tabNavText, abaAtiva === 'portfolio' && styles.tabNavTextActive]}>
                   Portfólio ({perfil.portfolio.length})
                 </Text>
@@ -255,7 +257,7 @@ export function ModalPerfilArtista({
                 style={[styles.tabNavItem, abaAtiva === 'flashes' && styles.tabNavItemActive]}
                 onPress={() => setAbaAtiva('flashes')}
               >
-                <Flame size={14} color={abaAtiva === 'flashes' ? '#f3c21a' : '#888'} />
+                <Flame size={14} color={abaAtiva === 'flashes' ? tc('#f3c21a') : tc('#888')} />
                 <Text style={[styles.tabNavText, abaAtiva === 'flashes' && styles.tabNavTextActive]}>
                   Flashes ({perfil.flashes.length})
                 </Text>
@@ -265,7 +267,7 @@ export function ModalPerfilArtista({
                 style={[styles.tabNavItem, abaAtiva === 'reviews' && styles.tabNavItemActive]}
                 onPress={() => setAbaAtiva('reviews')}
               >
-                <Star size={14} color={abaAtiva === 'reviews' ? '#f3c21a' : '#888'} />
+                <Star size={14} color={abaAtiva === 'reviews' ? tc('#f3c21a') : tc('#888')} />
                 <Text style={[styles.tabNavText, abaAtiva === 'reviews' && styles.tabNavTextActive]}>
                   Reviews ({perfil.totalAvaliacoes})
                 </Text>
@@ -275,13 +277,14 @@ export function ModalPerfilArtista({
                 style={[styles.tabNavItem, abaAtiva === 'estudio' && styles.tabNavItemActive]}
                 onPress={() => setAbaAtiva('estudio')}
               >
-                <ShieldCheck size={14} color={abaAtiva === 'estudio' ? '#f3c21a' : '#888'} />
+                <ShieldCheck size={14} color={abaAtiva === 'estudio' ? tc('#f3c21a') : tc('#888')} />
                 <Text style={[styles.tabNavText, abaAtiva === 'estudio' && styles.tabNavTextActive]}>
                   Estúdio
                 </Text>
               </Pressable>
             </View>
 
+            <AnimatedScreenTransition screenKey={abaAtiva}>
             {/* ABA 1: PORTFÓLIO */}
             {abaAtiva === 'portfolio' && (
               <View style={styles.tabContentArea}>
@@ -297,7 +300,7 @@ export function ModalPerfilArtista({
                         <Text style={styles.portfolioTagText}>{item.estilo}</Text>
                       </View>
                       <View style={styles.zoomIconWrap}>
-                        <Maximize2 size={12} color="#fff" />
+                        <Maximize2 size={12} color={tc('#fff')} />
                       </View>
                     </Pressable>
                   ))}
@@ -328,7 +331,7 @@ export function ModalPerfilArtista({
                             onIniciarAgendamento(perfil, flash);
                           }}
                         >
-                          <Calendar size={13} color="#111" />
+                          <Calendar size={13} color={tc('#111')} />
                           <Text style={styles.btnSelectFlashText}>Reservar Este Flash</Text>
                         </Pressable>
                       </View>
@@ -347,7 +350,7 @@ export function ModalPerfilArtista({
                     <Text style={styles.scoreLargeNumber}>{perfil.notaMedia.toFixed(1)}</Text>
                     <View style={styles.starsRow}>
                       {[1, 2, 3, 4, 5].map((s) => (
-                        <Star key={s} size={14} color="#f3c21a" fill="#f3c21a" />
+                        <Star key={s} size={14} color={tc('#f3c21a')} fill={tc('#f3c21a')} />
                       ))}
                     </View>
                     <Text style={styles.scoreSubText}>Baseado em {perfil.totalAvaliacoes} sessões</Text>
@@ -355,11 +358,11 @@ export function ModalPerfilArtista({
 
                   <View style={styles.scoreRight}>
                     <View style={styles.badgeHighlight}>
-                      <ShieldCheck size={14} color="#10b981" />
+                      <ShieldCheck size={14} color={tc('#10b981')} />
                       <Text style={styles.badgeHighlightText}>100% Clientes Verificados</Text>
                     </View>
                     <View style={styles.badgeHighlight}>
-                      <Sparkles size={14} color="#f3c21a" />
+                      <Sparkles size={14} color={tc('#f3c21a')} />
                       <Text style={styles.badgeHighlightText}>Alta taxa de retorno</Text>
                     </View>
                   </View>
@@ -369,7 +372,7 @@ export function ModalPerfilArtista({
                 <View style={styles.reviewsList}>
                   {perfil.reviews.length === 0 ? (
                     <View style={styles.emptyReviewsCard}>
-                      <Sparkles size={20} color="#f3c21a" />
+                      <Sparkles size={20} color={tc('#f3c21a')} />
                       <Text style={styles.emptyReviewsTitle}>Ainda sem avaliações registradas</Text>
                       <Text style={styles.emptyReviewsSub}>
                         Seja o primeiro cliente a agendar e deixar seu depoimento!
@@ -390,7 +393,7 @@ export function ModalPerfilArtista({
                             <View>
                               <View style={styles.authorVerifiedRow}>
                                 <Text style={styles.authorName}>{rev.autorNome}</Text>
-                                {rev.verificado && <CheckCircle2 size={12} color="#10b981" />}
+                                {rev.verificado && <CheckCircle2 size={12} color={tc('#10b981')} />}
                               </View>
                               <Text style={styles.reviewMetaDate}>
                                 {rev.data} • {rev.estiloTatuado}
@@ -399,7 +402,7 @@ export function ModalPerfilArtista({
                           </View>
 
                           <View style={styles.reviewRatingBadge}>
-                            <Star size={11} color="#f3c21a" fill="#f3c21a" />
+                            <Star size={11} color={tc('#f3c21a')} fill={tc('#f3c21a')} />
                             <Text style={styles.reviewRatingNum}>{rev.nota}.0</Text>
                           </View>
                         </View>
@@ -420,7 +423,7 @@ export function ModalPerfilArtista({
                   <Text style={styles.sectionHeading}>Localização & Funcionamento</Text>
 
                   <View style={styles.infoRow}>
-                    <MapPin size={16} color="#f3c21a" />
+                    <MapPin size={16} color={tc('#f3c21a')} />
                     <View style={{ flex: 1 }}>
                       <Text style={styles.infoTitle}>{perfil.estudioInfo.nome}</Text>
                       <Text style={styles.infoSubtitle}>
@@ -444,12 +447,12 @@ export function ModalPerfilArtista({
                       )
                     }
                   >
-                    <Navigation size={13} color="#000" />
+                    <Navigation size={13} color={tc('#000')} />
                     <Text style={styles.mapRouteBtnText}>Traçar Rota no Google Maps / Waze</Text>
                   </Pressable>
 
                   <View style={[styles.infoRow, { marginTop: 4 }]}>
-                    <Clock size={16} color="#f3c21a" />
+                    <Clock size={16} color={tc('#f3c21a')} />
                     <View style={{ flex: 1 }}>
                       <Text style={styles.infoTitle}>Horário de Atendimento</Text>
                       <Text style={styles.infoSubtitle}>
@@ -465,7 +468,7 @@ export function ModalPerfilArtista({
                   <View style={styles.amenitiesGrid}>
                     {perfil.estudioInfo.comodidades.map((c, i) => (
                       <View key={i} style={styles.amenityItem}>
-                        <CheckCircle2 size={14} color="#10b981" />
+                        <CheckCircle2 size={14} color={tc('#10b981')} />
                         <Text style={styles.amenityText}>{c}</Text>
                       </View>
                     ))}
@@ -475,13 +478,13 @@ export function ModalPerfilArtista({
                 {/* Protocolos de Biossegurança */}
                 <View style={[styles.studioInfoCard, styles.bioSafeCard]}>
                   <View style={styles.bioSafeHeader}>
-                    <ShieldCheck size={18} color="#10b981" />
+                    <ShieldCheck size={18} color={tc('#10b981')} />
                     <Text style={styles.bioSafeTitle}>Protocolo de Biossegurança Dermys</Text>
                   </View>
                   <View style={styles.amenitiesGrid}>
                     {perfil.estudioInfo.protocolosBiosseguranca.map((p, i) => (
                       <View key={i} style={styles.amenityItem}>
-                        <CheckCircle2 size={14} color="#10b981" />
+                        <CheckCircle2 size={14} color={tc('#10b981')} />
                         <Text style={styles.bioSafeText}>{p}</Text>
                       </View>
                     ))}
@@ -489,6 +492,7 @@ export function ModalPerfilArtista({
                 </View>
               </View>
             )}
+            </AnimatedScreenTransition>
           </ScrollView>
 
           {/* Barra de Ações Fixa no Rodapé */}
@@ -501,7 +505,7 @@ export function ModalPerfilArtista({
                   onAbrirChat(perfil);
                 }}
               >
-                <MessageSquare size={18} color="#fff" />
+                <MessageSquare size={18} color={tc('#fff')} />
                 <Text style={styles.btnChatActionText}>Chat</Text>
               </Pressable>
             )}
@@ -513,7 +517,7 @@ export function ModalPerfilArtista({
               ]}
               onPress={() => onIniciarAgendamento(perfil, flashSelecionado || undefined)}
             >
-              <Calendar size={18} color={perfil.agendaAberta === false ? '#f59e0b' : '#111'} />
+              <Calendar size={18} color={perfil.agendaAberta === false ? tc('#f59e0b') : tc('#111')} />
               <Text
                 style={[
                   styles.btnBookActionText,
@@ -534,7 +538,7 @@ export function ModalPerfilArtista({
         {fotoZoom && (
           <View style={styles.zoomOverlay}>
             <Pressable style={styles.zoomCloseBtn} onPress={() => setFotoZoom(null)}>
-              <X size={20} color="#fff" />
+              <X size={20} color={tc('#fff')} />
             </Pressable>
             <Image source={{ uri: fotoZoom.imagemUrl }} style={styles.zoomFullImage} resizeMode="contain" />
             <View style={styles.zoomDetailsCard}>
@@ -551,7 +555,7 @@ export function ModalPerfilArtista({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.92)',

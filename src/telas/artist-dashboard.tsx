@@ -1,4 +1,5 @@
 import type { BottomNavTab } from '@/components/bottom-nav';
+import { AnimatedScreenTransition } from '@/components/ui/animated-screen-transition';
 import { ArtistaAgendaTab } from '@/telas/artista/agenda-tab';
 import { ArtistaDashboardTab } from '@/telas/artista/dashboard-tab';
 import { ArtistaFinanceiroTab } from '@/telas/artista/financeiro-tab';
@@ -8,6 +9,7 @@ import type { PerfilUsuario } from '@/types/auth';
 import { LogOut } from 'lucide-react-native';
 import React from 'react';
 import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { createThemedStyles, tc } from '@/theme';
 
 interface PropsDashboardArtista {
   perfil: PerfilUsuario;
@@ -15,6 +17,7 @@ interface PropsDashboardArtista {
   activeTab?: BottomNavTab;
   chatContatoId?: string;
   onNavegarAba?: (tab: BottomNavTab, contatoId?: string) => void;
+  onAtualizarPerfil?: (novoPerfil: PerfilUsuario) => void;
 }
 
 export function DashboardArtista({
@@ -23,6 +26,7 @@ export function DashboardArtista({
   activeTab = 'dashboard',
   chatContatoId,
   onNavegarAba,
+  onAtualizarPerfil,
 }: PropsDashboardArtista) {
   const getTabTitle = () => {
     switch (activeTab) {
@@ -43,43 +47,50 @@ export function DashboardArtista({
   if (activeTab === 'chat') {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.chatWrapper}>
+        <AnimatedScreenTransition screenKey="chat" style={styles.chatWrapper}>
           <ArtistaMensagensTab perfil={perfil} contatoInicialId={chatContatoId} />
-        </View>
+        </AnimatedScreenTransition>
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.hiText}>Studio mode</Text>
-            <Text style={styles.title}>{getTabTitle()}</Text>
-            <Text style={styles.subtitle}>{perfil.nomeExibicao || 'Tatuador'}</Text>
+      <AnimatedScreenTransition screenKey={activeTab} style={styles.screenWrapper}>
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Header */}
+          <View style={styles.header}>
+            <View>
+              <Text style={styles.hiText}>Studio mode</Text>
+              <Text style={styles.title}>{getTabTitle()}</Text>
+              <Text style={styles.subtitle}>{perfil.nomeExibicao || 'Tatuador'}</Text>
+            </View>
+            <Pressable style={styles.logoutButton} onPress={onLogout}>
+              <LogOut size={14} color={tc('#fff')} />
+              <Text style={styles.logoutText}>Sair</Text>
+            </Pressable>
           </View>
-          <Pressable style={styles.logoutButton} onPress={onLogout}>
-            <LogOut size={14} color="#fff" />
-            <Text style={styles.logoutText}>Sair</Text>
-          </Pressable>
-        </View>
 
-        {/* Conteúdo Dinâmico por Aba */}
-        {activeTab === 'dashboard' && <ArtistaDashboardTab perfil={perfil} />}
-        {activeTab === 'schedule' && <ArtistaAgendaTab />}
-        {activeTab === 'financial' && <ArtistaFinanceiroTab perfil={perfil} />}
-        {activeTab === 'profile' && <ArtistaPerfilTab perfil={perfil} />}
-      </ScrollView>
+          {/* Conteúdo Dinâmico por Aba */}
+          {activeTab === 'dashboard' && <ArtistaDashboardTab perfil={perfil} />}
+          {activeTab === 'schedule' && <ArtistaAgendaTab />}
+          {activeTab === 'financial' && <ArtistaFinanceiroTab perfil={perfil} />}
+          {activeTab === 'profile' && (
+            <ArtistaPerfilTab perfil={perfil} onAtualizarPerfil={onAtualizarPerfil} />
+          )}
+        </ScrollView>
+      </AnimatedScreenTransition>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles({
   safeArea: {
     flex: 1,
     backgroundColor: '#050505',
+  },
+  screenWrapper: {
+    flex: 1,
   },
   chatWrapper: {
     flex: 1,

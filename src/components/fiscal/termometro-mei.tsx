@@ -9,6 +9,7 @@ import {
 } from 'lucide-react-native';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { createThemedStyles, tc } from '@/theme';
 
 interface PropsTermometroMei {
   metricas: MetricasFiscaisArtista;
@@ -25,10 +26,10 @@ export function TermometroMei({ metricas, onAbrirDasn }: PropsTermometroMei) {
   } = metricas;
 
   const getCorBarra = () => {
-    if (faixaAlerta === 'CRITICO_100') return '#ef4444'; // Vermelho
-    if (faixaAlerta === 'ALERTA_85') return '#f97316'; // Laranja
-    if (faixaAlerta === 'ALERTA_70') return '#f3c21a'; // Amarelo
-    return '#10b981'; // Verde seguro
+    if (faixaAlerta === 'CRITICO_100') return tc('#ef4444'); // Vermelho
+    if (faixaAlerta === 'ALERTA_85') return tc('#f97316'); // Laranja
+    if (faixaAlerta === 'ALERTA_70') return tc('#f3c21a'); // Amarelo
+    return tc('#10b981'); // Verde seguro
   };
 
   const getAlertaInfo = () => {
@@ -38,9 +39,9 @@ export function TermometroMei({ metricas, onAbrirDasn }: PropsTermometroMei) {
           titulo: 'Limite de Faturamento Excedido!',
           mensagem:
             'Você atingiu 100% do teto do MEI (R$ 81.000,00). Consulte seu contador para transição ao Simples Nacional (ME).',
-          corFundo: 'rgba(239, 68, 68, 0.15)',
-          corBorda: 'rgba(239, 68, 68, 0.4)',
-          corTexto: '#ef4444',
+          corFundo: tc('rgba(239, 68, 68, 0.15)'),
+          corBorda: tc('rgba(239, 68, 68, 0.4)'),
+          corTexto: tc('#ef4444'),
           icone: AlertTriangle,
         };
       case 'ALERTA_85':
@@ -48,9 +49,9 @@ export function TermometroMei({ metricas, onAbrirDasn }: PropsTermometroMei) {
           titulo: 'Atenção: 85% do Teto MEI Atingido',
           mensagem:
             'Você está próximo do limite anual. Planeje a regularização do seu enquadramento para evitar multas tributárias.',
-          corFundo: 'rgba(249, 115, 22, 0.15)',
-          corBorda: 'rgba(249, 115, 22, 0.4)',
-          corTexto: '#f97316',
+          corFundo: tc('rgba(249, 115, 22, 0.15)'),
+          corBorda: tc('rgba(249, 115, 22, 0.4)'),
+          corTexto: tc('#f97316'),
           icone: AlertTriangle,
         };
       case 'ALERTA_70':
@@ -58,9 +59,9 @@ export function TermometroMei({ metricas, onAbrirDasn }: PropsTermometroMei) {
           titulo: 'Alerta: 70% do Teto Atingido',
           mensagem:
             'Seu faturamento acumulado já consumiu mais de 70% do limite de R$ 81.000,00 neste ano-calendário.',
-          corFundo: 'rgba(243, 194, 26, 0.12)',
-          corBorda: 'rgba(243, 194, 26, 0.35)',
-          corTexto: '#f3c21a',
+          corFundo: tc('rgba(243, 194, 26, 0.12)'),
+          corBorda: tc('rgba(243, 194, 26, 0.35)'),
+          corTexto: tc('#f3c21a'),
           icone: Info,
         };
       case 'NORMAL':
@@ -69,9 +70,9 @@ export function TermometroMei({ metricas, onAbrirDasn }: PropsTermometroMei) {
           titulo: 'Situação Fiscal Regular',
           mensagem:
             'Seu faturamento anual está dentro da faixa segura do MEI. Emita suas notas com tranquilidade.',
-          corFundo: 'rgba(16, 185, 129, 0.1)',
-          corBorda: 'rgba(16, 185, 129, 0.3)',
-          corTexto: '#10b981',
+          corFundo: tc('rgba(16, 185, 129, 0.1)'),
+          corBorda: tc('rgba(16, 185, 129, 0.3)'),
+          corTexto: tc('#10b981'),
           icone: CheckCircle2,
         };
     }
@@ -85,12 +86,12 @@ export function TermometroMei({ metricas, onAbrirDasn }: PropsTermometroMei) {
       {/* Header com Botão DASN */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <TrendingUp size={18} color="#f3c21a" />
+          <TrendingUp size={18} color={tc('#f3c21a')} />
           <Text style={styles.title}>Termômetro Fiscal & Teto MEI</Text>
         </View>
 
         <Pressable style={styles.btnDasn} onPress={onAbrirDasn}>
-          <FileSpreadsheet size={13} color="#111" />
+          <FileSpreadsheet size={13} color={tc('#111')} />
           <Text style={styles.btnDasnText}>Relatório DASN</Text>
         </Pressable>
       </View>
@@ -136,7 +137,7 @@ export function TermometroMei({ metricas, onAbrirDasn }: PropsTermometroMei) {
 
         <View style={styles.statBox}>
           <Text style={styles.statLabel}>Saldo Disponível no Teto</Text>
-          <Text style={[styles.statVal, { color: '#10b981' }]}>
+          <Text style={[styles.statVal, { color: tc('#10b981') }]}>
             R$ {saldoRestanteTeto.toFixed(2)}
           </Text>
         </View>
@@ -159,7 +160,7 @@ export function TermometroMei({ metricas, onAbrirDasn }: PropsTermometroMei) {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles({
   container: {
     backgroundColor: '#101010',
     borderRadius: 16,

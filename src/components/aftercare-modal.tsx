@@ -8,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import { AppModal } from '@/components/ui/app-modal';
+import { createThemedStyles, tc } from '@/theme';
 
 interface AftercareModalProps {
   visivel: boolean;
@@ -47,7 +48,7 @@ export function AftercareModal({ visivel, onClose, artistaNome }: AftercareModal
           <View style={styles.header}>
             <View style={styles.headerLeft}>
               <View style={styles.iconWrap}>
-                <ShieldCheck size={20} color="#10b981" />
+                <ShieldCheck size={20} color={tc('#10b981')} />
               </View>
               <View>
                 <Text style={styles.title}>Guia de Cicatrização</Text>
@@ -55,14 +56,14 @@ export function AftercareModal({ visivel, onClose, artistaNome }: AftercareModal
               </View>
             </View>
             <Pressable style={styles.closeBtn} onPress={onClose}>
-              <X size={18} color="#9ca3af" />
+              <X size={18} color={tc('#9ca3af')} />
             </Pressable>
           </View>
 
           {/* Conteúdo */}
           <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
             <View style={styles.introBox}>
-              <Sparkles size={16} color="#f3c21a" />
+              <Sparkles size={16} color={tc('#f3c21a')} />
               <Text style={styles.introText}>
                 Sua tatuagem foi feita com materiais 100% esterilizados por {artistaNome || 'seu artista'}.
                 Agora, o resultado final depende dos seus cuidados diários!
@@ -72,7 +73,7 @@ export function AftercareModal({ visivel, onClose, artistaNome }: AftercareModal
             {passos.map((item, index) => (
               <View key={index} style={styles.stepCard}>
                 <View style={styles.stepHeader}>
-                  <CheckCircle2 size={16} color="#10b981" />
+                  <CheckCircle2 size={16} color={tc('#10b981')} />
                   <Text style={styles.stepTitle}>{item.titulo}</Text>
                 </View>
                 <Text style={styles.stepDesc}>{item.desc}</Text>
@@ -81,7 +82,7 @@ export function AftercareModal({ visivel, onClose, artistaNome }: AftercareModal
 
             {/* Aviso de Alerta */}
             <View style={styles.alertBox}>
-              <AlertCircle size={18} color="#ef4444" />
+              <AlertCircle size={18} color={tc('#ef4444')} />
               <Text style={styles.alertText}>
                 Em caso de vermelhidão excessiva após o 5º dia, calor excessivo ou secreções, entre em
                 contato imediatamente com o seu tatuador pelo chat.
@@ -101,7 +102,7 @@ export function AftercareModal({ visivel, onClose, artistaNome }: AftercareModal
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.85)',

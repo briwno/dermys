@@ -25,6 +25,7 @@ import type {
   LocalidadeUsuario,
   RaioFiltroKm,
 } from '@/types/localidade';
+import { createThemedStyles, tc } from '@/theme';
 
 interface ModalFiltroLocalidadeProps {
   visivel: boolean;
@@ -132,7 +133,7 @@ export function ModalFiltroLocalidade({
               </Text>
             </View>
             <Pressable style={styles.closeBtn} onPress={onClose}>
-              <X size={18} color="#9ca3af" />
+              <X size={18} color={tc('#9ca3af')} />
             </Pressable>
           </View>
 
@@ -140,12 +141,12 @@ export function ModalFiltroLocalidade({
             {/* Linha de Busca & Botão GPS */}
             <View style={styles.searchRow}>
               <View style={styles.searchWrap}>
-                <Search size={15} color="#71717a" style={styles.searchIcon} />
+                <Search size={15} color={tc('#71717a')} style={styles.searchIcon} />
                 <TextInput
                   value={buscaCidade}
                   onChangeText={setBuscaCidade}
                   placeholder="Buscar cidade..."
-                  placeholderTextColor="#71717a"
+                  placeholderTextColor={tc('#71717a')}
                   style={styles.searchInput}
                 />
               </View>
@@ -156,10 +157,10 @@ export function ModalFiltroLocalidade({
                 disabled={detectandoGps}
               >
                 {detectandoGps ? (
-                  <ActivityIndicator size="small" color="#000000" />
+                  <ActivityIndicator size="small" color={tc('#000000')} />
                 ) : (
                   <>
-                    <Crosshair size={14} color="#000000" />
+                    <Crosshair size={14} color={tc('#000000')} />
                     <Text style={styles.gpsQuickBtnText}>GPS</Text>
                   </>
                 )}
@@ -179,7 +180,7 @@ export function ModalFiltroLocalidade({
                     <Text style={[styles.cityChipText, sel && styles.cityChipTextActive]}>
                       {c.nome} ({c.estado})
                     </Text>
-                    {sel && <Check size={12} color="#000000" />}
+                    {sel && <Check size={12} color={tc('#000000')} />}
                   </Pressable>
                 );
               })}
@@ -219,7 +220,7 @@ export function ModalFiltroLocalidade({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.75)',

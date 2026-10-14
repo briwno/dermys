@@ -2,10 +2,13 @@ import React, {
   createContext,
   useCallback,
   useContext,
+  useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Animated, Platform, StyleSheet, View } from 'react-native';
+import { createThemedStyles } from '@/theme';
 
 interface ModalContextType {
   showModal: (id: string, content: ReactNode) => void;
@@ -13,6 +16,47 @@ interface ModalContextType {
 }
 
 const ModalContext = createContext<ModalContextType | null>(null);
+
+function AnimatedModalHostItem({ children }: { children: ReactNode }) {
+  const anim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.spring(anim, {
+      toValue: 1,
+      tension: 130,
+      friction: 9,
+      useNativeDriver: Platform.OS !== 'web',
+    }).start();
+  }, [anim]);
+
+  return (
+    <Animated.View
+      style={[
+        styles.modalHostItem,
+        {
+          opacity: anim,
+          transform: [
+            {
+              translateY: anim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [24, 0],
+              }),
+            },
+            {
+              scale: anim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.985, 1],
+              }),
+            },
+          ],
+        },
+      ]}
+      pointerEvents="auto"
+    >
+      {children}
+    </Animated.View>
+  );
+}
 
 export function ModalHostProvider({ children }: { children: ReactNode }) {
   const [modalsMap, setModalsMap] = useState<Record<string, ReactNode>>({});
@@ -41,9 +85,9 @@ export function ModalHostProvider({ children }: { children: ReactNode }) {
       {modalEntries.length > 0 && (
         <View style={styles.modalHostRoot} pointerEvents="box-none">
           {modalEntries.map(([id, content]) => (
-            <View key={id} style={styles.modalHostItem} pointerEvents="auto">
+            <AnimatedModalHostItem key={id}>
               {content}
-            </View>
+            </AnimatedModalHostItem>
           ))}
         </View>
       )}
@@ -55,7 +99,7 @@ export function useModalHost() {
   return useContext(ModalContext);
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles({
   modalHostRoot: {
     position: 'absolute',
     top: 0,

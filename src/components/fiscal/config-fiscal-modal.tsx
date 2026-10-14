@@ -31,6 +31,7 @@ import {
   View,
 } from 'react-native';
 import { AppModal } from '@/components/ui/app-modal';
+import { createThemedStyles, tc } from '@/theme';
 
 interface PropsConfigFiscalModal {
   visivel: boolean;
@@ -148,7 +149,7 @@ export function ConfigFiscalModal({
           <View style={styles.header}>
             <View style={styles.headerLeft}>
               <View style={styles.iconWrap}>
-                <FileCheck2 size={20} color="#f3c21a" />
+                <FileCheck2 size={20} color={tc('#f3c21a')} />
               </View>
               <View>
                 <Text style={styles.title}>Configurações Fiscais</Text>
@@ -156,7 +157,7 @@ export function ConfigFiscalModal({
               </View>
             </View>
             <Pressable style={styles.closeBtn} onPress={onClose}>
-              <X size={18} color="#9ca3af" />
+              <X size={18} color={tc('#9ca3af')} />
             </Pressable>
           </View>
 
@@ -226,7 +227,7 @@ export function ConfigFiscalModal({
                   value={cpfCnpj}
                   onChangeText={setCpfCnpj}
                   placeholder={tipoPessoa === 'PJ' ? '00.000.000/0001-00' : '000.000.000-00'}
-                  placeholderTextColor="#666"
+                  placeholderTextColor={tc('#666')}
                   style={styles.input}
                 />
               </View>
@@ -239,7 +240,7 @@ export function ConfigFiscalModal({
                   value={razaoSocial}
                   onChangeText={setRazaoSocial}
                   placeholder="Nome registrado na Receita Federal"
-                  placeholderTextColor="#666"
+                  placeholderTextColor={tc('#666')}
                   style={styles.input}
                 />
               </View>
@@ -251,7 +252,7 @@ export function ConfigFiscalModal({
                     value={nomeFantasia}
                     onChangeText={setNomeFantasia}
                     placeholder="Nome do estúdio / marca"
-                    placeholderTextColor="#666"
+                    placeholderTextColor={tc('#666')}
                     style={styles.input}
                   />
                 </View>
@@ -264,7 +265,7 @@ export function ConfigFiscalModal({
                     value={inscricaoMunicipal}
                     onChangeText={setInscricaoMunicipal}
                     placeholder="Ex: 12345678"
-                    placeholderTextColor="#666"
+                    placeholderTextColor={tc('#666')}
                     style={styles.input}
                   />
                 </View>
@@ -276,7 +277,7 @@ export function ConfigFiscalModal({
                     onChangeText={setAliquotaIss}
                     keyboardType="numeric"
                     placeholder="0.0"
-                    placeholderTextColor="#666"
+                    placeholderTextColor={tc('#666')}
                     style={styles.input}
                   />
                 </View>
@@ -289,7 +290,7 @@ export function ConfigFiscalModal({
                     value={cnae}
                     onChangeText={setCnae}
                     placeholder="9609-2/06"
-                    placeholderTextColor="#666"
+                    placeholderTextColor={tc('#666')}
                     style={styles.input}
                   />
                   <Text style={styles.inputTip}>9609-2/06: Tatuagem e Piercing</Text>
@@ -301,7 +302,7 @@ export function ConfigFiscalModal({
                     value={codigoTributacao}
                     onChangeText={setCodigoTributacao}
                     placeholder="06.01"
-                    placeholderTextColor="#666"
+                    placeholderTextColor={tc('#666')}
                     style={styles.input}
                   />
                   <Text style={styles.inputTip}>Item 06.01 da Lei Comp. 116</Text>
@@ -344,7 +345,7 @@ export function ConfigFiscalModal({
                       onChangeText={setApiKey}
                       secureTextEntry
                       placeholder="Insira sua chave de API secreta"
-                      placeholderTextColor="#666"
+                      placeholderTextColor={tc('#666')}
                       style={styles.input}
                     />
                   </View>
@@ -374,7 +375,7 @@ export function ConfigFiscalModal({
               {/* Certificado Digital A1 */}
               <View style={styles.certBox}>
                 <View style={styles.certHeader}>
-                  <KeyRound size={16} color="#f3c21a" />
+                  <KeyRound size={16} color={tc('#f3c21a')} />
                   <Text style={styles.certTitle}>Certificado Digital A1 (.pfx)</Text>
                 </View>
                 <Text style={styles.certDesc}>
@@ -383,12 +384,12 @@ export function ConfigFiscalModal({
 
                 {certificadoUrl ? (
                   <View style={styles.certSuccess}>
-                    <ShieldCheck size={16} color="#10b981" />
+                    <ShieldCheck size={16} color={tc('#10b981')} />
                     <Text style={styles.certSuccessText}>Certificado A1 carregado e ativo</Text>
                   </View>
                 ) : (
                   <Pressable style={styles.certUploadBtn} onPress={simularUploadCertificado}>
-                    <Upload size={14} color="#111" />
+                    <Upload size={14} color={tc('#111')} />
                     <Text style={styles.certUploadBtnText}>Fazer Upload do Certificado (.pfx)</Text>
                   </Pressable>
                 )}
@@ -409,8 +410,8 @@ export function ConfigFiscalModal({
                 <Switch
                   value={emissaoAutomatica}
                   onValueChange={setEmissaoAutomatica}
-                  trackColor={{ false: '#333', true: '#f3c21a' }}
-                  thumbColor={emissaoAutomatica ? '#111' : '#888'}
+                  trackColor={{ false: tc('#333'), true: tc('#f3c21a') }}
+                  thumbColor={emissaoAutomatica ? tc('#111') : tc('#888')}
                 />
               </View>
             </View>
@@ -424,15 +425,15 @@ export function ConfigFiscalModal({
 
             <Pressable style={styles.saveBtn} onPress={handleSalvar} disabled={salvando}>
               {salvando ? (
-                <ActivityIndicator color="#111" size="small" />
+                <ActivityIndicator color={tc('#111')} size="small" />
               ) : sucesso ? (
                 <>
-                  <Check size={16} color="#111" />
+                  <Check size={16} color={tc('#111')} />
                   <Text style={styles.saveBtnText}>Salvo com Sucesso!</Text>
                 </>
               ) : (
                 <>
-                  <Save size={16} color="#111" />
+                  <Save size={16} color={tc('#111')} />
                   <Text style={styles.saveBtnText}>Salvar Dados Fiscais</Text>
                 </>
               )}
@@ -444,7 +445,7 @@ export function ConfigFiscalModal({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.85)',

@@ -8,6 +8,7 @@ import { ArtistaDetalhadoService } from '@/services/artista-detalhado-service';
 import { LocalidadeService } from '@/services/localidade-service';
 import { supabase } from '@/services/supabase';
 import { ModalReservaCliente } from '@/telas/cliente/modal-reserva';
+import { PortfolioService } from '@/services/portfolio-service';
 import type { ItemPortfolio, PerfilArtistaCompleto } from '@/types/artista-detalhado';
 import type { LocalidadeUsuario } from '@/types/localidade';
 import type { BottomNavTab } from '@/components/bottom-nav';
@@ -25,11 +26,13 @@ import {
   Sparkles,
   Star,
 } from 'lucide-react-native';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
   Image,
+  type LayoutChangeEvent,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -37,6 +40,10 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { createThemedStyles, tc } from '@/theme';
+
+/** Espaço vertical entre um post e outro dentro de cada página do feed */
+const ESPACO_ENTRE_POSTS = 10;
 
 const TATTOOS_PADRAO_POR_ESTILO: Record<string, { titulo: string; imagemUrl: string }[]> = {
   'Fine Line': [
@@ -188,6 +195,12 @@ export function ClienteInicioTab({ onNavegarAba, perfil }: PropsClienteInicioTab
   const [artistasFeed, setArtistasFeed] = useState<ItemArtistaFeedData[]>([]);
   const [curtidos, setCurtidos] = useState<Record<string, boolean>>({});
   const [carregando, setCarregando] = useState(true);
+  const [alturaFeed, setAlturaFeed] = useState(0);
+
+  const onLayoutFeed = useCallback((e: LayoutChangeEvent) => {
+    const h = Math.floor(e.nativeEvent.layout.height);
+    setAlturaFeed((prev) => (Math.abs(prev - h) > 1 ? h : prev));
+  }, []);
 
   // Estado de Localidade & Geofence
   const [localidade, setLocalidade] = useState<LocalidadeUsuario>(
@@ -245,60 +258,109 @@ export function ClienteInicioTab({ onNavegarAba, perfil }: PropsClienteInicioTab
         });
       }
 
-      if (!errArtistas && artistasData) {
-        const todosArtistas: ItemArtistaFeedData[] = [];
+      const obrasCustomizadas = await PortfolioService.obterObrasParaFeed();
 
-        artistasData.forEach((art: any) => {
-          const reviewsDoArtista = reviewsPorArtista[art.id] || [];
-          const estilo = art.estilo_principal || 'Fine Line';
+      // Lista base de artistas: do Supabase ou das personas configuradas
+      let listaArtistasBase = artistasData && !errArtistas && artistasData.length > 0 ? artistasData : [
+        {
+          id: '11111111-1111-1111-1111-111111111111',
+          nome_exibicao: 'Camila Rossi',
+          foto_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
+          nome_estudio: 'Aura Tatuaria & Botânica',
+          endereco_estudio: 'Rua Harmonia, 412 - Vila Madalena',
+          cidade: 'São Paulo, SP (Vila Madalena)',
+          estilo_principal: 'Fine Line',
+          preco_inicial: 350,
+          curtidas: 240,
+          latitude: -23.5505,
+          longitude: -46.6885,
+        },
+        {
+          id: '22222222-2222-2222-2222-222222222222',
+          nome_exibicao: 'Leonardo Black',
+          foto_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80',
+          nome_estudio: 'Nômade Blackwork Studio',
+          endereco_estudio: 'Rua Fradique Coutinho, 890 - Pinheiros',
+          cidade: 'São Paulo, SP (Pinheiros)',
+          estilo_principal: 'Blackwork',
+          preco_inicial: 500,
+          curtidas: 310,
+          latitude: -23.5601,
+          longitude: -46.6902,
+        },
+        {
+          id: '33333333-3333-3333-3333-333333333333',
+          nome_exibicao: 'Maya Silveira',
+          foto_url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&auto=format&fit=crop&q=80',
+          nome_estudio: 'Cromia Studio Art',
+          endereco_estudio: 'Av. Paulista, 1000 - Bela Vista',
+          cidade: 'São Paulo, SP (Bela Vista)',
+          estilo_principal: 'Aquarela',
+          preco_inicial: 400,
+          curtidas: 180,
+          latitude: -23.5654,
+          longitude: -46.6512,
+        },
+      ];
 
-          let obras: ItemPortfolio[] = [];
+      const todosArtistas: ItemArtistaFeedData[] = [];
 
-          // Garante fotos REAIS de tatuagem/portfólio (nunca selfie/foto de perfil)
-          if (art.flashes && Array.isArray(art.flashes) && art.flashes.length > 0) {
-            obras = art.flashes.map((f: any) => ({
-              id: f.id,
-              artistaId: art.id,
-              titulo: f.titulo || `${estilo} Autoral`,
-              imagemUrl: f.imagem_url,
-              estilo: f.estilo || estilo,
-              preco: Number(f.preco || art.preco_inicial || 350),
-              disponivel: f.disponivel ?? true,
-            }));
-          } else {
-            const padroes =
-              TATTOOS_PADRAO_POR_ESTILO[estilo] || TATTOOS_PADRAO_POR_ESTILO['Fine Line'];
-            obras = padroes.map((p, idx) => ({
-              id: `${art.id}-padrao-${idx}`,
-              artistaId: art.id,
-              titulo: p.titulo,
-              imagemUrl: p.imagemUrl,
-              estilo: estilo,
-              preco: Number(art.preco_inicial || 350),
-              disponivel: true,
-            }));
-          }
+      listaArtistasBase.forEach((art: any) => {
+        const reviewsDoArtista = reviewsPorArtista[art.id] || [];
+        const estilo = art.estilo_principal || 'Fine Line';
 
-          todosArtistas.push({
-            id: art.id,
+        let obras: ItemPortfolio[] = [];
+
+        // 1. Fotos cadastradas em flashes
+        if (art.flashes && Array.isArray(art.flashes) && art.flashes.length > 0) {
+          obras = art.flashes.map((f: any) => ({
+            id: f.id,
             artistaId: art.id,
-            artistaNome: art.nome_exibicao || 'Artista Dermys',
-            artistaFoto: art.foto_url, // estritamente para o mini-avatar de 20px
-            estudioNome: art.nome_estudio || 'Estúdio Particular',
-            cidade: art.cidade || 'São Paulo, SP',
+            titulo: f.titulo || `${estilo} Autoral`,
+            imagemUrl: f.imagem_url,
+            estilo: f.estilo || estilo,
+            preco: Number(f.preco || art.preco_inicial || 350),
+            disponivel: f.disponivel ?? true,
+          }));
+        } else {
+          const padroes =
+            TATTOOS_PADRAO_POR_ESTILO[estilo] || TATTOOS_PADRAO_POR_ESTILO['Fine Line'];
+          obras = padroes.map((p, idx) => ({
+            id: `${art.id}-padrao-${idx}`,
+            artistaId: art.id,
+            titulo: p.titulo,
+            imagemUrl: p.imagemUrl,
             estilo: estilo,
-            precoInicial: Number(art.preco_inicial || 350),
-            curtidas: Number(art.curtidas || 120),
-            notaMedia: 4.9,
-            obras,
-            rawArtista: art,
-            rawFlashes: art.flashes || [],
-            rawReviews: reviewsDoArtista,
-          });
-        });
+            preco: Number(art.preco_inicial || 350),
+            disponivel: true,
+          }));
+        }
 
-        setArtistasFeed(todosArtistas);
-      }
+        // 2. Mescla fotos adicionadas pelo próprio tatuador via perfil
+        const adicionadasDesteArtista = obrasCustomizadas[art.id] || [];
+        if (adicionadasDesteArtista.length > 0) {
+          obras = [...adicionadasDesteArtista, ...obras];
+        }
+
+        todosArtistas.push({
+          id: art.id,
+          artistaId: art.id,
+          artistaNome: art.nome_exibicao || 'Artista Dermys',
+          artistaFoto: art.foto_url,
+          estudioNome: art.nome_estudio || 'Estúdio Particular',
+          cidade: art.cidade || 'São Paulo, SP',
+          estilo: estilo,
+          precoInicial: Number(art.preco_inicial || 350),
+          curtidas: Number(art.curtidas || 120),
+          notaMedia: 4.9,
+          obras,
+          rawArtista: art,
+          rawFlashes: art.flashes || [],
+          rawReviews: reviewsDoArtista,
+        });
+      });
+
+      setArtistasFeed(todosArtistas);
     } catch {
       // silencioso
     } finally {
@@ -435,12 +497,12 @@ export function ClienteInicioTab({ onNavegarAba, perfil }: PropsClienteInicioTab
           style={styles.locationChip}
           onPress={() => setModalLocalidadeAberto(true)}
         >
-          <MapPin size={13} color="#f3c21a" />
+          <MapPin size={13} color={tc('#f3c21a')} />
           <Text style={styles.locationChipText} numberOfLines={1}>
             {localidade.cidade}, {localidade.estado}
             {localidade.raioKm ? ` • ${localidade.raioKm} km` : ' • Brasil'}
           </Text>
-          <ChevronDown size={12} color="#888892" />
+          <ChevronDown size={12} color={tc('#888892')} />
         </Pressable>
 
         <Text style={styles.feedCountPill}>{artistasFiltrados.length} artistas</Text>
@@ -448,12 +510,12 @@ export function ClienteInicioTab({ onNavegarAba, perfil }: PropsClienteInicioTab
 
       {/* Barra de Busca Minimalista */}
       <View style={styles.searchWrap}>
-        <Search size={15} color="#71717a" style={styles.searchIcon} />
+        <Search size={15} color={tc('#71717a')} style={styles.searchIcon} />
         <TextInput
           value={consulta}
           onChangeText={setConsulta}
           placeholder="Buscar artista, estúdio ou estilo..."
-          placeholderTextColor="#71717a"
+          placeholderTextColor={tc('#71717a')}
           style={styles.searchInput}
         />
       </View>
@@ -461,6 +523,7 @@ export function ClienteInicioTab({ onNavegarAba, perfil }: PropsClienteInicioTab
       {/* Pílulas de Estilos */}
       <ScrollView
         horizontal
+        style={{ flexGrow: 0 }}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.tagsRow}
       >
@@ -480,41 +543,50 @@ export function ClienteInicioTab({ onNavegarAba, perfil }: PropsClienteInicioTab
         })}
       </ScrollView>
 
-      {/* Feed Estilo Pinterest com Carrossel de Obras */}
-      <View style={styles.feedSection}>
-        <View style={styles.feedHeaderRow}>
-          <Text style={styles.feedTitle}>Explorar Trabalhos & Portfólios</Text>
-          <Text style={styles.feedCountText}>{artistasFiltrados.length} artistas</Text>
-        </View>
-
-        {carregando ? (
-          <ActivityIndicator color="#f3c21a" style={{ marginVertical: 40 }} />
+      {/* Feed Estilo Reels/TikTok: um tatuador por página, com encaixe */}
+      <View style={styles.feedSection} onLayout={onLayoutFeed}>
+        {carregando || alturaFeed === 0 ? (
+          <ActivityIndicator color={tc('#f3c21a')} style={{ marginVertical: 40 }} />
         ) : (
           <FlatList
             data={artistasFiltrados}
             keyExtractor={(item) => item.id}
-            numColumns={2}
-            scrollEnabled={false}
-            columnWrapperStyle={styles.columnWrap}
-            contentContainerStyle={styles.gridContent}
-            renderItem={({ item }) => (
-              <CartaoArtistaFeed
-                item={item}
-                isCurtido={curtidos[item.id]}
-                onCurtir={alternarCurtida}
-                onAbrirPerfil={(artItem, obra) =>
-                  abrirResumoArtista(
-                    artItem.rawArtista,
-                    artItem.rawFlashes,
-                    artItem.rawReviews,
-                    obra
-                  )
-                }
-              />
+            pagingEnabled={Platform.OS === 'web'}
+            snapToInterval={alturaFeed}
+            snapToAlignment="start"
+            decelerationRate="fast"
+            disableIntervalMomentum
+            showsVerticalScrollIndicator={false}
+            getItemLayout={(_, index) => ({
+              length: alturaFeed,
+              offset: alturaFeed * index,
+              index,
+            })}
+            windowSize={3}
+            initialNumToRender={2}
+            maxToRenderPerBatch={2}
+            renderItem={({ item, index }) => (
+              <View style={{ height: alturaFeed, paddingBottom: ESPACO_ENTRE_POSTS }}>
+                <CartaoArtistaFeed
+                  item={item}
+                  altura={alturaFeed - ESPACO_ENTRE_POSTS}
+                  isCurtido={curtidos[item.id]}
+                  mostrarDicaDeslize={index === 0 && artistasFiltrados.length > 1}
+                  onCurtir={alternarCurtida}
+                  onAbrirPerfil={(artItem, obra) =>
+                    abrirResumoArtista(
+                      artItem.rawArtista,
+                      artItem.rawFlashes,
+                      artItem.rawReviews,
+                      obra
+                    )
+                  }
+                />
+              </View>
             )}
             ListEmptyComponent={
               <View style={styles.emptyWrap}>
-                <Compass size={32} color="#71717a" style={{ marginBottom: 8 }} />
+                <Compass size={32} color={tc('#71717a')} style={{ marginBottom: 8 }} />
                 <Text style={styles.emptyTitle}>Nenhum tatuador encontrado neste raio</Text>
                 <Text style={styles.emptyText}>
                   {localidade.raioKm
@@ -534,7 +606,7 @@ export function ClienteInicioTab({ onNavegarAba, perfil }: PropsClienteInicioTab
                       LocalidadeService.salvarLocalidade(expandida);
                     }}
                   >
-                    <Globe size={14} color="#000" />
+                    <Globe size={14} color={tc('#000')} />
                     <Text style={styles.btnExpandirRaioText}>Ver Tatuadores em Todo o Brasil</Text>
                   </Pressable>
                 )}
@@ -595,9 +667,10 @@ export function ClienteInicioTab({ onNavegarAba, perfil }: PropsClienteInicioTab
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles({
   container: {
-    gap: 12,
+    flex: 1,
+    gap: 10,
   },
   topLocationRow: {
     flexDirection: 'row',
@@ -677,8 +750,8 @@ const styles = StyleSheet.create({
     color: '#8e8e93',
   },
   feedSection: {
-    gap: 8,
-    marginTop: 4,
+    flex: 1,
+    minHeight: 0,
   },
   feedHeaderRow: {
     flexDirection: 'row',
@@ -698,13 +771,9 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
   },
-  columnWrap: {
-    justifyContent: 'space-between',
-    gap: 10,
-  },
   gridContent: {
-    gap: 10,
-    paddingBottom: 24,
+    gap: 20,
+    paddingBottom: 32,
   },
   emptyWrap: {
     paddingVertical: 48,

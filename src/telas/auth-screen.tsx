@@ -37,6 +37,7 @@ import {
   View,
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
+import { createThemedStyles, tc } from '@/theme';
 
 if (typeof window !== 'undefined') {
   WebBrowser.maybeCompleteAuthSession();
@@ -47,19 +48,19 @@ function GoogleIcon({ size = 20 }: { size?: number }) {
     <Svg width={size} height={size} viewBox="0 0 24 24">
       <Path
         d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-        fill="#4285F4"
+        fill={tc('#4285F4')}
       />
       <Path
         d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-        fill="#34A853"
+        fill={tc('#34A853')}
       />
       <Path
         d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-        fill="#FBBC05"
+        fill={tc('#FBBC05')}
       />
       <Path
         d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-        fill="#EA4335"
+        fill={tc('#EA4335')}
       />
     </Svg>
   );
@@ -449,7 +450,7 @@ export function TelaAutenticacao({
   const renderBoasVindas = () => (
     <View style={styles.sectionCenter}>
       <View style={styles.brandWrap}>
-        <Logo size={200} color="#f3c21a" />
+        <Logo size={200} color={tc('#f3c21a')} />
 
         <View style={styles.brandTextWrap}>
           <Text style={styles.brandTitle}>DERMYS</Text>
@@ -509,7 +510,7 @@ export function TelaAutenticacao({
           onPress={() => setTipoPerfil('cliente')}
         >
           <View style={styles.roleHead}>
-            <Compass size={20} color={tipoPerfil === 'cliente' ? '#f3c21a' : '#6b7280'} />
+            <Compass size={20} color={tipoPerfil === 'cliente' ? tc('#f3c21a') : tc('#6b7280')} />
             <View style={[styles.roleDot, tipoPerfil === 'cliente' ? styles.roleDotOn : styles.roleDotOff]} />
           </View>
           <Text style={styles.roleTitle}>Cliente</Text>
@@ -522,7 +523,7 @@ export function TelaAutenticacao({
           onPress={() => setTipoPerfil('artista')}
         >
           <View style={styles.roleHead}>
-            <Palette size={20} color={tipoPerfil === 'artista' ? '#f3c21a' : '#6b7280'} />
+            <Palette size={20} color={tipoPerfil === 'artista' ? tc('#f3c21a') : tc('#6b7280')} />
             <View style={[styles.roleDot, tipoPerfil === 'artista' ? styles.roleDotOn : styles.roleDotOff]} />
           </View>
           <Text style={styles.roleTitle}>Tatuador / Estúdio</Text>
@@ -582,12 +583,12 @@ export function TelaAutenticacao({
         <View style={styles.inputWrap}>
           {!opcoes?.multiline && (
             <View style={styles.inputIcon}>
-              <IconComp size={18} color={pendente ? '#f3c21a' : '#6f6f6f'} />
+              <IconComp size={18} color={pendente ? tc('#f3c21a') : tc('#6f6f6f')} />
             </View>
           )}
           <TextInput
             placeholder={placeholder}
-            placeholderTextColor="#6f6f6f"
+            placeholderTextColor={tc('#6f6f6f')}
             value={formulario[chave]}
             secureTextEntry={opcoes?.secure}
             keyboardType={opcoes?.keyboardType}
@@ -621,7 +622,7 @@ export function TelaAutenticacao({
             <Image source={{ uri: userFotoUrl }} style={styles.userAvatarImg} />
           ) : (
             <View style={styles.userAvatarFallback}>
-              <User size={24} color="#f3c21a" />
+              <User size={24} color={tc('#f3c21a')} />
             </View>
           )}
           <View style={styles.completeHeaderTextWrap}>
@@ -634,7 +635,7 @@ export function TelaAutenticacao({
 
         {erro ? (
           <View style={styles.errorBanner}>
-            <AlertCircle size={16} color="#ef4444" />
+            <AlertCircle size={16} color={tc('#ef4444')} />
             <Text style={styles.errorText}>{erro}</Text>
           </View>
         ) : null}
@@ -649,15 +650,15 @@ export function TelaAutenticacao({
           <View style={styles.statusBannerHead}>
             {totalFaltantes > 0 ? (
               <>
-                <AlertCircle size={18} color="#f3c21a" />
+                <AlertCircle size={18} color={tc('#f3c21a')} />
                 <Text style={styles.statusBannerTitle}>
                   Faltam {totalFaltantes} {totalFaltantes === 1 ? 'informação' : 'informações'} para ativar seu perfil
                 </Text>
               </>
             ) : (
               <>
-                <CheckCircle2 size={18} color="#22c55e" />
-                <Text style={[styles.statusBannerTitle, { color: '#22c55e' }]}>
+                <CheckCircle2 size={18} color={tc('#22c55e')} />
+                <Text style={[styles.statusBannerTitle, { color: tc('#22c55e') }]}>
                   Tudo pronto! Seu perfil está completo
                 </Text>
               </>
@@ -687,7 +688,7 @@ export function TelaAutenticacao({
               activeOpacity={0.85}
               onPress={() => setTipoPerfil('cliente')}
             >
-              <Compass size={22} color={tipoPerfil === 'cliente' ? '#f3c21a' : '#888'} />
+              <Compass size={22} color={tipoPerfil === 'cliente' ? tc('#f3c21a') : tc('#888')} />
               <Text
                 style={[
                   styles.roleSelectTitle,
@@ -707,7 +708,7 @@ export function TelaAutenticacao({
               activeOpacity={0.85}
               onPress={() => setTipoPerfil('artista')}
             >
-              <Palette size={22} color={tipoPerfil === 'artista' ? '#f3c21a' : '#888'} />
+              <Palette size={22} color={tipoPerfil === 'artista' ? tc('#f3c21a') : tc('#888')} />
               <Text
                 style={[
                   styles.roleSelectTitle,
@@ -787,7 +788,7 @@ export function TelaAutenticacao({
                         style={[styles.stylePill, ativo ? styles.stylePillActive : styles.stylePillIdle]}
                         activeOpacity={0.85}
                       >
-                        {ativo && <Sparkles size={12} color="#111" />}
+                        {ativo && <Sparkles size={12} color={tc('#111')} />}
                         <Text style={[styles.stylePillText, ativo ? styles.stylePillTextActive : styles.stylePillTextIdle]}>
                           {estilo}
                         </Text>
@@ -816,7 +817,7 @@ export function TelaAutenticacao({
           activeOpacity={0.85}
         >
           {carregando ? (
-            <ActivityIndicator color="#111" />
+            <ActivityIndicator color={tc('#111')} />
           ) : (
             <Text style={[styles.buttonTextBase, styles.buttonTextDark]}>
               Salvar e Entrar no Dermys
@@ -831,7 +832,7 @@ export function TelaAutenticacao({
           style={styles.switchAccountBtn}
           activeOpacity={0.8}
         >
-          <LogOut size={14} color="#777" />
+          <LogOut size={14} color={tc('#777')} />
           <Text style={styles.switchAccountText}>Trocar de conta ou Sair</Text>
         </TouchableOpacity>
       </View>
@@ -847,7 +848,7 @@ export function TelaAutenticacao({
 
       {erro ? (
         <View style={styles.errorBanner}>
-          <AlertCircle size={16} color="#ef4444" />
+          <AlertCircle size={16} color={tc('#ef4444')} />
           <Text style={styles.errorText}>{erro}</Text>
         </View>
       ) : null}
@@ -917,7 +918,7 @@ export function TelaAutenticacao({
           activeOpacity={0.85}
         >
           {carregando ? (
-            <ActivityIndicator color="#111" />
+            <ActivityIndicator color={tc('#111')} />
           ) : (
             <Text style={[styles.buttonTextBase, styles.buttonTextDark]}>
               {etapa === 'login' ? 'Entrar' : 'Finalizar Registro'}
@@ -970,7 +971,7 @@ export function TelaAutenticacao({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles({
   safeArea: { flex: 1, backgroundColor: '#050505' },
   scrollContent: { flexGrow: 1, paddingHorizontal: 20, paddingVertical: 20, justifyContent: 'center' },
   sectionCenter: { gap: 24 },

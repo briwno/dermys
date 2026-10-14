@@ -22,6 +22,7 @@ import {
   View,
 } from 'react-native';
 import { AppModal } from '@/components/ui/app-modal';
+import { createThemedStyles, tc } from '@/theme';
 
 interface PropsRelatorioDasnModal {
   visivel: boolean;
@@ -71,7 +72,7 @@ export function RelatorioDasnModal({
           <View style={styles.header}>
             <View style={styles.headerLeft}>
               <View style={styles.iconWrap}>
-                <FileSpreadsheet size={20} color="#f3c21a" />
+                <FileSpreadsheet size={20} color={tc('#f3c21a')} />
               </View>
               <View>
                 <Text style={styles.title}>Relatório DASN-SIMEI</Text>
@@ -79,14 +80,14 @@ export function RelatorioDasnModal({
               </View>
             </View>
             <Pressable style={styles.closeBtn} onPress={onClose}>
-              <X size={18} color="#9ca3af" />
+              <X size={18} color={tc('#9ca3af')} />
             </Pressable>
           </View>
 
           {/* Seletor de Ano */}
           <View style={styles.yearSelector}>
             <Pressable style={styles.yearNavBtn} onPress={() => setAno((a) => a - 1)}>
-              <ChevronLeft size={18} color="#f3c21a" />
+              <ChevronLeft size={18} color={tc('#f3c21a')} />
             </Pressable>
             <Text style={styles.yearTitle}>Ano-Calendário {ano}</Text>
             <Pressable
@@ -96,7 +97,7 @@ export function RelatorioDasnModal({
             >
               <ChevronRight
                 size={18}
-                color={ano >= new Date().getFullYear() ? '#444' : '#f3c21a'}
+                color={ano >= new Date().getFullYear() ? tc('#444') : tc('#f3c21a')}
               />
             </Pressable>
           </View>
@@ -104,7 +105,7 @@ export function RelatorioDasnModal({
           {/* Conteúdo */}
           {carregando ? (
             <View style={styles.loadingWrap}>
-              <ActivityIndicator color="#f3c21a" size="large" />
+              <ActivityIndicator color={tc('#f3c21a')} size="large" />
               <Text style={styles.loadingText}>Consolidando dados fiscais de {ano}...</Text>
             </View>
           ) : !relatorio ? (
@@ -116,7 +117,7 @@ export function RelatorioDasnModal({
               {/* Card Resumo Oficial da Declaração */}
               <View style={styles.summaryCard}>
                 <View style={styles.summaryHeader}>
-                  <ShieldCheck size={16} color="#10b981" />
+                  <ShieldCheck size={16} color={tc('#10b981')} />
                   <Text style={styles.summaryTitle}>Resumo para preenchimento da DASN</Text>
                 </View>
 
@@ -141,7 +142,7 @@ export function RelatorioDasnModal({
                   <Text
                     style={[
                       styles.summaryValBold,
-                      { color: relatorio.percentualUtilizado > 85 ? '#ef4444' : '#10b981' },
+                      { color: relatorio.percentualUtilizado > 85 ? tc('#ef4444') : tc('#10b981') },
                     ]}
                   >
                     {relatorio.percentualUtilizado}% do teto utilizado
@@ -190,7 +191,7 @@ export function RelatorioDasnModal({
 
               {/* Dica da Declaração */}
               <View style={styles.tipBox}>
-                <HelpCircle size={14} color="#f3c21a" />
+                <HelpCircle size={14} color={tc('#f3c21a')} />
                 <Text style={styles.tipText}>
                   Na declaração anual da Receita Federal (Portal do Empreendedor / Simples Nacional),
                   insira o campo "Receita Bruta de Prestação de Serviços" com o valor total acima.
@@ -202,8 +203,8 @@ export function RelatorioDasnModal({
           {/* Rodapé */}
           <View style={styles.footer}>
             <Pressable style={styles.copyBtn} onPress={copiarRelatorioTexto}>
-              {copiado ? <Check size={16} color="#10b981" /> : <Copy size={16} color="#fff" />}
-              <Text style={[styles.copyBtnText, copiado && { color: '#10b981' }]}>
+              {copiado ? <Check size={16} color={tc('#10b981')} /> : <Copy size={16} color={tc('#fff')} />}
+              <Text style={[styles.copyBtnText, copiado && { color: tc('#10b981') }]}>
                 {copiado ? 'Dados Copiados!' : 'Copiar Resumo da Declaração'}
               </Text>
             </Pressable>
@@ -218,7 +219,7 @@ export function RelatorioDasnModal({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.85)',

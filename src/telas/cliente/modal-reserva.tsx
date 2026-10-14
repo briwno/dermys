@@ -53,6 +53,7 @@ import {
 } from 'react-native';
 
 import type { PerfilUsuario } from '@/types/auth';
+import { createThemedStyles, tc } from '@/theme';
 
 interface ModalReservaProps {
   visivel: boolean;
@@ -658,7 +659,7 @@ export function ModalReservaCliente({
           {/* Header com Navegação e Indicador de Progresso */}
           <View style={styles.header}>
             <Pressable style={styles.backBtn} onPress={voltarEtapa}>
-              <ChevronLeft size={20} color="#fff" />
+              <ChevronLeft size={20} color={tc('#fff')} />
             </Pressable>
 
             <View style={styles.progressWrap}>
@@ -682,7 +683,7 @@ export function ModalReservaCliente({
             </View>
 
             <Pressable style={styles.closeBtn} onPress={onClose}>
-              <X size={18} color="#888" />
+              <X size={18} color={tc('#888')} />
             </Pressable>
           </View>
 
@@ -698,7 +699,7 @@ export function ModalReservaCliente({
                   <Text style={styles.stepTitle}>Briefing do Projeto</Text>
                   <Text style={styles.stepSub}>
                     Envie referências, medidas e detalhes para{' '}
-                    <Text style={{ color: '#f3c21a', fontWeight: '800' }}>
+                    <Text style={{ color: tc('#f3c21a'), fontWeight: '800' }}>
                       {artista.nomeArtista}
                     </Text>{' '}
                     avaliar e formalizar a proposta de orçamento
@@ -716,7 +717,7 @@ export function ModalReservaCliente({
                   >
                     <Sparkles
                       size={16}
-                      color={tipoSessao === 'flash' ? '#111' : '#f3c21a'}
+                      color={tipoSessao === 'flash' ? tc('#111') : tc('#f3c21a')}
                     />
                     <View>
                       <Text
@@ -749,7 +750,7 @@ export function ModalReservaCliente({
                   >
                     <Layers
                       size={16}
-                      color={tipoSessao === 'exclusivo' ? '#111' : '#f3c21a'}
+                      color={tipoSessao === 'exclusivo' ? tc('#111') : tc('#f3c21a')}
                     />
                     <View>
                       <Text
@@ -781,7 +782,7 @@ export function ModalReservaCliente({
                     </View>
 
                     {carregandoFlashes ? (
-                      <ActivityIndicator color="#f3c21a" style={{ marginVertical: 20 }} />
+                      <ActivityIndicator color={tc('#f3c21a')} style={{ marginVertical: 20 }} />
                     ) : flashesArtista.length === 0 ? (
                       <View style={styles.emptyBox}>
                         <Text style={styles.emptyText}>Nenhum flash cadastrado no momento.</Text>
@@ -809,7 +810,7 @@ export function ModalReservaCliente({
                               />
                               {isSel && (
                                 <View style={styles.checkPill}>
-                                  <Check size={12} color="#111" />
+                                  <Check size={12} color={tc('#111')} />
                                 </View>
                               )}
                               <View style={styles.flashCardContent}>
@@ -859,7 +860,7 @@ export function ModalReservaCliente({
                                 style={styles.btnRemovePhoto}
                                 onPress={() => removerFoto(slotIndex)}
                               >
-                                <X size={12} color="#fff" />
+                                <X size={12} color={tc('#fff')} />
                               </Pressable>
                             </View>
                           );
@@ -873,11 +874,11 @@ export function ModalReservaCliente({
                             disabled={upandoFoto}
                           >
                             {upandoFoto ? (
-                              <ActivityIndicator color="#f3c21a" size="small" />
+                              <ActivityIndicator color={tc('#f3c21a')} size="small" />
                             ) : (
                               <>
                                 <View style={styles.uploadIconWrap}>
-                                  <Camera size={16} color="#f3c21a" />
+                                  <Camera size={16} color={tc('#f3c21a')} />
                                 </View>
                                 <Text style={styles.uploadSlotTitle}>+ Foto {slotIndex + 1}</Text>
                                 <Text style={styles.uploadSlotSub}>Galeria</Text>
@@ -895,7 +896,7 @@ export function ModalReservaCliente({
                         onPress={escolherFotoGaleria}
                         disabled={upandoFoto || referenciasUrls.length >= 3}
                       >
-                        <UploadCloud size={16} color="#111" />
+                        <UploadCloud size={16} color={tc('#111')} />
                         <Text style={styles.btnUploadPrincipalText}>
                           {referenciasUrls.length === 0
                             ? 'Fazer Upload da Galeria'
@@ -907,7 +908,7 @@ export function ModalReservaCliente({
                         style={styles.btnToggleUrlLink}
                         onPress={() => setMostrarInputUrl(!mostrarInputUrl)}
                       >
-                        <Plus size={14} color="#f3c21a" />
+                        <Plus size={14} color={tc('#f3c21a')} />
                         <Text style={styles.btnToggleUrlLinkText}>Link da Web</Text>
                       </Pressable>
                     </View>
@@ -918,14 +919,14 @@ export function ModalReservaCliente({
                           value={inputCustomUrl}
                           onChangeText={setInputCustomUrl}
                           placeholder="Cole o link da foto (Pinterest, Instagram, URL)..."
-                          placeholderTextColor="#666"
+                          placeholderTextColor={tc('#666')}
                           style={styles.customUrlInput}
                         />
                         <Pressable
                           style={styles.customUrlConfirmBtn}
                           onPress={adicionarUrlCustomizada}
                         >
-                          <Check size={16} color="#111" />
+                          <Check size={16} color={tc('#111')} />
                         </Pressable>
                       </View>
                     )}
@@ -979,7 +980,7 @@ export function ModalReservaCliente({
                             style={styles.btnRemoverFotoCorpo}
                             onPress={() => setFotoLocalCorpo(null)}
                           >
-                            <Trash2 size={14} color="#ef4444" />
+                            <Trash2 size={14} color={tc('#ef4444')} />
                           </Pressable>
                         ) : null}
                       </View>
@@ -997,7 +998,7 @@ export function ModalReservaCliente({
                           onPress={escolherFotoRegiaoCorpo}
                           disabled={upandoFoto}
                         >
-                          <Camera size={16} color="#f3c21a" />
+                          <Camera size={16} color={tc('#f3c21a')} />
                           <Text style={styles.anatomyUploadBtnText}>
                             Tirar ou Escolher Foto do {localCorpo}
                           </Text>
@@ -1009,7 +1010,7 @@ export function ModalReservaCliente({
                     <View style={styles.sectionHeaderRow}>
                       <Text style={styles.sectionLabel}>3. Dimensões Estimadas (cm)</Text>
                       <View style={styles.cmHighlightBadge}>
-                        <Ruler size={12} color="#111" />
+                        <Ruler size={12} color={tc('#111')} />
                         <Text style={styles.cmHighlightBadgeText}>~{tamanhoNumericoCm} cm</Text>
                       </View>
                     </View>
@@ -1052,7 +1053,7 @@ export function ModalReservaCliente({
                         value={descricaoArte}
                         onChangeText={setDescricaoArte}
                         placeholder="Ex: Quero um ramo floral com sombreamento suave e traços finos no antebraço direito..."
-                        placeholderTextColor="#666"
+                        placeholderTextColor={tc('#666')}
                         multiline
                         numberOfLines={3}
                         style={styles.textArea}
@@ -1106,10 +1107,10 @@ export function ModalReservaCliente({
                     disabled={carregando}
                   >
                     {carregando ? (
-                      <ActivityIndicator color="#111" size="small" />
+                      <ActivityIndicator color={tc('#111')} size="small" />
                     ) : (
                       <>
-                        <Send size={18} color="#111" />
+                        <Send size={18} color={tc('#111')} />
                         <Text style={styles.btnEnviarBriefingChatText}>
                           Enviar Briefing & Abrir Chat com Artista
                         </Text>
@@ -1220,7 +1221,7 @@ export function ModalReservaCliente({
                               isSelected && styles.shiftIconWrapActive,
                             ]}
                           >
-                            <Icone size={20} color={isSelected ? '#111' : '#f3c21a'} />
+                            <Icone size={20} color={isSelected ? tc('#111') : tc('#f3c21a')} />
                           </View>
                           <View style={{ flex: 1 }}>
                             <View style={styles.shiftTitleRow}>
@@ -1261,7 +1262,7 @@ export function ModalReservaCliente({
 
                 {/* Resumo da Data e Turno */}
                 <View style={styles.summaryBar}>
-                  <CalendarIcon size={14} color="#f3c21a" />
+                  <CalendarIcon size={14} color={tc('#f3c21a')} />
                   <Text style={styles.summaryBarText}>
                     {dataSelecionada.toLocaleDateString('pt-BR', {
                       day: '2-digit',
@@ -1287,7 +1288,7 @@ export function ModalReservaCliente({
                 {/* Temporizador de Reserva (Hold de 30min) */}
                 <View style={styles.holdBanner}>
                   <View style={styles.holdBannerLeft}>
-                    <Clock size={16} color="#f3c21a" />
+                    <Clock size={16} color={tc('#f3c21a')} />
                     <View>
                       <Text style={styles.holdBannerTitle}>Temporizador de Reserva</Text>
                       <Text style={styles.holdBannerSub}>
@@ -1335,22 +1336,22 @@ export function ModalReservaCliente({
                 {cobrancaPix && (
                   <View style={styles.pixBox}>
                     <View style={styles.pixHeader}>
-                      <ShieldCheck size={16} color="#009ee3" />
+                      <ShieldCheck size={16} color={tc('#009ee3')} />
                       <Text style={styles.pixHeaderText}>PIX Mercado Pago em Custódia</Text>
                     </View>
 
                     <View style={styles.qrCodeWrapper}>
                       <View style={styles.qrMock}>
-                        <QrCode size={110} color="#f3c21a" />
+                        <QrCode size={110} color={tc('#f3c21a')} />
                         <Text style={styles.qrMockLabel}>PAGAMENTO PROTEGIDO</Text>
                       </View>
                     </View>
 
                     <Pressable style={styles.copyPixBtn} onPress={copiarChavePix}>
                       {pixCopiado ? (
-                        <Check size={16} color="#10b981" />
+                        <Check size={16} color={tc('#10b981')} />
                       ) : (
-                        <Copy size={16} color="#111" />
+                        <Copy size={16} color={tc('#111')} />
                       )}
                       <Text
                         style={[
@@ -1365,7 +1366,7 @@ export function ModalReservaCliente({
                     </Pressable>
 
                     <View style={styles.safeNotice}>
-                      <ShieldCheck size={12} color="#10b981" />
+                      <ShieldCheck size={12} color={tc('#10b981')} />
                       <Text style={styles.safeNoticeText}>
                         O valor fica retido com segurança até o dia do procedimento.
                       </Text>
@@ -1380,10 +1381,10 @@ export function ModalReservaCliente({
                   disabled={carregando}
                 >
                   {carregando ? (
-                    <ActivityIndicator color="#111" size="small" />
+                    <ActivityIndicator color={tc('#111')} size="small" />
                   ) : (
                     <>
-                      <CheckCircle2 size={18} color="#111" />
+                      <CheckCircle2 size={18} color={tc('#111')} />
                       <Text style={styles.btnConfirmDepositText}>
                         Confirmar Pagamento do Sinal
                       </Text>
@@ -1397,12 +1398,12 @@ export function ModalReservaCliente({
             {etapa === 4 && (
               <View style={[styles.stepContainer, { alignItems: 'center', paddingVertical: 14 }]}>
                 <View style={styles.successIconWrap}>
-                  <CheckCircle2 size={54} color="#f3c21a" />
+                  <CheckCircle2 size={54} color={tc('#f3c21a')} />
                 </View>
 
                 <Text style={styles.successTitle}>Sessão Confirmada!</Text>
                 <Text style={styles.successSub}>
-                  Sua vaga com <Text style={{ color: '#fff', fontWeight: '800' }}>{artista.nomeArtista}</Text> foi travada com sucesso com o sinal de R$ {valorSinalCalculado}.
+                  Sua vaga com <Text style={{ color: tc('#fff'), fontWeight: '800' }}>{artista.nomeArtista}</Text> foi travada com sucesso com o sinal de R$ {valorSinalCalculado}.
                 </Text>
 
                 <View style={styles.protocolCard}>
@@ -1431,11 +1432,11 @@ export function ModalReservaCliente({
 
                 <View style={styles.anamneseCallout}>
                   <View style={styles.anamneseCalloutHeader}>
-                    <FileHeart size={18} color="#f3c21a" />
+                    <FileHeart size={18} color={tc('#f3c21a')} />
                     <Text style={styles.anamneseCalloutTitle}>Fase 5: Ficha de Saúde (Anamnese)</Text>
                   </View>
                   <Text style={styles.anamneseCalloutText}>
-                    Por exigência sanitária e biossegurança, complete e assine sua <Text style={{ color: '#f3c21a', fontWeight: '700' }}>Ficha de Anamnese</Text> na aba <Text style={{ color: '#fff', fontWeight: '700' }}>Meus Agendamentos</Text> ou no Chat antes da sessão.
+                    Por exigência sanitária e biossegurança, complete e assine sua <Text style={{ color: tc('#f3c21a'), fontWeight: '700' }}>Ficha de Anamnese</Text> na aba <Text style={{ color: tc('#fff'), fontWeight: '700' }}>Meus Agendamentos</Text> ou no Chat antes da sessão.
                   </Text>
                 </View>
 
@@ -1466,13 +1467,13 @@ export function ModalReservaCliente({
                 disabled={carregando}
               >
                 {carregando ? (
-                  <ActivityIndicator color="#111" size="small" />
+                  <ActivityIndicator color={tc('#111')} size="small" />
                 ) : (
                   <>
                     <Text style={styles.btnNextText}>
                       Pagar Sinal (R$ {valorSinalCalculado})
                     </Text>
-                    <ChevronRight size={18} color="#111" />
+                    <ChevronRight size={18} color={tc('#111')} />
                   </>
                 )}
               </Pressable>
@@ -1484,7 +1485,7 @@ export function ModalReservaCliente({
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.88)',

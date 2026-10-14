@@ -48,6 +48,7 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { createThemedStyles, tc } from '@/theme';
 
 export interface FichaAnamneseArtista {
   id?: string;
@@ -381,7 +382,7 @@ export function ArtistaAgendaTab() {
           disabled={salvandoStatusAgenda}
         >
           {salvandoStatusAgenda ? (
-            <ActivityIndicator color={agendaAberta ? '#ef4444' : '#10b981'} size="small" />
+            <ActivityIndicator color={agendaAberta ? tc('#ef4444') : tc('#10b981')} size="small" />
           ) : (
             <Text
               style={[
@@ -420,7 +421,7 @@ export function ArtistaAgendaTab() {
 
       {/* Lista de Cards */}
       {carregando ? (
-        <ActivityIndicator color="#f3c21a" style={{ marginTop: 24 }} />
+        <ActivityIndicator color={tc('#f3c21a')} style={{ marginTop: 24 }} />
       ) : agendamentosFiltrados.length === 0 ? (
         <View style={styles.emptyWrap}>
           <Text style={styles.emptyTitle}>Agenda vazia nesta categoria</Text>
@@ -510,11 +511,11 @@ export function ArtistaAgendaTab() {
               <View style={styles.gridInfo}>
                 <View style={styles.infoCol}>
                   <View style={styles.infoLine}>
-                    <Calendar size={13} color="#f3c21a" />
+                    <Calendar size={13} color={tc('#f3c21a')} />
                     <Text style={styles.infoVal}>{item.data}</Text>
                   </View>
                   <View style={styles.infoLine}>
-                    <Clock size={13} color="#f3c21a" />
+                    <Clock size={13} color={tc('#f3c21a')} />
                     <Text style={styles.infoVal}>{item.horario}</Text>
                   </View>
                 </View>
@@ -539,11 +540,11 @@ export function ArtistaAgendaTab() {
                 ]}
               >
                 {temAlerta ? (
-                  <ShieldAlert size={14} color="#ef4444" />
+                  <ShieldAlert size={14} color={tc('#ef4444')} />
                 ) : anamneseAssinada ? (
-                  <ShieldCheck size={14} color="#10b981" />
+                  <ShieldCheck size={14} color={tc('#10b981')} />
                 ) : (
-                  <HeartPulse size={14} color="#f3c21a" />
+                  <HeartPulse size={14} color={tc('#f3c21a')} />
                 )}
                 <Text
                   style={[
@@ -576,7 +577,7 @@ export function ArtistaAgendaTab() {
 
                 <View style={styles.sinalStatusWrap}>
                   <View style={styles.sinalIconRow}>
-                    <CheckCircle2 size={12} color="#10b981" />
+                    <CheckCircle2 size={12} color={tc('#10b981')} />
                     <Text style={styles.sinalStatusText}>Sinal Pago via MP: R$ {item.valorSinal}</Text>
                   </View>
                   {!isConcluido && !isCancelado && (
@@ -593,8 +594,8 @@ export function ArtistaAgendaTab() {
                   style={[styles.btnSecondary, temAlerta && styles.btnSecondaryAlert]}
                   onPress={() => setItemAnamnese(item)}
                 >
-                  <FileHeart size={14} color={temAlerta ? '#ef4444' : '#f3c21a'} />
-                  <Text style={[styles.btnSecondaryText, temAlerta && { color: '#ef4444' }]}>
+                  <FileHeart size={14} color={temAlerta ? tc('#ef4444') : tc('#f3c21a')} />
+                  <Text style={[styles.btnSecondaryText, temAlerta && { color: tc('#ef4444') }]}>
                     {temAlerta ? 'Ver Alertas / Ficha' : 'Briefing & Saúde'}
                   </Text>
                 </Pressable>
@@ -605,14 +606,14 @@ export function ArtistaAgendaTab() {
                       style={styles.btnSuccess}
                       onPress={() => atualizarStatus(item.id, 'confirmado')}
                     >
-                      <CheckCircle size={14} color="#111" />
+                      <CheckCircle size={14} color={tc('#111')} />
                       <Text style={styles.btnSuccessText}>Aceitar</Text>
                     </Pressable>
                     <Pressable
                       style={styles.btnDanger}
                       onPress={() => atualizarStatus(item.id, 'cancelado')}
                     >
-                      <XCircle size={14} color="#ef4444" />
+                      <XCircle size={14} color={tc('#ef4444')} />
                     </Pressable>
                   </>
                 )}
@@ -622,7 +623,7 @@ export function ArtistaAgendaTab() {
                     style={styles.btnPrimary}
                     onPress={() => atualizarStatus(item.id, 'em_andamento')}
                   >
-                    <Play size={14} color="#111" />
+                    <Play size={14} color={tc('#111')} />
                     <Text style={styles.btnPrimaryText}>Iniciar Sessão</Text>
                   </Pressable>
                 )}
@@ -632,7 +633,7 @@ export function ArtistaAgendaTab() {
                     style={styles.btnDangerAction}
                     onPress={() => abrirModalFinalizar(item)}
                   >
-                    <Square size={14} color="#fff" fill="#fff" />
+                    <Square size={14} color={tc('#fff')} fill={tc('#fff')} />
                     <Text style={styles.btnDangerActionText}>Finalizar & Cobrar</Text>
                   </Pressable>
                 )}
@@ -643,15 +644,15 @@ export function ArtistaAgendaTab() {
                       style={[styles.btnReceipt, { flex: 1 }]}
                       onPress={() => setItemEmissaoNfse(item)}
                     >
-                      <FileCheck2 size={13} color="#f3c21a" />
+                      <FileCheck2 size={13} color={tc('#f3c21a')} />
                       <Text style={styles.btnReceiptText}>Emitir NFS-e</Text>
                     </Pressable>
                     <Pressable
-                      style={[styles.btnReceipt, { flex: 1, backgroundColor: '#181818' }]}
+                      style={[styles.btnReceipt, { flex: 1, backgroundColor: tc('#181818') }]}
                       onPress={() => abrirReciboAgendamento(item)}
                     >
-                      <DollarSign size={13} color="#10b981" />
-                      <Text style={[styles.btnReceiptText, { color: '#10b981' }]}>Recibo</Text>
+                      <DollarSign size={13} color={tc('#10b981')} />
+                      <Text style={[styles.btnReceiptText, { color: tc('#10b981') }]}>Recibo</Text>
                     </Pressable>
                   </View>
                 )}
@@ -673,7 +674,7 @@ export function ArtistaAgendaTab() {
             <View style={styles.modalHeader}>
               <View style={styles.modalHeaderLeft}>
                 <View style={styles.finishIconWrap}>
-                  <Timer size={20} color="#f3c21a" />
+                  <Timer size={20} color={tc('#f3c21a')} />
                 </View>
                 <View>
                   <Text style={styles.modalTitle}>Finalizar & Liquidar</Text>
@@ -681,7 +682,7 @@ export function ArtistaAgendaTab() {
                 </View>
               </View>
               <Pressable style={styles.closeBtn} onPress={() => setItemFinalizando(null)}>
-                <X size={18} color="#888" />
+                <X size={18} color={tc('#888')} />
               </Pressable>
             </View>
 
@@ -750,7 +751,7 @@ export function ArtistaAgendaTab() {
                       setTimeout(() => setCopiadoPix(false), 2000);
                     }}
                   >
-                    <Copy size={14} color="#111" />
+                    <Copy size={14} color={tc('#111')} />
                     <Text style={styles.copyPixBtnText}>
                       {copiadoPix ? 'PIX Copia e Cola Copiado!' : 'Copiar Chave Copia e Cola'}
                     </Text>
@@ -766,10 +767,10 @@ export function ArtistaAgendaTab() {
                 disabled={liquidando}
               >
                 {liquidando ? (
-                  <ActivityIndicator color="#111" size="small" />
+                  <ActivityIndicator color={tc('#111')} size="small" />
                 ) : (
                   <>
-                    <CheckCircle2 size={16} color="#111" />
+                    <CheckCircle2 size={16} color={tc('#111')} />
                     <Text style={styles.btnConfirmFinishText}>
                       {pixCopiaColaFinal ? 'Concluir e Ver Recibo' : 'Liquidar e Gerar Recibo Fiscal'}
                     </Text>
@@ -792,14 +793,14 @@ export function ArtistaAgendaTab() {
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
               <View style={styles.modalHeaderLeft}>
-                <FileHeart size={20} color="#f3c21a" />
+                <FileHeart size={20} color={tc('#f3c21a')} />
                 <View>
                   <Text style={styles.modalTitle}>Briefing & Ficha de Saúde</Text>
                   <Text style={styles.modalSub}>Cliente: {itemAnamnese?.clienteNome}</Text>
                 </View>
               </View>
               <Pressable style={styles.closeBtn} onPress={() => setItemAnamnese(null)}>
-                <X size={18} color="#888" />
+                <X size={18} color={tc('#888')} />
               </Pressable>
             </View>
 
@@ -807,7 +808,7 @@ export function ArtistaAgendaTab() {
               {/* Alerta Vermelho de Saúde se houver restrição */}
               {itemAnamnese?.fichaAnamnese?.tem_alerta_saude && (
                 <View style={styles.redAlertBanner}>
-                  <AlertTriangle size={20} color="#ef4444" />
+                  <AlertTriangle size={20} color={tc('#ef4444')} />
                   <View style={{ flex: 1 }}>
                     <Text style={styles.redAlertTitle}>ATENÇÃO SANITÁRIA (ALERTA)</Text>
                     <Text style={styles.redAlertSub}>
@@ -869,7 +870,7 @@ export function ArtistaAgendaTab() {
                       <Text
                         style={[
                           styles.healthVal,
-                          itemAnamnese.fichaAnamnese.alergias !== 'Nenhuma' && { color: '#ef4444', fontWeight: '800' },
+                          itemAnamnese.fichaAnamnese.alergias !== 'Nenhuma' && { color: tc('#ef4444'), fontWeight: '800' },
                         ]}
                       >
                         {itemAnamnese.fichaAnamnese.alergias || 'Nenhuma relatada'}
@@ -881,7 +882,7 @@ export function ArtistaAgendaTab() {
                       <Text
                         style={[
                           styles.healthVal,
-                          itemAnamnese.fichaAnamnese.doencas_cronicas !== 'Nenhuma' && { color: '#ef4444', fontWeight: '800' },
+                          itemAnamnese.fichaAnamnese.doencas_cronicas !== 'Nenhuma' && { color: tc('#ef4444'), fontWeight: '800' },
                         ]}
                       >
                         {itemAnamnese.fichaAnamnese.doencas_cronicas || 'Nenhuma relatada'}
@@ -903,7 +904,7 @@ export function ArtistaAgendaTab() {
                     </View>
 
                     <View style={styles.signedStamp}>
-                      <ShieldCheck size={14} color="#10b981" />
+                      <ShieldCheck size={14} color={tc('#10b981')} />
                       <Text style={styles.signedStampText}>
                         Assinado digitalmente pelo cliente em{' '}
                         {itemAnamnese.fichaAnamnese.data_assinatura
@@ -914,7 +915,7 @@ export function ArtistaAgendaTab() {
                   </View>
                 ) : (
                   <View style={styles.pendingAnamneseWrap}>
-                    <Clock size={16} color="#f3c21a" />
+                    <Clock size={16} color={tc('#f3c21a')} />
                     <Text style={styles.pendingAnamneseText}>
                       O cliente ainda não preencheu a ficha digital. Ele receberá o lembrete antes da sessão.
                     </Text>
@@ -973,7 +974,7 @@ export function ArtistaAgendaTab() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles({
   container: {
     flex: 1,
     gap: 12,

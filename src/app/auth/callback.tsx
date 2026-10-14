@@ -3,6 +3,7 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as Linking from 'expo-linking';
 import { extrairParametrosDeUrl, processarRetornoOAuthUrl } from '@/services/auth-oauth';
+import { createThemedStyles, tc } from '@/theme';
 
 export default function AuthCallback() {
   const router = useRouter();
@@ -58,12 +59,12 @@ export default function AuthCallback() {
 
   return (
     <View style={styles.container}>
-      <ActivityIndicator color="#f3c21a" size="large" />
+      <ActivityIndicator color={tc('#f3c21a')} size="large" />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles({
   container: {
     flex: 1,
     backgroundColor: '#070707',

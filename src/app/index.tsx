@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import * as Linking from 'expo-linking';
+import { StatusBar } from 'expo-status-bar';
 
+import { AnimatedScreenTransition } from '@/components/ui/animated-screen-transition';
 import { BottomNav, type BottomNavTab } from '@/components/bottom-nav';
 import {
   DebugFloatingButton,
@@ -15,8 +17,12 @@ import { DashboardArtista } from '@/telas/artist-dashboard';
 import { TelaAutenticacao, type SessaoAuthInfo } from '@/telas/auth-screen';
 import { DashboardCliente } from '@/telas/client-dashboard';
 import { normalizarPerfil, verificarStatusPerfil, type PerfilUsuario } from '@/types/auth';
+import { createThemedStyles, tc, useTheme } from '@/theme';
 
 export default function TelaInicial() {
+  // Assina o tema. Como o React Compiler memoiza o JSX, a árvore de conteúdo é
+  // remontada (key={modo}) ao alternar o modo para que todos os estilos sejam reaplicados.
+  const { modo, modoClaro } = useTheme();
   const [perfil, setPerfil] = useState<PerfilUsuario | null>(null);
   const [sessaoAuth, setSessaoAuth] = useState<SessaoAuthInfo | null>(null);
   const [dadosIncompletos, setDadosIncompletos] = useState<Partial<PerfilUsuario> | null>(null);
@@ -182,29 +188,35 @@ export default function TelaInicial() {
     if (inicializando) {
       return (
         <View style={styles.container}>
-          <ActivityIndicator color="#f3c21a" size="large" />
+          <ActivityIndicator color={tc('#f3c21a')} size="large" />
         </View>
       );
     }
 
     if (!perfil) {
       return (
-        <TelaAutenticacao
-          onComplete={handleLoginComplete}
-          sessaoAuth={sessaoAuth}
-          dadosIncompletos={dadosIncompletos}
-          onLogout={encerrarSessao}
-        />
+        <AnimatedScreenTransition screenKey="auth" type="fade">
+          <TelaAutenticacao
+            onComplete={handleLoginComplete}
+            sessaoAuth={sessaoAuth}
+            dadosIncompletos={dadosIncompletos}
+            onLogout={encerrarSessao}
+          />
+        </AnimatedScreenTransition>
       );
     }
 
     if (saindo) {
       return (
         <View style={styles.container}>
-          <ActivityIndicator color="#f3c21a" size="large" />
+          <ActivityIndicator color={tc('#f3c21a')} size="large" />
         </View>
       );
     }
+
+    const handleAtualizarPerfil = (novoPerfil: PerfilUsuario) => {
+      setPerfil(novoPerfil);
+    };
 
     const renderDashboard = () => {
       if (tipoPerfilAtual === 'artista') {
@@ -215,6 +227,7 @@ export default function TelaInicial() {
             activeTab={activeTab}
             chatContatoId={chatContatoId}
             onNavegarAba={handleNavegarAba}
+            onAtualizarPerfil={handleAtualizarPerfil}
           />
         );
       }
@@ -226,6 +239,7 @@ export default function TelaInicial() {
           activeTab={activeTab}
           chatContatoId={chatContatoId}
           onNavegarAba={handleNavegarAba}
+          onAtualizarPerfil={handleAtualizarPerfil}
         />
       );
     };
@@ -253,14 +267,15 @@ export default function TelaInicial() {
       activeTab={activeTab}
     >
       <DeviceFrameWrapper>
-        {renderConteudo()}
+        <StatusBar style={modoClaro ? 'dark' : 'light'} />
+        <Fragment key={modo}>{renderConteudo()}</Fragment>
         <DebugMenuModal />
       </DeviceFrameWrapper>
     </DebugProvider>
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles({
   container: {
     flex: 1,
     backgroundColor: '#070707',

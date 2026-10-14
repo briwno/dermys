@@ -1,4 +1,5 @@
 import type { BottomNavTab } from '@/components/bottom-nav';
+import { AnimatedScreenTransition } from '@/components/ui/animated-screen-transition';
 import { ClienteAgendamentosTab } from '@/telas/cliente/agendamentos-tab';
 import { ClienteInicioTab } from '@/telas/cliente/inicio-tab';
 import { ClienteMensagensTab } from '@/telas/cliente/mensagens-tab';
@@ -7,6 +8,7 @@ import type { PerfilUsuario } from '@/types/auth';
 import { LogOut } from 'lucide-react-native';
 import React from 'react';
 import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { createThemedStyles, tc } from '@/theme';
 
 interface PropsDashboardCliente {
   perfil: PerfilUsuario;
@@ -14,6 +16,7 @@ interface PropsDashboardCliente {
   activeTab?: BottomNavTab;
   chatContatoId?: string;
   onNavegarAba?: (tab: BottomNavTab, contatoId?: string) => void;
+  onAtualizarPerfil?: (novoPerfil: PerfilUsuario) => void;
 }
 
 export function DashboardCliente({
@@ -22,6 +25,7 @@ export function DashboardCliente({
   activeTab = 'home',
   chatContatoId,
   onNavegarAba,
+  onAtualizarPerfil,
 }: PropsDashboardCliente) {
   const getTabTitle = () => {
     switch (activeTab) {
@@ -40,43 +44,65 @@ export function DashboardCliente({
   if (activeTab === 'chat') {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.chatWrapper}>
+        <AnimatedScreenTransition screenKey="chat" style={styles.chatWrapper}>
           <ClienteMensagensTab perfil={perfil} contatoInicialId={chatContatoId} />
-        </View>
+        </AnimatedScreenTransition>
+      </SafeAreaView>
+    );
+  }
+
+  const header = (
+    <View style={styles.header}>
+      <View>
+        <Text style={styles.hiText}>Olá, {perfil.nomeExibicao || 'Cliente'}</Text>
+        <Text style={styles.title}>{getTabTitle()}</Text>
+      </View>
+      <Pressable style={styles.logoutButton} onPress={onLogout}>
+        <LogOut size={14} color={tc('#fff')} />
+        <Text style={styles.logoutText}>Sair</Text>
+      </Pressable>
+    </View>
+  );
+
+  // Aba Início: feed paginado estilo Reels precisa de altura fixa (sem ScrollView externo)
+  if (activeTab === 'home') {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <AnimatedScreenTransition screenKey={activeTab} style={styles.screenWrapper}>
+          <View style={styles.homeContent}>
+            {header}
+            <ClienteInicioTab onNavegarAba={onNavegarAba} perfil={perfil} />
+          </View>
+        </AnimatedScreenTransition>
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.hiText}>Olá, {perfil.nomeExibicao || 'Cliente'}</Text>
-            <Text style={styles.title}>{getTabTitle()}</Text>
-          </View>
-          <Pressable style={styles.logoutButton} onPress={onLogout}>
-            <LogOut size={14} color="#fff" />
-            <Text style={styles.logoutText}>Sair</Text>
-          </Pressable>
-        </View>
+      <AnimatedScreenTransition screenKey={activeTab} style={styles.screenWrapper}>
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Header */}
+          {header}
 
-        {/* Conteúdo Dinâmico por Aba */}
-        {activeTab === 'home' && (
-          <ClienteInicioTab onNavegarAba={onNavegarAba} perfil={perfil} />
-        )}
-        {activeTab === 'bookings' && <ClienteAgendamentosTab perfil={perfil} />}
-        {activeTab === 'profile' && <ClientePerfilTab perfil={perfil} />}
-      </ScrollView>
+          {/* Conteúdo Dinâmico por Aba */}
+          {activeTab === 'bookings' && <ClienteAgendamentosTab perfil={perfil} />}
+          {activeTab === 'profile' && (
+            <ClientePerfilTab perfil={perfil} onAtualizarPerfil={onAtualizarPerfil} />
+          )}
+        </ScrollView>
+      </AnimatedScreenTransition>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
+const styles = createThemedStyles({
   safeArea: {
     flex: 1,
     backgroundColor: '#050505',
+  },
+  screenWrapper: {
+    flex: 1,
   },
   chatWrapper: {
     flex: 1,
@@ -86,6 +112,12 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     gap: 14,
     paddingBottom: 28,
+  },
+  homeContent: {
+    flex: 1,
+    paddingHorizontal: 12,
+    paddingTop: 12,
+    gap: 10,
   },
   header: {
     flexDirection: 'row',
