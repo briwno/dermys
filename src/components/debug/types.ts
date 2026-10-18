@@ -72,7 +72,7 @@ export const PERSONAS_TESTE: PersonaTeste[] = [
     tipo: 'cliente',
     cidade: 'São Paulo, SP',
     email: 'cliente.dermys@dermys.app',
-    avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&auto=format&fit=crop&q=80',
+    avatarUrl: 'https://iklbyztvjvxfhgupmkvw.supabase.co/storage/v1/object/public/avatars/demo/personas-v1/99999999-9999-9999-9999-999999999999.jpg',
   },
   {
     id: '11111111-1111-1111-1111-111111111111',
@@ -82,7 +82,7 @@ export const PERSONAS_TESTE: PersonaTeste[] = [
     estilo: 'Fine Line / Botânica',
     cidade: 'São Paulo, SP (Vila Madalena)',
     email: 'camila.rossi@dermys.app',
-    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
+    avatarUrl: 'https://iklbyztvjvxfhgupmkvw.supabase.co/storage/v1/object/public/avatars/demo/personas-v1/11111111-1111-1111-1111-111111111111.jpg',
   },
   {
     id: '22222222-2222-2222-2222-222222222222',
@@ -92,7 +92,7 @@ export const PERSONAS_TESTE: PersonaTeste[] = [
     estilo: 'Blackwork & Dark Art',
     cidade: 'São Paulo, SP (Pinheiros)',
     email: 'leo.black@dermys.app',
-    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80',
+    avatarUrl: 'https://iklbyztvjvxfhgupmkvw.supabase.co/storage/v1/object/public/avatars/demo/personas-v1/22222222-2222-2222-2222-222222222222.jpg',
   },
   {
     id: '33333333-3333-3333-3333-333333333333',
@@ -102,7 +102,7 @@ export const PERSONAS_TESTE: PersonaTeste[] = [
     estilo: 'Aquarela & Cores',
     cidade: 'Rio de Janeiro, RJ (Ipanema)',
     email: 'maya.silveira@dermys.app',
-    avatarUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=200&auto=format&fit=crop&q=80',
+    avatarUrl: 'https://iklbyztvjvxfhgupmkvw.supabase.co/storage/v1/object/public/avatars/demo/personas-v1/33333333-3333-3333-3333-333333333333.jpg',
   },
   {
     id: '44444444-4444-4444-4444-444444444444',
@@ -112,7 +112,7 @@ export const PERSONAS_TESTE: PersonaTeste[] = [
     estilo: 'Oriental Tradicional',
     cidade: 'Curitiba, PR (Batel)',
     email: 'kaito.tanaka@dermys.app',
-    avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&auto=format&fit=crop&q=80',
+    avatarUrl: 'https://iklbyztvjvxfhgupmkvw.supabase.co/storage/v1/object/public/avatars/demo/personas-v1/44444444-4444-4444-4444-444444444444.jpg',
   },
   {
     id: '55555555-5555-5555-5555-555555555555',
@@ -122,7 +122,7 @@ export const PERSONAS_TESTE: PersonaTeste[] = [
     estilo: 'Old School',
     cidade: 'Florianópolis, SC (Lagoa)',
     email: 'gabriel.fontes@dermys.app',
-    avatarUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&auto=format&fit=crop&q=80',
+    avatarUrl: 'https://iklbyztvjvxfhgupmkvw.supabase.co/storage/v1/object/public/avatars/demo/personas-v1/55555555-5555-5555-5555-555555555555.jpg',
   },
   {
     id: '66666666-6666-6666-6666-666666666666',
@@ -132,7 +132,7 @@ export const PERSONAS_TESTE: PersonaTeste[] = [
     estilo: 'Geek & Anime',
     cidade: 'Belo Horizonte, MG (Savassi)',
     email: 'lucas.geek@dermys.app',
-    avatarUrl: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=200&auto=format&fit=crop&q=80',
+    avatarUrl: 'https://iklbyztvjvxfhgupmkvw.supabase.co/storage/v1/object/public/avatars/demo/personas-v1/66666666-6666-6666-6666-666666666666.jpg',
   },
   {
     id: '77777777-7777-7777-7777-777777777777',
@@ -142,7 +142,7 @@ export const PERSONAS_TESTE: PersonaTeste[] = [
     estilo: 'Microrealismo',
     cidade: 'Porto Alegre, RS (Moinhos)',
     email: 'valeria.mendes@dermys.app',
-    avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&auto=format&fit=crop&q=80',
+    avatarUrl: 'https://iklbyztvjvxfhgupmkvw.supabase.co/storage/v1/object/public/avatars/demo/personas-v1/77777777-7777-7777-7777-777777777777.jpg',
   },
   {
     id: '88888888-8888-8888-8888-888888888888',
@@ -152,6 +152,6 @@ export const PERSONAS_TESTE: PersonaTeste[] = [
     estilo: 'Ornamental / Blackwork',
     cidade: 'Salvador, BA (Rio Vermelho)',
     email: 'rodrigo.bahia@dermys.app',
-    avatarUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=200&auto=format&fit=crop&q=80',
+    avatarUrl: 'https://iklbyztvjvxfhgupmkvw.supabase.co/storage/v1/object/public/avatars/demo/personas-v1/88888888-8888-8888-8888-888888888888.jpg',
   },
 ];

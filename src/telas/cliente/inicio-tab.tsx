@@ -1,8 +1,12 @@
+import { PORTFOLIOS_DEMONSTRACAO, filtrarObrasDemonstracao } from '@/dados/portfolio-demonstracao';
 import {
   CartaoArtistaFeed,
   type ItemArtistaFeedData,
 } from '@/components/cliente/cartao-artista-feed';
 import { ModalFiltroLocalidade } from '@/components/cliente/modal-filtro-localidade';
+import { FeedMosaico } from '@/components/cliente/feed-mosaico';
+import { montarPostsObras } from '@/components/cliente/obras-feed';
+import { IDS_ARTISTAS_VITRINE } from '@/dados/artistas-vitrine';
 import { ModalPerfilArtista } from '@/components/cliente/modal-perfil-artista';
 import { ArtistaDetalhadoService } from '@/services/artista-detalhado-service';
 import { LocalidadeService } from '@/services/localidade-service';
@@ -19,6 +23,8 @@ import {
   Flame,
   Globe,
   Heart,
+  LayoutGrid,
+  GalleryVerticalEnd,
   MapPin,
   Navigation,
   Search,
@@ -44,115 +50,6 @@ import { createThemedStyles, tc } from '@/theme';
 
 /** Espaço vertical entre um post e outro dentro de cada página do feed */
 const ESPACO_ENTRE_POSTS = 10;
-
-const TATTOOS_PADRAO_POR_ESTILO: Record<string, { titulo: string; imagemUrl: string }[]> = {
-  'Fine Line': [
-    {
-      titulo: 'Floral Botânico Fine Line',
-      imagemUrl: 'https://images.unsplash.com/photo-1611501275019-9b5cda994e8d?w=800&auto=format&fit=crop&q=80',
-    },
-    {
-      titulo: 'Constelação & Fases Lunares',
-      imagemUrl: 'https://images.unsplash.com/photo-1598371839696-5c5bb00bdc28?w=800&auto=format&fit=crop&q=80',
-    },
-    {
-      titulo: 'Borboleta Micro-traço',
-      imagemUrl: 'https://images.unsplash.com/photo-1562962230-16e4623d36e6?w=800&auto=format&fit=crop&q=80',
-    },
-    {
-      titulo: 'Ramo de Oliveira Geométrico',
-      imagemUrl: 'https://images.unsplash.com/photo-1590246814883-57c511e76523?w=800&auto=format&fit=crop&q=80',
-    },
-  ],
-  'Blackwork': [
-    {
-      titulo: 'Crânio Floral Blackwork',
-      imagemUrl: 'https://images.unsplash.com/photo-1598371839696-5c5bb00bdc28?w=800&auto=format&fit=crop&q=80',
-    },
-    {
-      titulo: 'Corvo & Adaga Escura',
-      imagemUrl: 'https://images.unsplash.com/photo-1568515045052-f9a854d70bfd?w=800&auto=format&fit=crop&q=80',
-    },
-    {
-      titulo: 'Serpente Ouroboros Gravura',
-      imagemUrl: 'https://images.unsplash.com/photo-1611501275019-9b5cda994e8d?w=800&auto=format&fit=crop&q=80',
-    },
-    {
-      titulo: 'Mandala Sombreada',
-      imagemUrl: 'https://images.unsplash.com/photo-1562962230-16e4623d36e6?w=800&auto=format&fit=crop&q=80',
-    },
-  ],
-  'Realismo': [
-    {
-      titulo: 'Leão Sombreado Realista',
-      imagemUrl: 'https://images.unsplash.com/photo-1598371839696-5c5bb00bdc28?w=800&auto=format&fit=crop&q=80',
-    },
-    {
-      titulo: 'Retrato Micro-realismo',
-      imagemUrl: 'https://images.unsplash.com/photo-1611501275019-9b5cda994e8d?w=800&auto=format&fit=crop&q=80',
-    },
-    {
-      titulo: 'Texturas em Pele',
-      imagemUrl: 'https://images.unsplash.com/photo-1568515045052-f9a854d70bfd?w=800&auto=format&fit=crop&q=80',
-    },
-  ],
-  'Old School': [
-    {
-      titulo: 'Adaga & Rosa Tradicional',
-      imagemUrl: 'https://images.unsplash.com/photo-1568515045052-f9a854d70bfd?w=800&auto=format&fit=crop&q=80',
-    },
-    {
-      titulo: 'Pantera Negra Classic',
-      imagemUrl: 'https://images.unsplash.com/photo-1598371839696-5c5bb00bdc28?w=800&auto=format&fit=crop&q=80',
-    },
-    {
-      titulo: 'Âncora & Andorinhas',
-      imagemUrl: 'https://images.unsplash.com/photo-1611501275019-9b5cda994e8d?w=800&auto=format&fit=crop&q=80',
-    },
-  ],
-  'Oriental': [
-    {
-      titulo: 'Dragão Ryū & Nuvens',
-      imagemUrl: 'https://images.unsplash.com/photo-1611501275019-9b5cda994e8d?w=800&auto=format&fit=crop&q=80',
-    },
-    {
-      titulo: 'Carpa Koi & Ondas',
-      imagemUrl: 'https://images.unsplash.com/photo-1598371839696-5c5bb00bdc28?w=800&auto=format&fit=crop&q=80',
-    },
-    {
-      titulo: 'Máscara Hannya & Flor',
-      imagemUrl: 'https://images.unsplash.com/photo-1568515045052-f9a854d70bfd?w=800&auto=format&fit=crop&q=80',
-    },
-  ],
-  'Aquarela': [
-    {
-      titulo: 'Pássaro Fluido Aquarelado',
-      imagemUrl: 'https://images.unsplash.com/photo-1562962230-16e4623d36e6?w=800&auto=format&fit=crop&q=80',
-    },
-    {
-      titulo: 'Galáxia & Cores Vivas',
-      imagemUrl: 'https://images.unsplash.com/photo-1590246814883-57c511e76523?w=800&auto=format&fit=crop&q=80',
-    },
-    {
-      titulo: 'Água-viva & Pigmentos',
-      imagemUrl: 'https://images.unsplash.com/photo-1611501275019-9b5cda994e8d?w=800&auto=format&fit=crop&q=80',
-    },
-  ],
-  'Geek': [
-    {
-      titulo: 'Cyberpunk & Linhas Neon',
-      imagemUrl: 'https://images.unsplash.com/photo-1598371839696-5c5bb00bdc28?w=800&auto=format&fit=crop&q=80',
-    },
-    {
-      titulo: 'Anime Shonen Traço Fino',
-      imagemUrl: 'https://images.unsplash.com/photo-1568515045052-f9a854d70bfd?w=800&auto=format&fit=crop&q=80',
-    },
-    {
-      titulo: 'Símbolo Gamer Gravura',
-      imagemUrl: 'https://images.unsplash.com/photo-1611501275019-9b5cda994e8d?w=800&auto=format&fit=crop&q=80',
-    },
-  ],
-};
 
 export interface CartaoArtista {
   id: string;
@@ -196,6 +93,7 @@ export function ClienteInicioTab({ onNavegarAba, perfil }: PropsClienteInicioTab
   const [curtidos, setCurtidos] = useState<Record<string, boolean>>({});
   const [carregando, setCarregando] = useState(true);
   const [alturaFeed, setAlturaFeed] = useState(0);
+  const [modoFeed, setModoFeed] = useState<'mosaico' | 'deslizar'>('deslizar');
 
   const onLayoutFeed = useCallback((e: LayoutChangeEvent) => {
     const h = Math.floor(e.nativeEvent.layout.height);
@@ -240,7 +138,8 @@ export function ClienteInicioTab({ onNavegarAba, perfil }: PropsClienteInicioTab
           *,
           flashes:flashes_portfolio(*)
         `)
-        .eq('tipo_perfil', 'artista');
+        .eq('tipo_perfil', 'artista')
+        .in('id', IDS_ARTISTAS_VITRINE);
 
       // 2. Carrega todas as avaliações reais de clientes
       const { data: reviewsData } = await supabase
@@ -323,17 +222,7 @@ export function ClienteInicioTab({ onNavegarAba, perfil }: PropsClienteInicioTab
             disponivel: f.disponivel ?? true,
           }));
         } else {
-          const padroes =
-            TATTOOS_PADRAO_POR_ESTILO[estilo] || TATTOOS_PADRAO_POR_ESTILO['Fine Line'];
-          obras = padroes.map((p, idx) => ({
-            id: `${art.id}-padrao-${idx}`,
-            artistaId: art.id,
-            titulo: p.titulo,
-            imagemUrl: p.imagemUrl,
-            estilo: estilo,
-            preco: Number(art.preco_inicial || 350),
-            disponivel: true,
-          }));
+          obras = PORTFOLIOS_DEMONSTRACAO[art.id] || [];
         }
 
         // 2. Mescla fotos adicionadas pelo próprio tatuador via perfil
@@ -341,6 +230,8 @@ export function ClienteInicioTab({ onNavegarAba, perfil }: PropsClienteInicioTab
         if (adicionadasDesteArtista.length > 0) {
           obras = [...adicionadasDesteArtista, ...obras];
         }
+
+        obras = filtrarObrasDemonstracao(art.id, obras);
 
         todosArtistas.push({
           id: art.id,
@@ -489,6 +380,8 @@ export function ClienteInicioTab({ onNavegarAba, perfil }: PropsClienteInicioTab
     });
   }, [artistasComDistancia, localidade.raioKm, localidade.ordenacao, tagSelecionada, consulta]);
 
+  const postsObras = useMemo(() => montarPostsObras(artistasFiltrados), [artistasFiltrados]);
+
   return (
     <View style={styles.container}>
       {/* Barra de Localização Minimalista & Contagem */}
@@ -505,7 +398,9 @@ export function ClienteInicioTab({ onNavegarAba, perfil }: PropsClienteInicioTab
           <ChevronDown size={12} color={tc('#888892')} />
         </Pressable>
 
-        <Text style={styles.feedCountPill}>{artistasFiltrados.length} artistas</Text>
+        <Text style={styles.feedCountPill}>
+          {artistasFiltrados.length} artistas · {postsObras.length} obras
+        </Text>
       </View>
 
       {/* Barra de Busca Minimalista */}
@@ -543,13 +438,46 @@ export function ClienteInicioTab({ onNavegarAba, perfil }: PropsClienteInicioTab
         })}
       </ScrollView>
 
-      {/* Feed Estilo Reels/TikTok: um tatuador por página, com encaixe */}
+      <View style={styles.modeSelector} accessibilityRole="tablist">
+        {(['mosaico', 'deslizar'] as const).map((modo) => {
+          const ativo = modoFeed === modo;
+          const Icone = modo === 'mosaico' ? LayoutGrid : GalleryVerticalEnd;
+          return (
+            <Pressable
+              key={modo}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: ativo }}
+              accessibilityLabel={modo === 'mosaico' ? 'Ver feed em mosaico' : 'Ver feed deslizando'}
+              onPress={() => setModoFeed(modo)}
+              style={[styles.modeButton, ativo && styles.modeButtonActive]}
+            >
+              <Icone size={16} color={tc(ativo ? '#000000' : '#a1a1aa')} />
+              <Text style={[styles.modeText, ativo && styles.modeTextActive]}>
+                {modo === 'mosaico' ? 'Mosaico' : 'Deslizar'}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      {/* Os dois modos compartilham filtros, curtidas e abertura da obra. */}
       <View style={styles.feedSection} onLayout={onLayoutFeed}>
         {carregando || alturaFeed === 0 ? (
           <ActivityIndicator color={tc('#f3c21a')} style={{ marginVertical: 40 }} />
+        ) : modoFeed === 'mosaico' && postsObras.length > 0 ? (
+          <FeedMosaico
+            artistas={artistasFiltrados}
+            curtidos={curtidos}
+            onCurtir={alternarCurtida}
+            onAbrirPerfil={(artista, obra) => abrirResumoArtista(
+              artista.rawArtista, artista.rawFlashes, artista.rawReviews, obra
+            )}
+          />
         ) : (
           <FlatList
-            data={artistasFiltrados}
+            key={`${modoFeed}:${alturaFeed}:${tagSelecionada}:${consulta}:${localidade.raioKm}:${localidade.ordenacao}`}
+            data={postsObras}
+            extraData={curtidos}
             keyExtractor={(item) => item.id}
             pagingEnabled={Platform.OS === 'web'}
             snapToInterval={alturaFeed}
@@ -565,13 +493,13 @@ export function ClienteInicioTab({ onNavegarAba, perfil }: PropsClienteInicioTab
             windowSize={3}
             initialNumToRender={2}
             maxToRenderPerBatch={2}
-            renderItem={({ item, index }) => (
+            renderItem={({ item: post, index }) => (
               <View style={{ height: alturaFeed, paddingBottom: ESPACO_ENTRE_POSTS }}>
                 <CartaoArtistaFeed
-                  item={item}
+                  item={{ ...post.artista, obras: [post.obra] }}
                   altura={alturaFeed - ESPACO_ENTRE_POSTS}
-                  isCurtido={curtidos[item.id]}
-                  mostrarDicaDeslize={index === 0 && artistasFiltrados.length > 1}
+                  isCurtido={curtidos[post.artista.id]}
+                  mostrarDicaDeslize={index === 0 && postsObras.length > 1}
                   onCurtir={alternarCurtida}
                   onAbrirPerfil={(artItem, obra) =>
                     abrirResumoArtista(
@@ -584,6 +512,11 @@ export function ClienteInicioTab({ onNavegarAba, perfil }: PropsClienteInicioTab
                 />
               </View>
             )}
+            ListFooterComponent={postsObras.length > 0 ? (
+              <Text style={styles.feedEnd}>
+                Você viu todas as {postsObras.length} obras. Explore outros estilos ou amplie a região.
+              </Text>
+            ) : null}
             ListEmptyComponent={
               <View style={styles.emptyWrap}>
                 <Compass size={32} color={tc('#71717a')} style={{ marginBottom: 8 }} />
@@ -668,6 +601,18 @@ export function ClienteInicioTab({ onNavegarAba, perfil }: PropsClienteInicioTab
 }
 
 const styles = createThemedStyles({
+  feedEnd: { color: '#8e8e93', fontSize: 12, textAlign: 'center', padding: 20 },
+  modeSelector: {
+    flexDirection: 'row', backgroundColor: '#0f0f12', borderRadius: 12,
+    padding: 4, gap: 4,
+  },
+  modeButton: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 7, minHeight: 44, borderRadius: 9,
+  },
+  modeButtonActive: { backgroundColor: '#f3c21a' },
+  modeText: { color: '#a1a1aa', fontSize: 12, fontWeight: '800' },
+  modeTextActive: { color: '#000000' },
   container: {
     flex: 1,
     gap: 10,

@@ -1,4 +1,5 @@
 import { LocalidadeService } from '@/services/localidade-service';
+import { PORTFOLIOS_DEMONSTRACAO, filtrarObrasDemonstracao } from '@/dados/portfolio-demonstracao';
 import type {
   DetalhesEstudio,
   ItemPortfolio,
@@ -41,7 +42,7 @@ export class ArtistaDetalhadoService {
     const sinalBase = Math.round(precoInicial * 0.3);
 
     // Converte flashes
-    const flashes: ItemPortfolio[] = (flashesDb || []).map((f) => ({
+    const flashes: ItemPortfolio[] = filtrarObrasDemonstracao(artistaDb.id, (flashesDb || []).map((f) => ({
       id: f.id,
       artistaId: artistaDb.id,
       titulo: f.titulo || 'Flash Autoral',
@@ -51,12 +52,12 @@ export class ArtistaDetalhadoService {
       disponivel: f.disponivel ?? true,
       descricao: 'Arte autoral exclusiva disponível para tatuar. Inclui personalização de dimensões.',
       tempoSessao: '1h30 a 2h30',
-    }));
+    })));
 
     // Converte portfolio de trabalhos realizados
     const portfolio: ItemPortfolio[] = flashes.length > 0
       ? flashes
-      : [
+      : PORTFOLIOS_DEMONSTRACAO[artistaDb.id] || [
           {
             id: 'port-1',
             artistaId: artistaDb.id,

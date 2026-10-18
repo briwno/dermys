@@ -25,6 +25,7 @@ import {
 } from 'lucide-react-native';
 import type { ItemPortfolio } from '@/types/artista-detalhado';
 import { createThemedStyles, tc } from '@/theme';
+import { AvatarArtista } from './avatar-artista';
 
 export interface ItemArtistaFeedData {
   id: string;
@@ -357,6 +358,7 @@ export function CartaoArtistaFeed({
       {/* Rodapé: artista, legenda, preço, CTA */}
       <View style={styles.bottomOverlay} pointerEvents="box-none">
         <Pressable style={styles.artistRow} onPress={() => onAbrirPerfil(item, obraAtual)}>
+          <AvatarArtista uri={item.artistaFoto} nome={item.artistaNome} />
           <Text style={sobreFoto.artistName} numberOfLines={1}>
             {item.artistaNome}
           </Text>
@@ -389,7 +391,7 @@ export function CartaoArtistaFeed({
             style={[styles.swipeHint, { transform: [{ translateY: dicaY }] }]}
           >
             <ChevronDown size={14} color="#d4d4d8" />
-            <Text style={sobreFoto.swipeHintText}>Deslize para o próximo artista</Text>
+            <Text style={sobreFoto.swipeHintText}>Deslize para ver mais obras</Text>
           </Animated.View>
         )}
       </View>
