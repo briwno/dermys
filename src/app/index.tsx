@@ -9,6 +9,7 @@ import {
   DebugFloatingButton,
   DebugMenuModal,
   DebugProvider,
+  DebugRefreshBoundary,
   DeviceFrameWrapper,
 } from '@/components/debug';
 import { processarRetornoOAuthUrl } from '@/services/auth-oauth';
@@ -305,7 +306,7 @@ export default function TelaInicial() {
     >
       <DeviceFrameWrapper>
         <StatusBar style={modoClaro ? 'dark' : 'light'} />
-        <Fragment key={modo}>{renderConteudo()}</Fragment>
+        <DebugRefreshBoundary><Fragment key={modo}>{renderConteudo()}</Fragment></DebugRefreshBoundary>
         <DebugMenuModal />
       </DeviceFrameWrapper>
     </DebugProvider>

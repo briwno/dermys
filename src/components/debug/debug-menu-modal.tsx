@@ -40,7 +40,7 @@ import {
   X,
   Zap,
 } from 'lucide-react-native';
-import { DebugService } from '@/services/debug-service';
+import { DebugSimulador } from './debug-simulador';
 import { useDebug } from './debug-context';
 import { MODELOS_DISPOSITIVOS, PERSONAS_TESTE, type ModeloDispositivo, type PersonaTeste } from './types';
 
@@ -64,117 +64,9 @@ export function DebugMenuModal() {
   } = useDebug();
 
   const [abaAtiva, setAbaAtiva] = useState<'personas' | 'navegacao' | 'dispositivo' | 'simulador'>('personas');
-  const [mensagemStatus, setMensagemStatus] = useState<string | null>(null);
-  const [executandoAcao, setExecutandoAcao] = useState(false);
-
   if (!menuAberto) return null;
 
   const isArtista = perfilAtual?.role === 'artista' || perfilAtual?.tipo_perfil === 'artista';
-
-  const exibirFeedback = (msg: string) => {
-    setMensagemStatus(msg);
-    setTimeout(() => setMensagemStatus(null), 3500);
-  };
-
-  const handleCriarAgendamentoTeste = async () => {
-    setExecutandoAcao(true);
-    try {
-      const clienteId = '99999999-9999-9999-9999-999999999999'; // Mariana Costa
-      const artistaId = isArtista ? (perfilAtual?.id || '11111111-1111-1111-1111-111111111111') : '11111111-1111-1111-1111-111111111111';
-      const ag = await DebugService.criarAgendamentoTeste(clienteId, artistaId, 'Fine Line Botânica');
-      if (ag) {
-        exibirFeedback('Novo agendamento de teste criado no Supabase com sucesso!');
-      } else {
-        exibirFeedback('Aviso: Não foi possível criar agendamento de teste.');
-      }
-    } catch {
-      exibirFeedback('Erro ao criar agendamento.');
-    } finally {
-      setExecutandoAcao(false);
-    }
-  };
-
-  const handleCriarTransacaoTeste = async () => {
-    setExecutandoAcao(true);
-    try {
-      const clienteId = '99999999-9999-9999-9999-999999999999';
-      const artistaId = isArtista ? (perfilAtual?.id || '11111111-1111-1111-1111-111111111111') : '11111111-1111-1111-1111-111111111111';
-      const tr = await DebugService.criarTransacaoTeste(clienteId, artistaId, 'SINAL');
-      if (tr) {
-        exibirFeedback('Nova transação de sinal (R$ 150) criada no extrato financeiro!');
-      } else {
-        exibirFeedback('Aviso: Não foi possível criar transação.');
-      }
-    } catch {
-      exibirFeedback('Erro ao criar transação.');
-    } finally {
-      setExecutandoAcao(false);
-    }
-  };
-
-  const handleEnviarMensagemTeste = async () => {
-    setExecutandoAcao(true);
-    try {
-      const clienteId = '99999999-9999-9999-9999-999999999999';
-      const artistaId = '11111111-1111-1111-1111-111111111111';
-      const msg = await DebugService.enviarMensagemTeste(
-        clienteId,
-        artistaId,
-        `Olá! Mensagem de teste enviada em tempo real às ${new Date().toLocaleTimeString('pt-BR')}`
-      );
-      if (msg) {
-        exibirFeedback('Mensagem em tempo real enviada via Supabase Realtime!');
-      }
-    } catch {
-      exibirFeedback('Erro ao enviar mensagem.');
-    } finally {
-      setExecutandoAcao(false);
-    }
-  };
-
-  const handleLimparCache = async () => {
-    setExecutandoAcao(true);
-    try {
-      await DebugService.limparCacheLocal();
-      exibirFeedback('Cache local do AsyncStorage limpo com sucesso.');
-    } catch {
-      exibirFeedback('Erro ao limpar cache.');
-    } finally {
-      setExecutandoAcao(false);
-    }
-  };
-
-  const handleAvancarTempoDebug = async () => {
-    setExecutandoAcao(true);
-    try {
-      const clienteId = '99999999-9999-9999-9999-999999999999'; // Mariana Costa
-      const artistaId = isArtista
-        ? perfilAtual?.id || '11111111-1111-1111-1111-111111111111'
-        : '11111111-1111-1111-1111-111111111111'; // Camila Rossi
-      const res = await DebugService.avancarTempoEConcluirSessao(artistaId, clienteId);
-      if (res?.sucesso) {
-        exibirFeedback(`⏱️ Tempo avançado! Sessão concluída e ${res.numeroNotaFiscal} gerada no Chat.`);
-      } else {
-        exibirFeedback('Aviso: Falha ao avançar tempo no simulador.');
-      }
-    } catch {
-      exibirFeedback('Erro ao avançar tempo.');
-    } finally {
-      setExecutandoAcao(false);
-    }
-  };
-
-  const handleSimularAlertaMei = (tipo: 'normal' | 'alerta' | 'estourado') => {
-    let msg = '';
-    if (tipo === 'normal') {
-      msg = 'Termômetro MEI em faixa segura (52%).';
-    } else if (tipo === 'alerta') {
-      msg = 'Alerta disparado: Faturamento atingiu 83% do teto MEI!';
-    } else {
-      msg = 'Alerta Crítico: Limite de R$ 81.000,00 do MEI ultrapassado!';
-    }
-    exibirFeedback(msg);
-  };
 
   return (
     <Modal
@@ -187,7 +79,7 @@ export function DebugMenuModal() {
         <View style={styles.modalCard}>
           {/* Header */}
           <View style={styles.modalHeader}>
-            <View>
+            <View style={{ flex: 1, minWidth: 0, paddingRight: 12 }}>
               <Text style={styles.modalTitle}>Central de Testes & Desenvolvimento</Text>
               <Text style={styles.modalSubtitle}>Dermys Developer Tools • Ações, Personas e Simuladores</Text>
             </View>
@@ -202,14 +94,14 @@ export function DebugMenuModal() {
           </View>
 
           {/* Abas Superiores */}
-          <View style={styles.tabsRow}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={styles.tabsRow}>
             <TouchableOpacity
               style={[styles.tabButton, abaAtiva === 'personas' && styles.tabButtonActive]}
               onPress={() => setAbaAtiva('personas')}
             >
               <Users size={14} color={abaAtiva === 'personas' ? '#f3c21a' : '#777'} />
               <Text style={[styles.tabButtonText, abaAtiva === 'personas' && styles.tabButtonTextActive]}>
-                Perfis ({PERSONAS_TESTE.length})
+                Perfis
               </Text>
             </TouchableOpacity>
 
@@ -219,7 +111,7 @@ export function DebugMenuModal() {
             >
               <Compass size={14} color={abaAtiva === 'navegacao' ? '#f3c21a' : '#777'} />
               <Text style={[styles.tabButtonText, abaAtiva === 'navegacao' && styles.tabButtonTextActive]}>
-                Navegação Rápida
+                Navegar
               </Text>
             </TouchableOpacity>
 
@@ -229,7 +121,7 @@ export function DebugMenuModal() {
             >
               <Smartphone size={14} color={abaAtiva === 'dispositivo' ? '#f3c21a' : '#777'} />
               <Text style={[styles.tabButtonText, abaAtiva === 'dispositivo' && styles.tabButtonTextActive]}>
-                Moldura & Zoom
+                Dispositivo
               </Text>
             </TouchableOpacity>
 
@@ -239,18 +131,10 @@ export function DebugMenuModal() {
             >
               <Zap size={14} color={abaAtiva === 'simulador' ? '#f3c21a' : '#777'} />
               <Text style={[styles.tabButtonText, abaAtiva === 'simulador' && styles.tabButtonTextActive]}>
-                Simuladores & Dados
+                Gerar dados
               </Text>
             </TouchableOpacity>
-          </View>
-
-          {/* Feedback Banner */}
-          {mensagemStatus && (
-            <View style={styles.feedbackBanner}>
-              <CheckCircle2 size={15} color="#f3c21a" />
-              <Text style={styles.feedbackBannerText}>{mensagemStatus}</Text>
-            </View>
-          )}
+          </ScrollView>
 
           {/* Conteúdo da Aba */}
           <ScrollView style={styles.modalContentScroll} showsVerticalScrollIndicator={false}>
@@ -529,116 +413,7 @@ export function DebugMenuModal() {
               </View>
             )}
 
-            {/* ABA 4: SIMULADORES & DADOS */}
-            {abaAtiva === 'simulador' && (
-              <View style={styles.tabContentStack}>
-                <Text style={styles.sectionTitle}>Ações Rápidas de Teste no Banco de Dados</Text>
-
-                {/* Criação de Agendamento */}
-                <View style={styles.simCard}>
-                  <Text style={styles.simCardTitle}>1. Criar Agendamento de Teste Instantâneo</Text>
-                  <Text style={styles.simCardDesc}>
-                    Insere uma solicitação de reserva pendente no Supabase entre cliente e artista.
-                  </Text>
-                  <TouchableOpacity
-                    style={styles.simActionPrimaryBtn}
-                    onPress={handleCriarAgendamentoTeste}
-                    disabled={executandoAcao}
-                  >
-                    <Calendar size={13} color="#000" />
-                    <Text style={styles.simActionPrimaryBtnText}>Inserir Agendamento</Text>
-                  </TouchableOpacity>
-                </View>
-
-                {/* Criação de Transação Financeira */}
-                <View style={styles.simCard}>
-                  <Text style={styles.simCardTitle}>2. Criar Transação de Sinal (PIX)</Text>
-                  <Text style={styles.simCardDesc}>
-                    Insere uma transação de R$ 150 em custódia no extrato financeiro.
-                  </Text>
-                  <TouchableOpacity
-                    style={styles.simActionPrimaryBtn}
-                    onPress={handleCriarTransacaoTeste}
-                    disabled={executandoAcao}
-                  >
-                    <DollarSign size={13} color="#000" />
-                    <Text style={styles.simActionPrimaryBtnText}>Inserir Transação Financeira</Text>
-                  </TouchableOpacity>
-                </View>
-
-                {/* Enviar Mensagem Realtime */}
-                <View style={styles.simCard}>
-                  <Text style={styles.simCardTitle}>3. Enviar Mensagem de Teste no Chat</Text>
-                  <Text style={styles.simCardDesc}>
-                    Dispara uma mensagem em tempo real para verificar a sincronização do WebSocket.
-                  </Text>
-                  <TouchableOpacity
-                    style={styles.simActionPrimaryBtn}
-                    onPress={handleEnviarMensagemTeste}
-                    disabled={executandoAcao}
-                  >
-                    <Send size={13} color="#000" />
-                    <Text style={styles.simActionPrimaryBtnText}>Disparar Mensagem Realtime</Text>
-                  </TouchableOpacity>
-                </View>
-
-                {/* Termômetro Fiscal */}
-                <View style={styles.simCard}>
-                  <Text style={styles.simCardTitle}>4. Testar Alertas do Termômetro MEI</Text>
-                  <View style={styles.simActionsRow}>
-                    <TouchableOpacity
-                      style={[styles.simActionBtn, styles.simActionBtnGreen]}
-                      onPress={() => handleSimularAlertaMei('normal')}
-                    >
-                      <Text style={styles.simActionBtnTextGreen}>Normal (52%)</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={[styles.simActionBtn, styles.simActionBtnYellow]}
-                      onPress={() => handleSimularAlertaMei('alerta')}
-                    >
-                      <Text style={styles.simActionBtnTextYellow}>Alerta 80%</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                      style={[styles.simActionBtn, styles.simActionBtnRed]}
-                      onPress={() => handleSimularAlertaMei('estourado')}
-                    >
-                      <Text style={styles.simActionBtnTextRed}>Excedido 100%</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-
-                {/* Avançar no Tempo: Conclusão de Sessão & NFS-e */}
-                <View style={styles.simCard}>
-                  <Text style={styles.simCardTitle}>5. ⏱️ Avançar no Tempo (Dia da Sessão & NFS-e)</Text>
-                  <Text style={styles.simCardDesc}>
-                    Simula a chegada do dia do atendimento, valida a anamnese, conclui o procedimento e gera o documento fiscal com envio automático no chat.
-                  </Text>
-                  <TouchableOpacity
-                    style={styles.simActionPrimaryBtn}
-                    onPress={handleAvancarTempoDebug}
-                    disabled={executandoAcao}
-                  >
-                    <Clock size={13} color="#000" />
-                    <Text style={styles.simActionPrimaryBtnText}>Simular Conclusão & Gerar NFS-e</Text>
-                  </TouchableOpacity>
-                </View>
-
-                {/* Limpeza de Cache */}
-                <View style={styles.simCard}>
-                  <Text style={styles.simCardTitle}>6. Limpeza de Cache Local</Text>
-                  <TouchableOpacity
-                    style={styles.simActionDangerBtn}
-                    onPress={handleLimparCache}
-                    disabled={executandoAcao}
-                  >
-                    <Trash2 size={13} color="#ef4444" />
-                    <Text style={styles.simActionDangerBtnText}>Limpar AsyncStorage Local</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            )}
+            {abaAtiva === 'simulador' && <DebugSimulador />}
           </ScrollView>
         </View>
       </View>

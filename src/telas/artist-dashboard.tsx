@@ -73,7 +73,7 @@ export function DashboardArtista({
 
           {/* Conteúdo Dinâmico por Aba */}
           {activeTab === 'dashboard' && <ArtistaDashboardTab perfil={perfil} />}
-          {activeTab === 'schedule' && <ArtistaAgendaTab />}
+          {activeTab === 'schedule' && <ArtistaAgendaTab perfil={perfil} />}
           {activeTab === 'financial' && <ArtistaFinanceiroTab perfil={perfil} />}
           {activeTab === 'profile' && (
             <ArtistaPerfilTab perfil={perfil} onAtualizarPerfil={onAtualizarPerfil} />

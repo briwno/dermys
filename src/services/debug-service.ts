@@ -1,216 +1,102 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from './supabase';
+import type { PerfilUsuario } from '@/types/auth';
+
+export const CENARIOS_DEBUG = [
+  { id: 'sinal_custodia', grupo: 'Pagamentos', titulo: 'Sinal em custódia', descricao: 'Reserva confirmada, com 30% do valor em custódia. Não gera receita na DRE.' },
+  { id: 'pix_liberado', grupo: 'Pagamentos', titulo: 'PIX liberado', descricao: 'Serviço concluído com sinal e pagamento final liberados.' },
+  { id: 'cartao_aprovado', grupo: 'Pagamentos', titulo: 'Cartão com taxa', descricao: 'Serviço concluído, dois pagamentos aprovados e taxa simulada de 4,99%.' },
+  { id: 'pagamento_pendente', grupo: 'Pagamentos', titulo: 'Pagamento pendente', descricao: 'Reserva e sinal aguardando pagamento. Fica fora da DRE.' },
+  { id: 'pagamento_cancelado', grupo: 'Pagamentos', titulo: 'Pagamento cancelado', descricao: 'Reserva cancelada com sinal cancelado, para testar os filtros.' },
+  { id: 'estorno_parcial', grupo: 'Pagamentos', titulo: 'Estorno parcial', descricao: 'Serviço concluído e pago, seguido de devolução simulada de 25%.' },
+  { id: 'despesa_material', grupo: 'Despesas', titulo: 'Materiais de tatuagem', descricao: 'Despesa com materiais, classificada automaticamente como custo na DRE.' },
+  { id: 'despesa_estudio', grupo: 'Despesas', titulo: 'Despesa fixa do estúdio', descricao: 'Aluguel e contas, com marcação de despesa recorrente.' },
+  { id: 'despesa_equipamento', grupo: 'Despesas', titulo: 'Manutenção de equipamento', descricao: 'Despesa administrativa com manutenção de equipamentos.' },
+  { id: 'pacote_despesas', grupo: 'Despesas', titulo: 'Pacote de cinco despesas', descricao: 'Distribui o valor base entre materiais, limpeza, contas, manutenção e outros.' },
+  { id: 'reserva_pendente', grupo: 'Agenda', titulo: 'Solicitação de reserva', descricao: 'Agendamento pendente sem pagamento.' },
+  { id: 'reserva_confirmada', grupo: 'Agenda', titulo: 'Reserva confirmada', descricao: 'Agendamento confirmado e sinal em custódia.' },
+  { id: 'sessao_concluida', grupo: 'Agenda', titulo: 'Sessão concluída', descricao: 'Sessão concluída, com sinal e saldo quitados. Alimenta a DRE.' },
+  { id: 'reserva_cancelada', grupo: 'Agenda', titulo: 'Reserva cancelada', descricao: 'Agendamento cancelado sem movimentação financeira.' },
+  { id: 'mes_lucrativo', grupo: 'Cenários completos', titulo: 'Mês com lucro', descricao: 'Um serviço pago, materiais e contas somando 35% do valor base.' },
+  { id: 'mes_prejuizo', grupo: 'Cenários completos', titulo: 'Mês com prejuízo', descricao: 'Um serviço pago e despesas somando 150% do valor base.' },
+  { id: 'historico_trimestral', grupo: 'Cenários completos', titulo: 'Histórico de três meses', descricao: 'Serviços e despesas no mês da data base e nos dois anteriores.' },
+  { id: 'dre_completa', grupo: 'Cenários completos', titulo: 'Todas as categorias da DRE', descricao: 'Dois serviços, pagamentos, custos, despesas, depreciação e tributos simulados.' },
+] as const;
+export type CenarioDebug = typeof CENARIOS_DEBUG[number]['id'];
+export interface ResultadoDebug {
+  loteId: string;
+  agendamentos: number;
+  transacoes: number;
+  despesas: number;
+  lancamentos: number;
+}
+export interface LoteDebug {
+  id: string;
+  cenario: CenarioDebug;
+  criado_em: string;
+  data_base: string;
+  resultado: ResultadoDebug;
+  removido_em: string | null;
+}
+export interface PedidoDebug {
+  artistaId: string;
+  clienteId: string;
+  cenario: CenarioDebug;
+  data: string;
+  valor: number;
+  quantidade: number;
+  requestId: string;
+}
+
+export function resolverAlvosDebug(perfil: PerfilUsuario | null, outroId: string): Pick<PedidoDebug, 'artistaId' | 'clienteId'> {
+  const ativoId = perfil?.id || perfil?.uid;
+  if (!ativoId || !outroId) throw new Error('Selecione um perfil ativo e a outra pessoa do cenário.');
+  const artista = perfil?.role === 'artista' || perfil?.tipo_perfil === 'artista';
+  const alvos = artista ? { artistaId: ativoId, clienteId: outroId } : { artistaId: outroId, clienteId: ativoId };
+  if (alvos.artistaId === alvos.clienteId) throw new Error('Artista e cliente devem ser pessoas diferentes.');
+  return alvos;
+}
+
+export function novoIdDebug(): string {
+  if (typeof globalThis.crypto?.randomUUID === 'function') return globalThis.crypto.randomUUID();
+  // Identificador de idempotência; não é uma credencial ou token de autorização.
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (caractere) => {
+    const numero = Math.floor(Math.random() * 16);
+    return (caractere === 'x' ? numero : (numero & 3) | 8).toString(16);
+  });
+}
+
+function erroLegivel(error: { code?: string; message: string }) {
+  if (error.code === '42501') return new Error('Sua sessão não tem permissão para gerar testes neste perfil. Entre na conta autorizada.');
+  if (error.code === 'P0001') return new Error(error.message);
+  return new Error('Não foi possível concluir a ação. Confira a conexão; use Tentar novamente para repetir o mesmo pedido sem duplicá-lo.');
+}
 
 export class DebugService {
-  /**
-   * Cria um agendamento de teste real no banco de dados Supabase
-   */
-  static async criarAgendamentoTeste(clienteId: string, artistaId: string, estilo: string = 'Fine Line') {
-    try {
-      const dataHora = new Date();
-      dataHora.setDate(dataHora.getDate() + 3);
-      dataHora.setHours(14, 0, 0, 0);
-
-      const { data, error } = await supabase
-        .from('agendamentos')
-        .insert({
-          cliente_id: clienteId,
-          artista_id: artistaId,
-          estilo: estilo,
-          descricao: `Agendamento de teste gerado via Dev Tools - Sessão autoral de ${estilo}`,
-          data_horario: dataHora.toISOString(),
-          valor_sinal: 150,
-          valor_total: 600,
-          status: 'PENDENTE',
-        })
-        .select('*')
-        .single();
-
-      if (error) throw error;
-      return data;
-    } catch (err) {
-      console.error('Erro ao criar agendamento de teste:', err);
-      return null;
-    }
+  static async gerarCenario(pedido: PedidoDebug): Promise<ResultadoDebug> {
+    const { data, error } = await supabase.rpc('debug_gerar_cenario', {
+      p_artista_id: pedido.artistaId, p_cliente_id: pedido.clienteId, p_cenario: pedido.cenario,
+      p_data: pedido.data, p_valor: pedido.valor, p_quantidade: pedido.quantidade, p_request_id: pedido.requestId,
+    });
+    if (error) throw erroLegivel(error);
+    if (!data) throw new Error('O banco não retornou o resultado do teste.');
+    return data as ResultadoDebug;
   }
-
-  /**
-   * Cria uma transação financeira de teste no banco de dados
-   */
-  static async criarTransacaoTeste(clienteId: string, artistaId: string, tipo: 'SINAL' | 'TOTAL' = 'SINAL') {
-    try {
-      const valorBruto = tipo === 'SINAL' ? 150 : 650;
-      const taxaMP = Number((valorBruto * 0.0499).toFixed(2));
-      const valorLiquido = valorBruto - taxaMP;
-
-      const { data, error } = await supabase
-        .from('transacoes_financeiras')
-        .insert({
-          artista_id: artistaId,
-          cliente_id: clienteId,
-          valor_bruto: valorBruto,
-          taxa_mercado_pago: taxaMP,
-          valor_liquido: valorLiquido,
-          status: 'CUSTODIA',
-          tipo: tipo,
-          forma_pagamento: 'PIX Mercado Pago',
-          descricao: `Sinal de reserva de teste (${tipo})`,
-        })
-        .select('*')
-        .single();
-
-      if (error) throw error;
-      return data;
-    } catch (err) {
-      console.error('Erro ao criar transação de teste:', err);
-      return null;
-    }
+  static async listarLotes(perfilId: string): Promise<LoteDebug[]> {
+    const { data, error } = await supabase.rpc('debug_listar_lotes', { p_perfil_id: perfilId });
+    if (error) throw erroLegivel(error);
+    return data || [];
   }
-
-  /**
-   * Envia uma mensagem de teste em tempo real no chat
-   */
-  static async enviarMensagemTeste(remetenteId: string, destinatarioId: string, texto: string) {
-    try {
-      const { data, error } = await supabase
-        .from('mensagens')
-        .insert({
-          remetente_id: remetenteId,
-          destinatario_id: destinatarioId,
-          conteudo: texto,
-          lida: false,
-          criado_em: new Date().toISOString(),
-        })
-        .select('*')
-        .single();
-
-      if (error) throw error;
-      return data;
-    } catch (err) {
-      console.error('Erro ao enviar mensagem de teste:', err);
-      return null;
-    }
+  static async removerLote(loteId: string) {
+    const { data, error } = await supabase.rpc('debug_remover_lote', { p_lote_id: loteId });
+    if (error) throw erroLegivel(error);
+    if (!data) throw new Error('O lote não foi removido.');
   }
-
-  /**
-   * Avança no tempo: simula o dia da sessão, completa a anamnese, conclui o agendamento e gera a NFS-e
-   */
-  static async avancarTempoEConcluirSessao(artistaId: string, clienteId: string) {
-    try {
-      // 1. Busca agendamento ativo ou cria um confirmado
-      const { data: ags } = await supabase
-        .from('agendamentos')
-        .select('*')
-        .eq('artista_id', artistaId)
-        .eq('cliente_id', clienteId)
-        .order('criado_em', { ascending: false })
-        .limit(1);
-
-      let agId = ags?.[0]?.id;
-      let valorTotal = ags?.[0]?.valor_total || 800;
-      let valorSinal = ags?.[0]?.valor_sinal || 240;
-
-      if (!agId) {
-        const novo = await this.criarAgendamentoTeste(clienteId, artistaId, 'Fine Line Botânica');
-        agId = novo?.id;
-      }
-
-      // 2. Garante Ficha de Anamnese preenchida e assinada
-      try {
-        await supabase.from('fichas_anamnese').insert({
-          cliente_id: clienteId,
-          artista_id: artistaId,
-          alergias: 'Nenhuma',
-          doencas_cronicas: 'Nenhuma',
-          medicamentos: 'Nenhum',
-          observacoes: 'Queloide: Não | Gestante: Não | Anticoagulante: Não (Validado via Simulador)',
-          assinado: true,
-          tem_alerta_saude: false,
-          data_assinatura: new Date().toISOString(),
-        });
-      } catch {
-        // segue
-      }
-
-      // 3. Atualiza agendamento para CONCLUIDO
-      if (agId) {
-        try {
-          await supabase
-            .from('agendamentos')
-            .update({
-              status: 'CONCLUIDO',
-              valor_total: valorTotal,
-              data_horario: new Date().toISOString(),
-            })
-            .eq('id', agId);
-        } catch {
-          // segue
-        }
-      }
-
-      // 4. Cria transação de quitação do saldo
-      await this.criarTransacaoTeste(clienteId, artistaId, 'TOTAL');
-
-      // 5. Emite dados fiscais
-      const hash = Math.random().toString(36).substring(2, 7).toUpperCase();
-      const numNfse = `NFS-2026-${hash}`;
-      const codVerif = `AUT-${Date.now().toString(16).toUpperCase()}`;
-
-      // 6. Dispara mensagens no chat com o card de conclusão e Aftercare
-      const payloadCard = {
-        tipo: 'session_completed',
-        payload: {
-          agendamentoId: agId || `AG-${Date.now().toString().slice(-6)}`,
-          valorTotal,
-          valorSinalPago: valorSinal,
-          valorRestantePago: Math.max(0, valorTotal - valorSinal),
-          metodoPagamentoRestante: 'PIX Presencial',
-          numeroNotaFiscal: numNfse,
-          codigoVerificacaoNfse: codVerif,
-          dataRealizacao: new Date().toLocaleDateString('pt-BR'),
-          estilo: 'Fine Line',
-          tomadorNome: 'Cliente Dermys',
-        },
-      };
-
-      await supabase.from('mensagens').insert([
-        {
-          remetente_id: artistaId,
-          destinatario_id: clienteId,
-          conteudo: `[DERMYS_CARD:${JSON.stringify(payloadCard)}]`,
-          lida: false,
-          criado_em: new Date().toISOString(),
-        },
-        {
-          remetente_id: artistaId,
-          destinatario_id: clienteId,
-          conteudo:
-            '✨ Procedimento concluído com sucesso! Lembre-se de seguir o Guia de Cicatrização (Aftercare) para a melhor fixação dos pigmentos.',
-          lida: false,
-          criado_em: new Date(Date.now() + 1000).toISOString(),
-        },
-      ]);
-
-      return {
-        sucesso: true,
-        numeroNotaFiscal: numNfse,
-        codigoVerificacao: codVerif,
-      };
-    } catch (err) {
-      console.error('Erro ao avançar tempo no simulador:', err);
-      return null;
-    }
-  }
-
-  /**
-   * Limpa cache local de armazenamento
-   */
   static async limparCacheLocal() {
-    try {
-      await AsyncStorage.clear();
-      return true;
-    } catch {
-      return false;
-    }
+    const chaves = await AsyncStorage.getAllKeys();
+    // Preserva autenticação, persona, tema e dados manuais do usuário.
+    const caches = chaves.filter((chave) => chave.startsWith('@dermys:cache:'));
+    if (caches.length) await AsyncStorage.multiRemove(caches);
+    return caches.length;
   }
 }

@@ -27,6 +27,8 @@ interface DebugContextData {
   navegarParaAba: (aba: any) => void;
   trocarPersona: (persona: PersonaTeste) => Promise<void>;
   deslogarParaAuth: () => void;
+  revisaoDados: number;
+  atualizarDadosTeste: () => void;
 }
 
 const DebugContext = createContext<DebugContextData | undefined>(undefined);
@@ -52,6 +54,7 @@ export function DebugProvider({
   const [escala, setEscalaState] = useState<number>(0.92);
   const [menuAberto, setMenuAberto] = useState<boolean>(false);
   const [carregandoPersona, setCarregandoPersona] = useState<boolean>(false);
+  const [revisaoDados, setRevisaoDados] = useState(0);
 
   const personaAtivaId = perfilAtual?.id || null;
 
@@ -190,6 +193,8 @@ export function DebugProvider({
         navegarParaAba,
         trocarPersona,
         deslogarParaAuth,
+        revisaoDados,
+        atualizarDadosTeste: () => setRevisaoDados((valor) => valor + 1),
       }}
     >
       {children}
@@ -203,4 +208,9 @@ export function useDebug() {
     throw new Error('useDebug deve ser utilizado dentro de um DebugProvider');
   }
   return context;
+}
+
+export function DebugRefreshBoundary({ children }: { children: ReactNode }) {
+  const { revisaoDados } = useDebug();
+  return <React.Fragment key={revisaoDados}>{children}</React.Fragment>;
 }

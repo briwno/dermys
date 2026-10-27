@@ -7,6 +7,7 @@ import { criarCobrancaFinal, gerarReciboFiscal, obterUrlQrCodePix } from '@/serv
 import { supabase } from '@/services/supabase';
 import type { ReciboFiscal } from '@/types/financeiro';
 import type { NotaFiscalRegistro } from '@/types/fiscal';
+import type { PerfilUsuario } from '@/types/auth';
 import {
   AlertCircle,
   AlertTriangle,
@@ -85,7 +86,8 @@ export interface ItemAgendaCompleto {
   fichaAnamnese?: FichaAnamneseArtista | null;
 }
 
-export function ArtistaAgendaTab() {
+export function ArtistaAgendaTab({ perfil }: { perfil: PerfilUsuario }) {
+  const artistaId = perfil.id || perfil.uid || '';
   const [agendamentos, setAgendamentos] = useState<ItemAgendaCompleto[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [filtro, setFiltro] = useState<'tudo' | 'proximos' | 'andamento' | 'historico'>('tudo');
@@ -115,7 +117,7 @@ export function ArtistaAgendaTab() {
   useEffect(() => {
     carregarAgenda();
     carregarStatusAgenda();
-  }, []);
+  }, [artistaId]);
 
   const carregarStatusAgenda = async () => {
     try {
@@ -127,7 +129,7 @@ export function ArtistaAgendaTab() {
       const { data: profile } = await supabase
         .from('profiles')
         .select('agenda_aberta, mensagem_agenda_fechada')
-        .eq('id', session.user.id)
+        .eq('id', artistaId)
         .maybeSingle();
 
       if (profile) {
@@ -153,7 +155,7 @@ export function ArtistaAgendaTab() {
       await supabase
         .from('profiles')
         .update({ agenda_aberta: novoStatus })
-        .eq('id', session.user.id);
+        .eq('id', artistaId);
     } catch (err) {
       console.warn('Erro ao atualizar status da agenda:', err);
     } finally {
@@ -189,7 +191,7 @@ export function ArtistaAgendaTab() {
           sinal_pago,
           cliente:profiles!agendamentos_cliente_id_fkey(nome_exibicao)
         `)
-        .eq('artista_id', session.user.id)
+        .eq('artista_id', artistaId)
         .order('data_horario', { ascending: true });
 
       if (!error && data) {
@@ -197,7 +199,7 @@ export function ArtistaAgendaTab() {
         const { data: fichasData } = await supabase
           .from('fichas_anamnese')
           .select('*')
-          .eq('artista_id', session.user.id);
+          .eq('artista_id', artistaId);
 
         const fichasMap = new Map<string, FichaAnamneseArtista>();
         if (fichasData) {
@@ -283,12 +285,12 @@ export function ArtistaAgendaTab() {
       if (session?.user) {
         const cobranca = await criarCobrancaFinal({
           agendamentoId: itemFinalizando.id,
-          artistaId: session.user.id,
+          artistaId: artistaId,
           clienteId: itemFinalizando.clienteId,
           valorFinal: precoFinal,
           valorSinalJaPago: itemFinalizando.valorSinal,
           metodo: metodoPagamentoFinal,
-          artistaNome: session.user.user_metadata?.full_name || 'Tatuador Dermys',
+          artistaNome: perfil.nomeExibicao || perfil.nome_exibicao || 'Tatuador Dermys',
         });
 
         if (metodoPagamentoFinal === 'pix') {
@@ -302,10 +304,10 @@ export function ArtistaAgendaTab() {
         });
 
         try {
-          const pFiscal = await FiscalService.obterOuCriarPerfilFiscal(session.user.id);
+          const pFiscal = await FiscalService.obterOuCriarPerfilFiscal(artistaId);
           if (pFiscal.emissao_automatica) {
             await FiscalService.emitirNotaFiscal({
-              artistaId: session.user.id,
+              artistaId: artistaId,
               clienteId: itemFinalizando.clienteId,
               agendamentoId: itemFinalizando.id,
               valorServico: precoFinal,
