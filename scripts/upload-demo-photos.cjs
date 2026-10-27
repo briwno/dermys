@@ -27,7 +27,7 @@ async function main() {
     if (!existing.some(file => file.name === item.file)) {
       const { error } = await client.storage.from('portfolios').upload(
         `demo/generated-v1/${item.file}`, bytes,
-        { contentType: 'image/png', cacheControl: '31536000', upsert: false }
+        { contentType: item.file.endsWith('.jpg') ? 'image/jpeg' : 'image/png', cacheControl: '31536000', upsert: false }
       );
       if (error) throw error;
     }

@@ -33,7 +33,7 @@ export function DashboardArtista({
       case 'schedule':
         return 'Agenda de Atendimentos';
       case 'financial':
-        return 'Painel Fiscal & Financeiro';
+        return 'Financeiro & fiscal';
       case 'chat':
         return 'Mensagens com Clientes';
       case 'profile':
@@ -60,7 +60,7 @@ export function DashboardArtista({
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           {/* Header */}
           <View style={styles.header}>
-            <View>
+            <View style={{ flex: 1, minWidth: 0, paddingRight: 12 }}>
               <Text style={styles.hiText}>Studio mode</Text>
               <Text style={styles.title}>{getTabTitle()}</Text>
               <Text style={styles.subtitle}>{perfil.nomeExibicao || 'Tatuador'}</Text>

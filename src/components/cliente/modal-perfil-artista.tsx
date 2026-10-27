@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Image,
   Pressable,
@@ -57,33 +57,28 @@ export function ModalPerfilArtista({
 }: ModalPerfilArtistaProps) {
   const [abaAtiva, setAbaAtiva] = useState<AbaPerfil>('portfolio');
   const [curtido, setCurtido] = useState(false);
-  const [flashSelecionado, setFlashSelecionado] = useState<ItemPortfolio | null>(flashInicial || null);
+  const [flashSelecionado, setFlashSelecionado] = useState<ItemPortfolio | null>(null);
   const [fotoZoom, setFotoZoom] = useState<ItemPortfolio | null>(null);
+
+  useEffect(() => {
+    if (visivel) {
+      setFlashSelecionado(flashInicial?.disponivel ? flashInicial : null);
+      setAbaAtiva('portfolio');
+      setFotoZoom(null);
+    }
+  }, [visivel, perfil?.id, flashInicial]);
 
   if (!perfil) return null;
 
   const totalCurtidas = perfil.curtidas + (curtido ? 1 : 0);
+  const flashesDisponiveis = perfil.flashes.filter(flash => flash.disponivel === true);
 
   return (
     <AppModal visible={visivel} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
         <View style={styles.container}>
-          {/* Header com Imagem de Capa e Botão Fechar */}
-          <View style={styles.heroWrap}>
-            <Image
-              source={{
-                uri:
-                  perfil.capaUrl ||
-                  perfil.fotoUrl ||
-                  'https://images.unsplash.com/photo-1598371839696-5c5bb00bdc28?w=800&auto=format&fit=crop&q=80',
-              }}
-              style={styles.heroCoverImage}
-            />
-            <View style={styles.heroGradient} />
-
-            {/* Ações Superiores na Capa */}
             <View style={styles.topActionsBar}>
-              <Pressable style={styles.circleBtn} onPress={onClose}>
+              <Pressable style={styles.circleBtn} onPress={onClose} accessibilityRole="button" accessibilityLabel="Fechar perfil">
                 <X size={18} color={tc('#fff')} />
               </Pressable>
 
@@ -100,7 +95,25 @@ export function ModalPerfilArtista({
                 </Pressable>
               </View>
             </View>
+          <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}>
+          {/* Header com Imagem de Capa e Botão Fechar */}
+          <View style={styles.heroWrap}>
+            <Image
+              source={{
+                uri:
+                  perfil.capaUrl ||
+                  perfil.fotoUrl ||
+                  'https://images.unsplash.com/photo-1598371839696-5c5bb00bdc28?w=800&auto=format&fit=crop&q=80',
+              }}
+              style={styles.heroCoverImage}
+            />
+            <View style={styles.heroGradient} />
 
+            {/* Ações Superiores na Capa */}
+
+
+          </View>
             {/* Informações do Artista Sobrepostas no Hero */}
             <View style={styles.artistHeroInfo}>
               <View style={styles.avatarWrap}>
@@ -120,9 +133,6 @@ export function ModalPerfilArtista({
               <View style={styles.artistNameBlock}>
                 <View style={styles.nameRow}>
                   <Text style={styles.artistNameText}>{perfil.nomeArtista}</Text>
-                  <View style={styles.proTag}>
-                    <Text style={styles.proTagText}>DERMYS PRO</Text>
-                  </View>
                 </View>
 
                 <Text style={styles.studioNameText}>{perfil.nomeEstudio}</Text>
@@ -177,14 +187,6 @@ export function ModalPerfilArtista({
                 </View>
               </View>
             </View>
-          </View>
-
-          {/* Conteúdo com Scroll */}
-          <ScrollView
-            style={styles.scrollView}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-          >
             {/* Aviso de Agenda Fechada se aplicável */}
             {perfil.agendaAberta === false && (
               <View style={styles.agendaFechadaCallout}>
@@ -208,17 +210,15 @@ export function ModalPerfilArtista({
               </View>
 
               <View style={styles.priceCard}>
-                <Text style={styles.priceCardLabel}>MÉDIA / HORA</Text>
-                <Text style={styles.priceCardValue}>R$ {perfil.precoMedioHora || 250}</Text>
-                <Text style={styles.priceCardSub}>Sessões longas</Text>
+                <Text style={styles.priceCardLabel}>PORTFÓLIO</Text>
+                <Text style={styles.priceCardValue}>{perfil.portfolio.length}</Text>
+                <Text style={styles.priceCardSub}>Obras publicadas</Text>
               </View>
 
               <View style={styles.priceCard}>
-                <Text style={styles.priceCardLabel}>SINAL M. PAGO</Text>
-                <Text style={[styles.priceCardValue, { color: tc('#10b981') }]}>
-                  R$ {perfil.valorSinalBase || 120}
-                </Text>
-                <Text style={styles.priceCardSub}>Reserva garantida</Text>
+                <Text style={styles.priceCardLabel}>AVALIAÇÕES</Text>
+                <Text style={styles.priceCardValue}>{perfil.totalAvaliacoes}</Text>
+                <Text style={styles.priceCardSub}>Experiências reais</Text>
               </View>
             </View>
 
@@ -247,7 +247,6 @@ export function ModalPerfilArtista({
                 style={[styles.tabNavItem, abaAtiva === 'portfolio' && styles.tabNavItemActive]}
                 onPress={() => setAbaAtiva('portfolio')}
               >
-                <ImageIcon size={14} color={abaAtiva === 'portfolio' ? tc('#f3c21a') : tc('#888')} />
                 <Text style={[styles.tabNavText, abaAtiva === 'portfolio' && styles.tabNavTextActive]}>
                   Portfólio ({perfil.portfolio.length})
                 </Text>
@@ -257,9 +256,8 @@ export function ModalPerfilArtista({
                 style={[styles.tabNavItem, abaAtiva === 'flashes' && styles.tabNavItemActive]}
                 onPress={() => setAbaAtiva('flashes')}
               >
-                <Flame size={14} color={abaAtiva === 'flashes' ? tc('#f3c21a') : tc('#888')} />
                 <Text style={[styles.tabNavText, abaAtiva === 'flashes' && styles.tabNavTextActive]}>
-                  Flashes ({perfil.flashes.length})
+                  Flashes ({flashesDisponiveis.length})
                 </Text>
               </Pressable>
 
@@ -267,9 +265,8 @@ export function ModalPerfilArtista({
                 style={[styles.tabNavItem, abaAtiva === 'reviews' && styles.tabNavItemActive]}
                 onPress={() => setAbaAtiva('reviews')}
               >
-                <Star size={14} color={abaAtiva === 'reviews' ? tc('#f3c21a') : tc('#888')} />
                 <Text style={[styles.tabNavText, abaAtiva === 'reviews' && styles.tabNavTextActive]}>
-                  Reviews ({perfil.totalAvaliacoes})
+                  Avaliações
                 </Text>
               </Pressable>
 
@@ -277,7 +274,6 @@ export function ModalPerfilArtista({
                 style={[styles.tabNavItem, abaAtiva === 'estudio' && styles.tabNavItemActive]}
                 onPress={() => setAbaAtiva('estudio')}
               >
-                <ShieldCheck size={14} color={abaAtiva === 'estudio' ? tc('#f3c21a') : tc('#888')} />
                 <Text style={[styles.tabNavText, abaAtiva === 'estudio' && styles.tabNavTextActive]}>
                   Estúdio
                 </Text>
@@ -312,7 +308,11 @@ export function ModalPerfilArtista({
             {abaAtiva === 'flashes' && (
               <View style={styles.tabContentArea}>
                 <View style={styles.flashesGrid}>
-                  {perfil.flashes.map((flash, idx) => (
+                  {flashesDisponiveis.length === 0 && <View style={styles.emptyReviewsCard}>
+                    <Text style={styles.emptyReviewsTitle}>Novas ideias, sob medida</Text>
+                    <Text style={styles.emptyReviewsSub}>Este artista está sem flashes disponíveis. Explore o portfólio e peça um orçamento para sua ideia.</Text>
+                  </View>}
+                  {flashesDisponiveis.map((flash, idx) => (
                     <View key={flash.id || idx} style={styles.flashCardItem}>
                       <Image source={{ uri: flash.imagemUrl }} style={styles.flashCardImage} />
                       <View style={styles.flashCardContent}>
@@ -528,7 +528,7 @@ export function ModalPerfilArtista({
                   ? 'Reservar Flash Selecionado'
                   : perfil.agendaAberta === false
                   ? 'Enviar Briefing (Lista de Espera)'
-                  : 'Pedir Orçamento / Agendar'}
+                  : 'Pedir orçamento'}
               </Text>
             </Pressable>
           </View>
@@ -570,15 +570,15 @@ const styles = createThemedStyles({
     position: 'relative',
   },
   heroWrap: {
-    height: 190,
-    width: '100%',
+    height: 220,
+    marginHorizontal: -16,
     position: 'relative',
     backgroundColor: '#121214',
   },
   heroCoverImage: {
     width: '100%',
     height: '100%',
-    opacity: 0.55,
+    opacity: 1,
   },
   heroGradient: {
     position: 'absolute',
@@ -586,7 +586,7 @@ const styles = createThemedStyles({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(10, 10, 12, 0.45)',
+    backgroundColor: 'rgba(10, 10, 12, 0.12)',
   },
   topActionsBar: {
     position: 'absolute',
@@ -618,20 +618,17 @@ const styles = createThemedStyles({
     borderColor: '#f43f5e',
   },
   artistHeroInfo: {
-    position: 'absolute',
-    bottom: 12,
-    left: 16,
-    right: 16,
+    marginTop: -38,
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'flex-start',
     gap: 12,
   },
   avatarWrap: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    borderWidth: 2,
-    borderColor: '#f3c21a',
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    borderWidth: 4,
+    borderColor: '#0a0a0c',
     position: 'relative',
     backgroundColor: '#161618',
   },
@@ -655,7 +652,8 @@ const styles = createThemedStyles({
   },
   artistNameBlock: {
     flex: 1,
-    gap: 2,
+    paddingTop: 40,
+    gap: 5,
   },
   nameRow: {
     flexDirection: 'row',
@@ -664,9 +662,10 @@ const styles = createThemedStyles({
   },
   artistNameText: {
     color: '#ffffff',
-    fontSize: 18,
-    fontWeight: '900',
-    letterSpacing: -0.3,
+    fontSize: 22,
+    fontWeight: '700',
+    letterSpacing: -0.6,
+    flexShrink: 1,
   },
   proTag: {
     backgroundColor: 'rgba(243, 194, 26, 0.15)',
@@ -698,13 +697,13 @@ const styles = createThemedStyles({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    backgroundColor: '#f3c21a',
+    backgroundColor: '#242426',
     paddingHorizontal: 7,
     paddingVertical: 2,
     borderRadius: 6,
   },
   distanceBadgeText: {
-    color: '#000000',
+    color: '#d4d4d8',
     fontSize: 10,
     fontWeight: '900',
   },
@@ -807,7 +806,7 @@ const styles = createThemedStyles({
   },
   scrollContent: {
     paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingTop: 0,
     paddingBottom: 24,
     gap: 14,
   },
@@ -817,9 +816,8 @@ const styles = createThemedStyles({
   },
   priceCard: {
     flex: 1,
-    backgroundColor: '#121216',
-    borderWidth: 1,
-    borderColor: '#222228',
+    backgroundColor: '#101012',
+    borderWidth: 0,
     borderRadius: 12,
     paddingVertical: 10,
     paddingHorizontal: 8,
@@ -833,8 +831,8 @@ const styles = createThemedStyles({
   },
   priceCardValue: {
     color: '#ffffff',
-    fontSize: 15,
-    fontWeight: '900',
+    fontSize: 18,
+    fontWeight: '600',
     marginVertical: 2,
   },
   priceCardSub: {
@@ -842,11 +840,8 @@ const styles = createThemedStyles({
     fontSize: 10,
   },
   bioCard: {
-    backgroundColor: '#121216',
     borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#222228',
-    padding: 14,
+    paddingVertical: 8,
     gap: 8,
   },
   sectionHeading: {
@@ -858,7 +853,7 @@ const styles = createThemedStyles({
   bioText: {
     color: '#d4d4d8',
     fontSize: 12,
-    lineHeight: 18,
+    lineHeight: 21,
   },
   stylesTagsRow: {
     flexDirection: 'row',
@@ -906,6 +901,7 @@ const styles = createThemedStyles({
     justifyContent: 'center',
     gap: 4,
     paddingVertical: 8,
+    minHeight: 44,
     borderRadius: 8,
   },
   tabNavItemActive: {
@@ -929,8 +925,8 @@ const styles = createThemedStyles({
   },
   portfolioCard: {
     width: '48%',
-    aspectRatio: 1,
-    borderRadius: 12,
+    aspectRatio: 0.75,
+    borderRadius: 16,
     overflow: 'hidden',
     position: 'relative',
     backgroundColor: '#1a1a20',

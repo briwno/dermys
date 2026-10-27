@@ -53,13 +53,12 @@ export function DashboardCliente({
 
   const header = (
     <View style={styles.header}>
-      <View>
-        <Text style={styles.hiText}>Olá, {perfil.nomeExibicao || 'Cliente'}</Text>
-        <Text style={styles.title}>{getTabTitle()}</Text>
+      <View style={{ flex: 1, paddingRight: 8 }}>
+        <Text style={[styles.hiText, activeTab === 'home' && styles.marca]}>{activeTab === 'home' ? 'DERMYS / EXPLORE' : `Olá, ${perfil.nomeExibicao || 'Cliente'}`}</Text>
+        {activeTab === 'home' ? <Text style={styles.manifesto}>Arte na pele.<Text style={styles.manifestoDestaque}>{'\n'}Histórias pra levar.</Text></Text> : <Text style={styles.title}>{getTabTitle()}</Text>}
       </View>
-      <Pressable style={styles.logoutButton} onPress={onLogout}>
-        <LogOut size={14} color={tc('#fff')} />
-        <Text style={styles.logoutText}>Sair</Text>
+      <Pressable style={styles.logoutButton} onPress={onLogout} accessibilityRole="button" accessibilityLabel="Sair da conta">
+        <LogOut size={17} color={tc('#a1a1aa')} />
       </Pressable>
     </View>
   );
@@ -97,6 +96,9 @@ export function DashboardCliente({
 }
 
 const styles = createThemedStyles({
+  marca: { color: '#f3c21a', fontSize: 10, fontWeight: '900', letterSpacing: 2.4, marginBottom: 8 },
+  manifesto: { color: '#f4f4f5', fontSize: 29, lineHeight: 31, fontWeight: '900', letterSpacing: -1.2 },
+  manifestoDestaque: { color: '#f3c21a', fontStyle: 'italic' },
   safeArea: {
     flex: 1,
     backgroundColor: '#050505',
@@ -115,8 +117,8 @@ const styles = createThemedStyles({
   },
   homeContent: {
     flex: 1,
-    paddingHorizontal: 12,
-    paddingTop: 12,
+    paddingHorizontal: 16,
+    paddingTop: 8,
     gap: 10,
   },
   header: {
@@ -127,17 +129,16 @@ const styles = createThemedStyles({
   },
   hiText: {
     color: '#8a8a8a',
-    fontSize: 11,
+    fontSize: 9,
     textTransform: 'uppercase',
-    letterSpacing: 1.2,
-    fontWeight: '700',
+    letterSpacing: 2,
+    fontWeight: '600',
   },
   title: {
-    color: '#f3c21a',
+    color: '#f4f4f5',
     fontSize: 26,
-    fontWeight: '900',
-    fontStyle: 'italic',
-    letterSpacing: -0.8,
+    fontWeight: '700',
+    letterSpacing: -1,
   },
   logoutButton: {
     flexDirection: 'row',
@@ -145,10 +146,11 @@ const styles = createThemedStyles({
     gap: 6,
     borderWidth: 1,
     borderColor: '#2a2a2a',
-    borderRadius: 12,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    backgroundColor: '#121212',
+    borderRadius: 22,
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    backgroundColor: '#101012',
   },
   logoutText: {
     color: '#fff',

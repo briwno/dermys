@@ -1,14 +1,3 @@
-import React, { useState } from 'react';
-import {
-  Image,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
 import {
   Calendar,
   Check,
@@ -20,12 +9,19 @@ import {
   MessageSquare,
   Smartphone,
   User,
-  Users,
-  Wrench,
-  Zap,
+  Wrench
 } from 'lucide-react-native';
+import { useState } from 'react';
+import {
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
 import { useDebug } from './debug-context';
-import { MODELOS_DISPOSITIVOS, PERSONAS_TESTE, type ModeloDispositivo, type PersonaTeste } from './types';
+import { PERSONAS_TESTE } from './types';
 
 export function DevTopBar() {
   const {

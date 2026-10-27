@@ -1,10 +1,194 @@
 [
-  { "file": "fine-line.png", "artistId": "11111111-1111-1111-1111-111111111111", "title": "Demonstração IA · Oliveira e lavanda", "style": "Fine Line" },
-  { "file": "blackwork.png", "artistId": "22222222-2222-2222-2222-222222222222", "title": "Demonstração IA · Corvo e peônias", "style": "Blackwork" },
-  { "file": "aquarela.png", "artistId": "33333333-3333-3333-3333-333333333333", "title": "Demonstração IA · Beija-flor tropical", "style": "Aquarela" },
-  { "file": "oriental.png", "artistId": "44444444-4444-4444-4444-444444444444", "title": "Demonstração IA · Carpa e cerejeiras", "style": "Oriental" },
-  { "file": "old-school.png", "artistId": "55555555-5555-5555-5555-555555555555", "title": "Demonstração IA · Âncora e rosa", "style": "Old School" },
-  { "file": "geek.png", "artistId": "66666666-6666-6666-6666-666666666666", "title": "Demonstração IA · Gato astronauta", "style": "Geek" },
-  { "file": "realismo.png", "artistId": "77777777-7777-7777-7777-777777777777", "title": "Demonstração IA · Leão em preto e cinza", "style": "Realismo" },
-  { "file": "ornamental.png", "artistId": "88888888-8888-8888-8888-888888888888", "title": "Demonstração IA · Mandala ornamental", "style": "Blackwork" }
+  {
+    "file": "fine-line.jpg",
+    "artistId": "11111111-1111-1111-1111-111111111111",
+    "title": "Demonstração IA · Oliveira e lavanda",
+    "style": "Fine Line"
+  },
+  {
+    "file": "blackwork.jpg",
+    "artistId": "22222222-2222-2222-2222-222222222222",
+    "title": "Demonstração IA · Corvo e peônias",
+    "style": "Blackwork"
+  },
+  {
+    "file": "aquarela.jpg",
+    "artistId": "33333333-3333-3333-3333-333333333333",
+    "title": "Demonstração IA · Beija-flor tropical",
+    "style": "Aquarela"
+  },
+  {
+    "file": "oriental.jpg",
+    "artistId": "44444444-4444-4444-4444-444444444444",
+    "title": "Demonstração IA · Carpa e cerejeiras",
+    "style": "Oriental"
+  },
+  {
+    "file": "old-school.jpg",
+    "artistId": "55555555-5555-5555-5555-555555555555",
+    "title": "Demonstração IA · Âncora e rosa",
+    "style": "Old School"
+  },
+  {
+    "file": "geek.jpg",
+    "artistId": "66666666-6666-6666-6666-666666666666",
+    "title": "Demonstração IA · Gato astronauta",
+    "style": "Geek"
+  },
+  {
+    "file": "realismo.jpg",
+    "artistId": "77777777-7777-7777-7777-777777777777",
+    "title": "Demonstração IA · Leão em preto e cinza",
+    "style": "Realismo"
+  },
+  {
+    "file": "ornamental.jpg",
+    "artistId": "88888888-8888-8888-8888-888888888888",
+    "title": "Demonstração IA · Mandala ornamental",
+    "style": "Blackwork"
+  },
+  {
+    "file": "fine-line-2.jpg",
+    "artistId": "11111111-1111-1111-1111-111111111111",
+    "title": "Demonstração IA · Lavanda delicada",
+    "style": "Fine Line"
+  },
+  {
+    "file": "fine-line-3.jpg",
+    "artistId": "11111111-1111-1111-1111-111111111111",
+    "title": "Demonstração IA · Borboleta lunar",
+    "style": "Fine Line"
+  },
+  {
+    "file": "fine-line-4.jpg",
+    "artistId": "11111111-1111-1111-1111-111111111111",
+    "title": "Demonstração IA · Flores silvestres",
+    "style": "Fine Line"
+  },
+  {
+    "file": "blackwork-2.jpg",
+    "artistId": "22222222-2222-2222-2222-222222222222",
+    "title": "Demonstração IA · Serpente e peônias",
+    "style": "Blackwork"
+  },
+  {
+    "file": "blackwork-3.jpg",
+    "artistId": "22222222-2222-2222-2222-222222222222",
+    "title": "Demonstração IA · Mariposa noturna",
+    "style": "Blackwork"
+  },
+  {
+    "file": "blackwork-4.jpg",
+    "artistId": "22222222-2222-2222-2222-222222222222",
+    "title": "Demonstração IA · Lobo em gravura",
+    "style": "Blackwork"
+  },
+  {
+    "file": "aquarela-2.jpg",
+    "artistId": "33333333-3333-3333-3333-333333333333",
+    "title": "Demonstração IA · Raposa em aquarela",
+    "style": "Aquarela"
+  },
+  {
+    "file": "aquarela-3.jpg",
+    "artistId": "33333333-3333-3333-3333-333333333333",
+    "title": "Demonstração IA · Íris azul",
+    "style": "Aquarela"
+  },
+  {
+    "file": "aquarela-4.jpg",
+    "artistId": "33333333-3333-3333-3333-333333333333",
+    "title": "Demonstração IA · Borboleta em cores",
+    "style": "Aquarela"
+  },
+  {
+    "file": "oriental-2.jpg",
+    "artistId": "44444444-4444-4444-4444-444444444444",
+    "title": "Demonstração IA · Dragão entre nuvens",
+    "style": "Oriental"
+  },
+  {
+    "file": "oriental-3.jpg",
+    "artistId": "44444444-4444-4444-4444-444444444444",
+    "title": "Demonstração IA · Crisântemo japonês",
+    "style": "Oriental"
+  },
+  {
+    "file": "oriental-4.jpg",
+    "artistId": "44444444-4444-4444-4444-444444444444",
+    "title": "Demonstração IA · Máscara Hannya",
+    "style": "Oriental"
+  },
+  {
+    "file": "old-school-2.jpg",
+    "artistId": "55555555-5555-5555-5555-555555555555",
+    "title": "Demonstração IA · Andorinha tradicional",
+    "style": "Old School"
+  },
+  {
+    "file": "old-school-3.jpg",
+    "artistId": "55555555-5555-5555-5555-555555555555",
+    "title": "Demonstração IA · Rosa e adaga",
+    "style": "Old School"
+  },
+  {
+    "file": "old-school-4.jpg",
+    "artistId": "55555555-5555-5555-5555-555555555555",
+    "title": "Demonstração IA · Farol náutico",
+    "style": "Old School"
+  },
+  {
+    "file": "geek-2.jpg",
+    "artistId": "66666666-6666-6666-6666-666666666666",
+    "title": "Demonstração IA · Controle cósmico",
+    "style": "Geek"
+  },
+  {
+    "file": "geek-3.jpg",
+    "artistId": "66666666-6666-6666-6666-666666666666",
+    "title": "Demonstração IA · Dragão de bolso",
+    "style": "Geek"
+  },
+  {
+    "file": "geek-4.jpg",
+    "artistId": "66666666-6666-6666-6666-666666666666",
+    "title": "Demonstração IA · Robô e estrelas",
+    "style": "Geek"
+  },
+  {
+    "file": "realismo-2.jpg",
+    "artistId": "77777777-7777-7777-7777-777777777777",
+    "title": "Demonstração IA · Olhar felino",
+    "style": "Realismo"
+  },
+  {
+    "file": "realismo-3.jpg",
+    "artistId": "77777777-7777-7777-7777-777777777777",
+    "title": "Demonstração IA · Retrato canino",
+    "style": "Realismo"
+  },
+  {
+    "file": "realismo-4.jpg",
+    "artistId": "77777777-7777-7777-7777-777777777777",
+    "title": "Demonstração IA · Rosa em preto e cinza",
+    "style": "Realismo"
+  },
+  {
+    "file": "ornamental-2.jpg",
+    "artistId": "88888888-8888-8888-8888-888888888888",
+    "title": "Demonstração IA · Lótus ornamental",
+    "style": "Blackwork"
+  },
+  {
+    "file": "ornamental-3.jpg",
+    "artistId": "88888888-8888-8888-8888-888888888888",
+    "title": "Demonstração IA · Geometria sagrada",
+    "style": "Blackwork"
+  },
+  {
+    "file": "ornamental-4.jpg",
+    "artistId": "88888888-8888-8888-8888-888888888888",
+    "title": "Demonstração IA · Mandala floral",
+    "style": "Blackwork"
+  }
 ]

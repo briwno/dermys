@@ -1,7 +1,7 @@
-import { Calendar, DollarSign, Home, LayoutGrid, MessageSquare, User } from 'lucide-react-native';
-import React, { useEffect, useRef } from 'react';
-import { Animated, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { createThemedStyles, tc } from '@/theme';
+import { CalendarDays, Compass, LayoutGrid, MessageCircle, UserRound, WalletCards, type LucideIcon } from 'lucide-react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { AccessibilityInfo, Animated, Platform, Pressable, View } from 'react-native';
 
 export type BottomNavTab = 'dashboard' | 'schedule' | 'financial' | 'home' | 'bookings' | 'chat' | 'profile';
 
@@ -12,35 +12,43 @@ interface BottomNavProps {
 }
 
 interface TabButtonProps {
-  id: BottomNavTab;
-  icon: React.ComponentType<{ size: number; color: string }>;
+  icon: LucideIcon;
   label: string;
   isActive: boolean;
   onPress: () => void;
+  reduzirMovimento: boolean;
 }
 
 function BottomNavTabButton({
-  id: _id,
   icon: IconComponent,
   label,
   isActive,
   onPress,
+  reduzirMovimento,
 }: TabButtonProps) {
+  const [emFoco, setEmFoco] = useState(false);
   const pressScale = useRef(new Animated.Value(1)).current;
   const activeScale = useRef(new Animated.Value(isActive ? 1 : 0)).current;
 
   useEffect(() => {
-    Animated.spring(activeScale, {
+    if (reduzirMovimento) {
+      activeScale.setValue(isActive ? 1 : 0);
+      return;
+    }
+    const animacao = Animated.spring(activeScale, {
       toValue: isActive ? 1 : 0,
-      tension: 130,
-      friction: 8,
+      tension: 180,
+      friction: 16,
       useNativeDriver: Platform.OS !== 'web',
-    }).start();
-  }, [isActive, activeScale]);
+    });
+    animacao.start();
+    return () => animacao.stop();
+  }, [isActive, activeScale, reduzirMovimento]);
 
   const handlePressIn = () => {
+    if (reduzirMovimento) return;
     Animated.spring(pressScale, {
-      toValue: 0.9,
+      toValue: 0.92,
       friction: 5,
       tension: 220,
       useNativeDriver: Platform.OS !== 'web',
@@ -48,6 +56,10 @@ function BottomNavTabButton({
   };
 
   const handlePressOut = () => {
+    if (reduzirMovimento) {
+      pressScale.setValue(1);
+      return;
+    }
     Animated.spring(pressScale, {
       toValue: 1,
       friction: 6,
@@ -56,11 +68,16 @@ function BottomNavTabButton({
     }).start();
   };
 
-  const iconColor = isActive ? tc('#f3c21a') : tc('#6b7280');
+  const iconColor = tc(isActive ? '#f3c21a' : emFoco ? '#f4f4f5' : '#9898a4');
 
   return (
     <Pressable
       style={styles.tabButton}
+      accessibilityRole="tab"
+      accessibilityLabel={label}
+      accessibilityState={{ selected: isActive }}
+      onFocus={() => setEmFoco(true)}
+      onBlur={() => setEmFoco(false)}
       onPress={onPress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
@@ -70,150 +87,131 @@ function BottomNavTabButton({
         style={[
           styles.iconWrapper,
           {
-            transform: [
-              { scale: pressScale },
-              {
-                scale: activeScale.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [1, 1.08],
-                }),
-              },
-            ],
+            transform: [{ scale: pressScale }],
           },
         ]}
       >
+        <View pointerEvents="none" style={styles.iconForeground}>
+          <IconComponent size={23} strokeWidth={isActive ? 2.2 : 1.8} color={iconColor} />
+        </View>
         <Animated.View
+          pointerEvents="none"
           style={[
-            styles.activeHalo,
+            styles.activeIndicator,
             {
               opacity: activeScale,
               transform: [
                 {
-                  scale: activeScale.interpolate({
+                  scaleX: activeScale.interpolate({
                     inputRange: [0, 1],
-                    outputRange: [0.65, 1],
+                    outputRange: [0.4, 1],
                   }),
                 },
               ],
             },
           ]}
         />
-        <IconComponent size={20} color={iconColor} />
       </Animated.View>
 
-      <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>{label}</Text>
-
-      <Animated.View
-        style={[
-          styles.activeIndicator,
-          {
-            opacity: activeScale,
-            transform: [
-              {
-                scaleX: activeScale.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [0.3, 1],
-                }),
-              },
-            ],
-          },
-        ]}
-      />
     </Pressable>
   );
 }
 
 export function BottomNav({ activeTab, setActiveTab, role }: BottomNavProps) {
-  const tabs: { id: BottomNavTab; icon: React.ComponentType<{ size: number; color: string }>; label: string }[] =
+  const [reduzirMovimento, setReduzirMovimento] = useState(false);
+  useEffect(() => {
+    let ativo = true;
+    AccessibilityInfo.isReduceMotionEnabled().then((valor) => { if (ativo) setReduzirMovimento(valor); }).catch(() => {});
+    const subscription = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduzirMovimento);
+    return () => { ativo = false; subscription.remove(); };
+  }, []);
+  const tabs: { id: BottomNavTab; icon: LucideIcon; label: string }[] =
     role === 'artista'
       ? [
           { id: 'dashboard', icon: LayoutGrid, label: 'Início' },
-          { id: 'schedule', icon: Calendar, label: 'Agenda' },
-          { id: 'financial', icon: DollarSign, label: 'Fiscal/Fin.' },
-          { id: 'chat', icon: MessageSquare, label: 'Chat' },
-          { id: 'profile', icon: User, label: 'Perfil' },
+          { id: 'schedule', icon: CalendarDays, label: 'Agenda' },
+          { id: 'financial', icon: WalletCards, label: 'Financeiro e fiscal' },
+          { id: 'chat', icon: MessageCircle, label: 'Mensagens' },
+          { id: 'profile', icon: UserRound, label: 'Perfil' },
         ]
       : [
-          { id: 'home', icon: Home, label: 'Início' },
-          { id: 'bookings', icon: Calendar, label: 'Agendamentos' },
-          { id: 'chat', icon: MessageSquare, label: 'Chat' },
-          { id: 'profile', icon: User, label: 'Perfil' },
+          { id: 'home', icon: Compass, label: 'Explorar' },
+          { id: 'bookings', icon: CalendarDays, label: 'Agendamentos' },
+          { id: 'chat', icon: MessageCircle, label: 'Mensagens' },
+          { id: 'profile', icon: UserRound, label: 'Perfil' },
         ];
 
   return (
-    <View style={styles.navContainer}>
+    <View style={styles.dock} pointerEvents="box-none">
+    <View style={styles.navContainer} accessibilityRole="tablist">
       {tabs.map((tab) => {
         const isActive = activeTab === tab.id;
         return (
           <BottomNavTabButton
             key={tab.id}
-            id={tab.id}
             icon={tab.icon}
             label={tab.label}
             isActive={isActive}
+            reduzirMovimento={reduzirMovimento}
             onPress={() => setActiveTab(tab.id)}
           />
         );
       })}
     </View>
+    </View>
   );
 }
 
 const styles = createThemedStyles({
-  navContainer: {
+  dock: {
     position: 'absolute',
     left: 0,
     right: 0,
-    bottom: 0,
-    height: 76,
-    backgroundColor: '#0a0a0a',
-    borderTopWidth: 1,
-    borderTopColor: '#1a1a1a',
+    bottom: 10,
+    paddingHorizontal: 14,
+    alignItems: 'center',
+  },
+  navContainer: {
+    width: '100%',
+    maxWidth: 440,
+    height: 64,
+    borderRadius: 24,
+    backgroundColor: '#151518',
+    borderWidth: 1,
+    borderColor: '#303036',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingBottom: 8,
+    paddingHorizontal: 8,
+    gap: 4,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.22,
+    shadowRadius: 14,
+    elevation: 8,
   },
   tabButton: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 3,
-    paddingVertical: 4,
+    height: 52,
+    minWidth: 48,
+    borderRadius: 18,
     position: 'relative',
   },
+  iconForeground: { zIndex: 1 },
   iconWrapper: {
-    width: 36,
-    height: 28,
+    width: 48,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
   },
-  activeHalo: {
-    position: 'absolute',
-    top: 0,
-    left: 4,
-    right: 4,
-    bottom: 0,
-    borderRadius: 14,
-    backgroundColor: 'rgba(243, 194, 26, 0.14)',
-  },
-  tabLabel: {
-    fontSize: 9,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.9,
-    color: '#6b7280',
-  },
-  tabLabelActive: {
-    color: '#f3c21a',
-  },
   activeIndicator: {
     position: 'absolute',
-    bottom: 0,
-    width: 14,
-    height: 2.5,
+    bottom: 2,
+    width: 12,
+    height: 2,
     borderRadius: 2,
     backgroundColor: '#f3c21a',
   },

@@ -50,6 +50,7 @@ export class PortfolioService {
         .eq('artista_id', artistaId);
 
       if (!error && data && Array.isArray(data)) {
+        if (data.length > 0) padroes.forEach(obra => mapaObras.delete(obra.id));
         data.forEach((f: any) => {
           mapaObras.set(f.id, {
             id: f.id,

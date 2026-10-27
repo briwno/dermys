@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState, type ReactNode }
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '@/services/supabase';
+import { selecionarPersonaTeste, obterRevisaoPersona } from '@/services/persona-teste';
 import { normalizarPerfil, type PerfilUsuario } from '@/types/auth';
 import { MODELOS_DISPOSITIVOS, PERSONAS_TESTE, type ModeloDispositivo, type PersonaTeste } from './types';
 
@@ -111,7 +112,11 @@ export function DebugProvider({
   // Troca instantânea de perfil para qualquer artista/estúdio ou cliente populado
   const trocarPersona = async (persona: PersonaTeste) => {
     setCarregandoPersona(true);
+    // Atualiza a seleção antes da consulta para invalidar carregamentos de Auth em voo.
+    const persistencia = selecionarPersonaTeste(persona.id).catch(() => {});
+    const revisao = obterRevisaoPersona();
     try {
+      await persistencia;
       // 1. Busca perfil completo no Supabase
       const { data: dbProfile, error } = await supabase
         .from('profiles')
@@ -137,6 +142,7 @@ export function DebugProvider({
         });
       }
 
+      if (revisao !== obterRevisaoPersona()) return;
       if (onSetPerfil) {
         onSetPerfil(perfilFinal);
       }
@@ -153,11 +159,12 @@ export function DebugProvider({
     } catch {
       // silencioso
     } finally {
-      setCarregandoPersona(false);
+      if (revisao === obterRevisaoPersona()) setCarregandoPersona(false);
     }
   };
 
   const deslogarParaAuth = () => {
+    void selecionarPersonaTeste(null).catch(() => {});
     if (onSetPerfil) {
       onSetPerfil(null);
     }

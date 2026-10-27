@@ -93,7 +93,7 @@ export function ClienteInicioTab({ onNavegarAba, perfil }: PropsClienteInicioTab
   const [curtidos, setCurtidos] = useState<Record<string, boolean>>({});
   const [carregando, setCarregando] = useState(true);
   const [alturaFeed, setAlturaFeed] = useState(0);
-  const [modoFeed, setModoFeed] = useState<'mosaico' | 'deslizar'>('deslizar');
+  const [modoFeed, setModoFeed] = useState<'mosaico' | 'deslizar'>('mosaico');
 
   const onLayoutFeed = useCallback((e: LayoutChangeEvent) => {
     const h = Math.floor(e.nativeEvent.layout.height);
@@ -390,7 +390,7 @@ export function ClienteInicioTab({ onNavegarAba, perfil }: PropsClienteInicioTab
           style={styles.locationChip}
           onPress={() => setModalLocalidadeAberto(true)}
         >
-          <MapPin size={13} color={tc('#f3c21a')} />
+          <MapPin size={14} color={tc('#f3c21a')} />
           <Text style={styles.locationChipText} numberOfLines={1}>
             {localidade.cidade}, {localidade.estado}
             {localidade.raioKm ? ` • ${localidade.raioKm} km` : ' • Brasil'}
@@ -398,9 +398,19 @@ export function ClienteInicioTab({ onNavegarAba, perfil }: PropsClienteInicioTab
           <ChevronDown size={12} color={tc('#888892')} />
         </Pressable>
 
-        <Text style={styles.feedCountPill}>
-          {artistasFiltrados.length} artistas · {postsObras.length} obras
-        </Text>
+        <View style={styles.modeSelector} accessibilityRole="tablist">
+          {(['mosaico', 'deslizar'] as const).map(modo => {
+            const ativo = modoFeed === modo;
+            const Icone = modo === 'mosaico' ? LayoutGrid : GalleryVerticalEnd;
+            return <Pressable key={modo} accessibilityRole="tab"
+              accessibilityState={{ selected: ativo }}
+              accessibilityLabel={modo === 'mosaico' ? 'Ver feed em mosaico' : 'Ver feed deslizando'}
+              onPress={() => setModoFeed(modo)}
+              style={[styles.modeButton, ativo && styles.modeButtonActive]}>
+              <Icone size={17} color={tc(ativo ? '#f3c21a' : '#71717a')} />
+            </Pressable>;
+          })}
+        </View>
       </View>
 
       {/* Barra de Busca Minimalista */}
@@ -409,7 +419,7 @@ export function ClienteInicioTab({ onNavegarAba, perfil }: PropsClienteInicioTab
         <TextInput
           value={consulta}
           onChangeText={setConsulta}
-          placeholder="Buscar artista, estúdio ou estilo..."
+          placeholder="Qual é a sua próxima tattoo?"
           placeholderTextColor={tc('#71717a')}
           style={styles.searchInput}
         />
@@ -438,26 +448,12 @@ export function ClienteInicioTab({ onNavegarAba, perfil }: PropsClienteInicioTab
         })}
       </ScrollView>
 
-      <View style={styles.modeSelector} accessibilityRole="tablist">
-        {(['mosaico', 'deslizar'] as const).map((modo) => {
-          const ativo = modoFeed === modo;
-          const Icone = modo === 'mosaico' ? LayoutGrid : GalleryVerticalEnd;
-          return (
-            <Pressable
-              key={modo}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: ativo }}
-              accessibilityLabel={modo === 'mosaico' ? 'Ver feed em mosaico' : 'Ver feed deslizando'}
-              onPress={() => setModoFeed(modo)}
-              style={[styles.modeButton, ativo && styles.modeButtonActive]}
-            >
-              <Icone size={16} color={tc(ativo ? '#000000' : '#a1a1aa')} />
-              <Text style={[styles.modeText, ativo && styles.modeTextActive]}>
-                {modo === 'mosaico' ? 'Mosaico' : 'Deslizar'}
-              </Text>
-            </Pressable>
-          );
-        })}
+      <View style={styles.feedHeaderRow}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
+          <Sparkles size={14} color={tc('#f3c21a')} />
+          <Text style={styles.feedTitle}>{tagSelecionada === 'Todos' ? 'Encontre seu traço' : tagSelecionada}</Text>
+        </View>
+        <Text style={styles.feedCountText}>{carregando ? 'Explorando…' : `${postsObras.length} obras`}</Text>
       </View>
 
       {/* Os dois modos compartilham filtros, curtidas e abertura da obra. */}
@@ -604,18 +600,18 @@ const styles = createThemedStyles({
   feedEnd: { color: '#8e8e93', fontSize: 12, textAlign: 'center', padding: 20 },
   modeSelector: {
     flexDirection: 'row', backgroundColor: '#0f0f12', borderRadius: 12,
-    padding: 4, gap: 4,
+    padding: 2, gap: 2,
   },
   modeButton: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 7, minHeight: 44, borderRadius: 9,
+    alignItems: 'center', justifyContent: 'center',
+    width: 44, height: 44, borderRadius: 10,
   },
-  modeButtonActive: { backgroundColor: '#f3c21a' },
+  modeButtonActive: { backgroundColor: '#242426' },
   modeText: { color: '#a1a1aa', fontSize: 12, fontWeight: '800' },
   modeTextActive: { color: '#000000' },
   container: {
     flex: 1,
-    gap: 10,
+    gap: 8,
   },
   topLocationRow: {
     flexDirection: 'row',
@@ -628,17 +624,16 @@ const styles = createThemedStyles({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#121216',
-    borderWidth: 1,
-    borderColor: '#222228',
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    flexShrink: 1,
+    minWidth: 0,
+    paddingRight: 8,
+    minHeight: 44,
   },
   locationChipText: {
-    color: '#ffffff',
+    color: '#c4c4cc',
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '500',
+    flexShrink: 1,
     letterSpacing: -0.2,
   },
   feedCountPill: {
@@ -658,13 +653,13 @@ const styles = createThemedStyles({
   searchInput: {
     backgroundColor: '#0f0f12',
     borderWidth: 1,
-    borderColor: '#222228',
-    borderRadius: 12,
+    borderColor: '#35352c',
+    borderRadius: 10,
     color: '#ffffff',
-    fontSize: 13,
+    fontSize: 14,
     paddingLeft: 38,
     paddingRight: 14,
-    height: 42,
+    height: 48,
   },
   tagsRow: {
     gap: 6,
@@ -672,27 +667,28 @@ const styles = createThemedStyles({
   },
   tag: {
     paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 18,
+    minHeight: 40,
+    justifyContent: 'center',
+    borderRadius: 8,
     borderWidth: 1,
+    borderColor: '#303034',
   },
   tagActive: {
     backgroundColor: '#f3c21a',
     borderColor: '#f3c21a',
   },
   tagIdle: {
-    backgroundColor: '#0f0f12',
-    borderColor: '#1e1e24',
+    backgroundColor: '#141417',
   },
   tagText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
   },
   tagTextActive: {
     color: '#000000',
   },
   tagTextIdle: {
-    color: '#8e8e93',
+    color: '#b4b4bc',
   },
   feedSection: {
     flex: 1,
@@ -707,7 +703,7 @@ const styles = createThemedStyles({
   },
   feedTitle: {
     color: '#e4e4e7',
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '800',
     letterSpacing: -0.2,
   },

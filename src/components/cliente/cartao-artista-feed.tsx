@@ -376,12 +376,14 @@ export function CartaoArtistaFeed({
         </Text>
 
         <View style={styles.ctaRow}>
-          <View>
-            <Text style={sobreFoto.priceLabel}>A partir de</Text>
-            <Text style={styles.priceValue}>R$ {obraAtual.preco || item.precoInicial}</Text>
-          </View>
+          {obraAtual.disponivel === true && obraAtual.preco != null ? (
+            <View>
+              <Text style={sobreFoto.priceLabel}>Flash disponível</Text>
+              <Text style={styles.priceValue}>R$ {obraAtual.preco}</Text>
+            </View>
+          ) : <Text style={sobreFoto.studioText}>Conheça o trabalho do artista</Text>}
           <Pressable style={styles.ctaBtn} onPress={() => onAbrirPerfil(item, obraAtual)}>
-            <Text style={styles.ctaText}>Ver perfil & agendar</Text>
+            <Text style={styles.ctaText}>Ver perfil</Text>
           </Pressable>
         </View>
 

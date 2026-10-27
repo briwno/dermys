@@ -1,6 +1,7 @@
 import { Logo } from '@/components/logo';
 import { AUTH_REDIRECT_URL, iniciarLoginGoogle } from '@/services/auth-oauth';
 import { supabase } from '@/services/supabase';
+import { createThemedStyles, tc } from '@/theme';
 import {
   normalizarPerfil,
   verificarStatusPerfil,
@@ -30,14 +31,12 @@ import {
   Image,
   SafeAreaView,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import { createThemedStyles, tc } from '@/theme';
 
 if (typeof window !== 'undefined') {
   WebBrowser.maybeCompleteAuthSession();
@@ -903,7 +902,7 @@ export function TelaAutenticacao({
             })
           : null}
 
-        {renderInput('senha', etapa === 'cadastro' ? 'Criar Senha' : 'Sua Senha', 'Mínimo 6 caracteres', Lock, {
+        {renderInput('senha', etapa === 'cadastro' ? 'Criar Senha' : 'Sua Senha', 'Mmo 6 caracteres', Lock, {
           secure: true,
           autoCapitalize: 'none',
           obrigatorio: true,

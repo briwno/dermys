@@ -1,12 +1,20 @@
 # Fotos de demonstração do Dermys
 
-Oito imagens sintéticas criadas com a ferramenta integrada ImageGen, em 18/10/2026.
+32 imagens sintéticas criadas com a ferramenta integrada ImageGen, em 18/10/2026:
+quatro obras para cada um dos oito artistas de demonstração.
 São exemplos visuais, não trabalhos reais dos artistas. Os registros no feed usam
 o prefixo **Demonstração IA** e `disponivel = false`.
 
-Os arquivos originais ficam nesta pasta. O manifesto associa cada imagem somente
+As versões finais em JPEG ficam nesta pasta. O manifesto associa cada imagem somente
 a um dos oito perfis de demonstração já existentes. Nenhuma conta real é alterada.
 Destino no Storage: `portfolios/demo/generated-v1/`.
+
+As imagens finais foram redimensionadas para até 960 px de largura e codificadas
+em JPEG com qualidade 86. As 32 somam aproximadamente 5,9 MB. Os oito PNGs iniciais
+foram preservados como fontes; o aplicativo usa as versões JPEG.
+
+Os prompts completos das 24 imagens adicionais estão em `additional-prompts.json`.
+O quadro abaixo registra os prompts das oito imagens iniciais.
 
 ## Prompts
 

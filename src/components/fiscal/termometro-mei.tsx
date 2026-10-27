@@ -87,7 +87,7 @@ export function TermometroMei({ metricas, onAbrirDasn }: PropsTermometroMei) {
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <TrendingUp size={18} color={tc('#f3c21a')} />
-          <Text style={styles.title}>Termômetro Fiscal & Teto MEI</Text>
+          <Text style={styles.title}>Seu limite MEI</Text>
         </View>
 
         <Pressable style={styles.btnDasn} onPress={onAbrirDasn}>
@@ -132,13 +132,13 @@ export function TermometroMei({ metricas, onAbrirDasn }: PropsTermometroMei) {
       <View style={styles.statsRow}>
         <View style={styles.statBox}>
           <Text style={styles.statLabel}>Faturamento no Ano</Text>
-          <Text style={styles.statVal}>R$ {faturamentoAcumuladoAno.toFixed(2)}</Text>
+          <Text style={styles.statVal}>{faturamentoAcumuladoAno.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</Text>
         </View>
 
         <View style={styles.statBox}>
           <Text style={styles.statLabel}>Saldo Disponível no Teto</Text>
           <Text style={[styles.statVal, { color: tc('#10b981') }]}>
-            R$ {saldoRestanteTeto.toFixed(2)}
+            {saldoRestanteTeto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
           </Text>
         </View>
       </View>
@@ -171,6 +171,8 @@ const styles = createThemedStyles({
   },
   header: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
     justifyContent: 'space-between',
     alignItems: 'center',
   },
@@ -178,13 +180,13 @@ const styles = createThemedStyles({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    flexShrink: 1,
   },
   title: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    flexShrink: 1,
   },
   btnDasn: {
     flexDirection: 'row',
@@ -192,12 +194,13 @@ const styles = createThemedStyles({
     gap: 6,
     backgroundColor: '#f3c21a',
     paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingVertical: 12,
+    minHeight: 44,
     borderRadius: 8,
   },
   btnDasnText: {
     color: '#111',
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '900',
     textTransform: 'uppercase',
   },
@@ -266,7 +269,7 @@ const styles = createThemedStyles({
   },
   statLabel: {
     color: '#9ca3af',
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '700',
     textTransform: 'uppercase',
   },
@@ -293,7 +296,7 @@ const styles = createThemedStyles({
   },
   alertMsg: {
     color: '#d1d5db',
-    fontSize: 11,
-    lineHeight: 15,
+    fontSize: 13,
+    lineHeight: 19,
   },
 });

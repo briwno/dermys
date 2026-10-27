@@ -1,4 +1,5 @@
 import { ConfigFiscalModal } from '@/components/fiscal/config-fiscal-modal';
+import { DrePainel } from '@/components/fiscal/dre-painel';
 import { DetalhesNotaModal } from '@/components/fiscal/detalhes-nota-modal';
 import { EmissaoNfseModal } from '@/components/fiscal/emissao-nfse-modal';
 import { RelatorioDasnModal } from '@/components/fiscal/relatorio-dasn-modal';
@@ -69,7 +70,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
   });
 
   const [carregando, setCarregando] = useState(true);
-  const [secaoAtiva, setSecaoAtiva] = useState<'NOTAS_FISCAIS' | 'TRANSACOES'>('NOTAS_FISCAIS');
+  const [secaoAtiva, setSecaoAtiva] = useState<'NOTAS_FISCAIS' | 'TRANSACOES' | 'DRE'>('DRE');
   const [filtroTransacoes, setFiltroTransacoes] = useState<
     'TODOS' | 'CUSTODIA' | 'LIBERADO' | 'SINAIS'
   >('TODOS');
@@ -189,14 +190,22 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
   // Cálculos consolidados
   const saldoLiberado = transacoes
     .filter((t) => t.status === 'LIBERADO' || t.status === 'APROVADO')
-    .reduce((acc, t) => acc + Number(t.valor_liquido || 0), 0);
+    .reduce((acc, t) => acc + (t.tipo === 'ESTORNO' || t.tipo === 'TAXA_PLATAFORMA'
+      ? -Math.abs(Number(t.valor_liquido || t.valor_bruto || 0)) : Number(t.valor_liquido || 0)), 0);
 
   const saldoCustodia = transacoes
-    .filter((t) => t.status === 'CUSTODIA')
+    .filter((t) => t.status === 'CUSTODIA' && (t.tipo === 'SINAL' || t.tipo === 'PAGAMENTO_FINAL'))
     .reduce((acc, t) => acc + Number(t.valor_bruto || 0), 0);
 
-  const faturamentoBrutoMes = transacoes.reduce((acc, t) => acc + Number(t.valor_bruto || 0), 0);
-  const totalTaxasMP = transacoes.reduce((acc, t) => acc + Number(t.taxa_mercado_pago || 0), 0);
+  const agora = new Date();
+  const recebimentosMes = transacoes.filter((t) => {
+    const data = new Date(t.criado_em);
+    return (t.status === 'APROVADO' || t.status === 'LIBERADO') &&
+      (t.tipo === 'SINAL' || t.tipo === 'PAGAMENTO_FINAL') &&
+      data.getFullYear() === agora.getFullYear() && data.getMonth() === agora.getMonth();
+  });
+  const faturamentoBrutoMes = recebimentosMes.reduce((acc, t) => acc + Number(t.valor_bruto || 0), 0);
+  const totalTaxasMP = recebimentosMes.reduce((acc, t) => acc + Number(t.taxa_mercado_pago || 0), 0);
   const faturamentoLiquido = faturamentoBrutoMes - totalTaxasMP;
 
   const transacoesFiltradas = transacoes.filter((t) => {
@@ -244,7 +253,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
             <Text style={styles.cardHighlightLabel}>Saldo Disponível</Text>
             <Wallet size={15} color={tc('#f3c21a')} />
           </View>
-          <Text style={styles.cardHighlightValue}>R$ {saldoLiberado.toFixed(2)}</Text>
+          <Text style={styles.cardHighlightValue}>{saldoLiberado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</Text>
           <Text style={styles.cardSubText}>Liberado Mercado Pago</Text>
         </View>
 
@@ -253,7 +262,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
             <Text style={styles.cardCustodiaLabel}>Em Custódia</Text>
             <ShieldCheck size={15} color={tc('#3b82f6')} />
           </View>
-          <Text style={styles.cardCustodiaValue}>R$ {saldoCustodia.toFixed(2)}</Text>
+          <Text style={styles.cardCustodiaValue}>{saldoCustodia.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</Text>
           <Text style={styles.cardSubText}>Sinais de reservas futuras</Text>
         </View>
       </View>
@@ -265,7 +274,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
           onPress={() => setModalEmissaoAberto(true)}
         >
           <Plus size={15} color={tc('#111')} />
-          <Text style={styles.fiscalActionBtnPrimaryText}>Emitir Nota / Recibo</Text>
+          <Text style={styles.fiscalActionBtnPrimaryText}>Emitir nota ou recibo</Text>
         </Pressable>
 
         <Pressable
@@ -273,7 +282,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
           onPress={() => setModalPdfAberto(true)}
         >
           <FileText size={15} color={tc('#f3c21a')} />
-          <Text style={styles.fiscalActionBtnText}>Relatório em PDF</Text>
+          <Text style={styles.fiscalActionBtnText}>Relatórios PDF</Text>
         </Pressable>
 
         <Pressable
@@ -281,18 +290,18 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
           onPress={() => setModalConfigAberto(true)}
         >
           <Settings size={15} color={tc('#aaa')} />
-          <Text style={styles.fiscalActionBtnText}>Dados Fiscais</Text>
+          <Text style={styles.fiscalActionBtnText}>Dados fiscais</Text>
         </Pressable>
       </View>
 
-      {/* Termômetro Fiscal do Teto MEI */}
-      <TermometroMei
-        metricas={metricasFiscais}
-        onAbrirDasn={() => setModalDasnAberto(true)}
-      />
-
-      {/* Toggle de Seções: Notas Fiscais vs Extrato MP */}
+      {/* Navegação entre resultado, documentos e movimentações. */}
       <View style={styles.sectionToggleWrap}>
+        <Pressable
+          style={[styles.sectionToggleBtn, secaoAtiva === 'DRE' && styles.sectionToggleBtnActive]}
+          onPress={() => setSecaoAtiva('DRE')}
+        >
+          <Text style={[styles.sectionToggleBtnText, secaoAtiva === 'DRE' && styles.sectionToggleBtnTextActive]}>DRE</Text>
+        </Pressable>
         <Pressable
           style={[
             styles.sectionToggleBtn,
@@ -310,7 +319,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
               secaoAtiva === 'NOTAS_FISCAIS' && styles.sectionToggleBtnTextActive,
             ]}
           >
-            Notas Fiscais ({notasFiscais.length})
+            Notas ({notasFiscais.length})
           </Text>
         </Pressable>
 
@@ -331,10 +340,13 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
               secaoAtiva === 'TRANSACOES' && styles.sectionToggleBtnTextActive,
             ]}
           >
-            Extrato de Cobranças ({transacoes.length})
+            Extrato
           </Text>
         </Pressable>
       </View>
+
+      {secaoAtiva === 'DRE' && <DrePainel key={artistaId} artistaId={artistaId} />}
+      {secaoAtiva === 'NOTAS_FISCAIS' && <TermometroMei metricas={metricasFiscais} onAbrirDasn={() => setModalDasnAberto(true)} />}
 
       {/* Conteúdo da Seção 1: Histórico de Notas Fiscais (NFS-e & Recibos) */}
       {secaoAtiva === 'NOTAS_FISCAIS' && (
@@ -591,7 +603,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
       )}
 
       {/* Configurações de Pagamento e Chave PIX */}
-      <View style={styles.sectionCard}>
+      {secaoAtiva === 'TRANSACOES' && <View style={styles.sectionCard}>
         <View style={styles.sectionHeader}>
           <QrCode size={16} color={tc('#f3c21a')} />
           <Text style={styles.sectionTitle}>Chave PIX & Sinal de Reserva</Text>
@@ -637,6 +649,8 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
           )}
         </Pressable>
       </View>
+
+      }
 
       {/* Modais Fiscais & Financeiros */}
       {perfilFiscal && (
@@ -710,6 +724,7 @@ const styles = createThemedStyles({
   },
   cardHalf: {
     flex: 1,
+    minWidth: 0,
   },
   cardHighlight: {
     backgroundColor: '#111',
@@ -730,14 +745,14 @@ const styles = createThemedStyles({
   },
   cardHighlightLabel: {
     color: '#f3c21a',
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 0.8,
   },
   cardCustodiaLabel: {
     color: '#60a5fa',
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 0.8,
@@ -757,15 +772,18 @@ const styles = createThemedStyles({
     marginTop: 2,
   },
   cardSubText: {
-    color: '#6b7280',
-    fontSize: 10,
+    color: '#a1a1aa',
+    fontSize: 12,
+    lineHeight: 17,
   },
   fiscalActionsRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
   },
   fiscalActionBtn: {
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: '45%',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -773,22 +791,24 @@ const styles = createThemedStyles({
     backgroundColor: '#141414',
     borderWidth: 1,
     borderColor: '#242424',
-    paddingVertical: 10,
-    paddingHorizontal: 8,
+    minHeight: 48,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
     borderRadius: 10,
   },
   fiscalActionBtnPrimary: {
+    flexBasis: '100%',
     backgroundColor: '#f3c21a',
     borderColor: '#f3c21a',
   },
   fiscalActionBtnPrimaryText: {
     color: '#000000',
-    fontSize: 11,
+    fontSize: 14,
     fontWeight: '800',
   },
   fiscalActionBtnText: {
     color: '#ffffff',
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '700',
   },
   sectionToggleWrap: {
@@ -802,6 +822,8 @@ const styles = createThemedStyles({
   },
   sectionToggleBtn: {
     flex: 1,
+    minWidth: 0,
+    minHeight: 46,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -813,8 +835,8 @@ const styles = createThemedStyles({
     backgroundColor: '#f3c21a',
   },
   sectionToggleBtnText: {
-    color: '#888',
-    fontSize: 11,
+    color: '#b4b4bc',
+    fontSize: 13,
     fontWeight: '700',
   },
   sectionToggleBtnTextActive: {
@@ -838,7 +860,7 @@ const styles = createThemedStyles({
     color: '#fff',
     fontSize: 13,
     fontWeight: '800',
-    textTransform: 'uppercase',
+    flexShrink: 1,
     letterSpacing: 0.5,
   },
   filterRow: {
