@@ -115,6 +115,12 @@ Direção visual: problema à esquerda em cinza claro; solução à direita em b
 
 ## Lista de capturas
 
+### Fluxo com código correspondente
+
+Use o [guia de fluxo, arquivos e código](fluxo-codigo-apresentacao.md) para intercalar cada ação do aplicativo com sua implementação. O guia traz sete etapas, caminhos, linhas e trechos extraídos dos arquivos locais. As inserções de código ocupam parte dos mesmos blocos de tempo: o vídeo continua planejado para cinco minutos e três slides.
+
+Mostre a tela do produto antes do trecho de código. O arquivo de preparação do cenário fica identificado separadamente dos serviços e telas usados no fluxo do aplicativo.
+
 ### Fora do aplicativo
 
 - Confluence: Introdução, sem editar a página.
