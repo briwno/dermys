@@ -1,9 +1,14 @@
+import { ds } from '@/theme/design-system';
+import { createThemedStyles, tc } from '@/theme';
 import { AppModal } from '@/components/ui/app-modal';
 import {
   DadosDanfseCompleto,
   imprimirOuBaixarPdfDanfse,
+  gerarHtmlDanfseCompleto,
   montarDadosDanfse,
 } from '@/services/fiscal/danfse-generator';
+import { compartilharPdf, copiarTexto } from '@/services/documentos-mobile';
+import { demoAtiva } from '@/services/apresentacao-store';
 import {
   Check,
   Copy,
@@ -43,6 +48,7 @@ export function DanfseDocumentoModal({
 }: DanfseDocumentoModalProps) {
   const [copiado, setCopiado] = useState(false);
   const [baixando, setBaixando] = useState(false);
+  const [erro, setErro] = useState('');
 
   const danfse: DadosDanfseCompleto | null = useMemo(() => {
     if (!dadosNotaOuRecibo) return null;
@@ -51,15 +57,17 @@ export function DanfseDocumentoModal({
 
   if (!visivel || !danfse) return null;
 
-  const copiarChaveAcesso = () => {
-    setCopiado(true);
-    setTimeout(() => setCopiado(false), 2500);
+  const copiarChaveAcesso = async () => {
+    try { await copiarTexto(danfse.chaveAcesso); setCopiado(true); setTimeout(() => setCopiado(false), 2500); }
+    catch { setErro('Não foi possível copiar a chave. Tente novamente.'); }
   };
 
-  const handleBaixarOuImprimirPdf = () => {
+  const handleBaixarOuImprimirPdf = async () => {
     setBaixando(true);
     try {
-      imprimirOuBaixarPdfDanfse(danfse);
+      if (Platform.OS === 'web') imprimirOuBaixarPdfDanfse(danfse);
+      else await compartilharPdf(gerarHtmlDanfseCompleto(danfse));
+    } catch { setErro('Não foi possível exportar o documento. Tente novamente.');
     } finally {
       setTimeout(() => setBaixando(false), 1200);
     }
@@ -80,28 +88,30 @@ export function DanfseDocumentoModal({
 
   return (
     <AppModal visible={visivel} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={styles.overlay}>
-        <View style={styles.container}>
+      <View style={chromeStyles.overlay}>
+        <View style={chromeStyles.container}>
           {/* Header Superior com Ações Rápidas */}
-          <View style={styles.topBar}>
-            <View style={styles.topBarLeft}>
-              <View style={styles.badgeOficial}>
-                <ShieldCheck size={14} color="#10b981" />
-                <Text style={styles.badgeOficialText}>PADRÃO NACIONAL NFS-E</Text>
+          <View style={chromeStyles.topBar}>
+            <View style={chromeStyles.topBarLeft}>
+              <View style={chromeStyles.badgeOficial}>
+                <ShieldCheck size={14} color={tc('#10b981')} />
+                <Text style={chromeStyles.badgeOficialText}>{demoAtiva() || dadosNotaOuRecibo?.provedor === 'simulado' ? 'DEMONSTRAÇÃO · SEM VALIDADE FISCAL' : 'PADRÃO NACIONAL NFS-E'}</Text>
               </View>
-              <Text style={styles.topBarTitle}>NFS-e Nº {danfse.numeroNfse}</Text>
+              <Text style={chromeStyles.topBarTitle}>NFS-e Nº {danfse.numeroNfse}</Text>
             </View>
 
-            <Pressable style={styles.closeBtn} onPress={onClose}>
-              <X size={18} color="#aaa" />
+            <Pressable style={chromeStyles.closeBtn} onPress={onClose}>
+              <X size={18} color={tc(ds.cores.textoSecundario)} />
             </Pressable>
           </View>
 
           {/* Área com Scroll contendo o Documento DANFSe Estilo Folha Oficial */}
           <ScrollView
-            contentContainerStyle={styles.scrollDocument}
+            contentContainerStyle={chromeStyles.scrollDocument}
             showsVerticalScrollIndicator={false}
           >
+            {erro ? <Text accessibilityRole="alert" style={{ color: '#f87171', padding: 12 }}>{erro}</Text> : null}
+            {demoAtiva() && <Text style={{ color: tc('#f3c21a'), fontSize: 12, padding: 12 }}>Documento de exemplo para apresentação acadêmica.</Text>}
             <View style={styles.danfsePaper}>
               {/* 1. Header do Documento */}
               <View style={styles.docHeader}>
@@ -403,29 +413,29 @@ export function DanfseDocumentoModal({
           </ScrollView>
 
           {/* Barra de Ações Inferior: Baixar PDF, Copiar Chave, WhatsApp */}
-          <View style={styles.actionFooter}>
+          <View style={chromeStyles.actionFooter}>
             <Pressable
-              style={styles.btnBaixarPdf}
+              style={chromeStyles.btnBaixarPdf}
               onPress={handleBaixarOuImprimirPdf}
               disabled={baixando}
             >
-              <Printer size={16} color="#000" />
-              <Text style={styles.btnBaixarPdfText}>
+              <Printer size={16} color={tc('#111')} />
+              <Text style={chromeStyles.btnBaixarPdfText}>
                 {baixando ? 'Gerando Documento...' : 'Baixar / Imprimir PDF da NFS-e'}
               </Text>
             </Pressable>
 
-            <View style={styles.actionBtnRow}>
-              <Pressable style={styles.btnSecondary} onPress={copiarChaveAcesso}>
-                {copiado ? <Check size={14} color="#10b981" /> : <Copy size={14} color="#fff" />}
-                <Text style={[styles.btnSecondaryText, copiado && { color: '#10b981' }]}>
+            <View style={chromeStyles.actionBtnRow}>
+              <Pressable style={chromeStyles.btnSecondary} onPress={copiarChaveAcesso}>
+                {copiado ? <Check size={14} color={tc('#10b981')} /> : <Copy size={14} color={tc(ds.cores.texto)} />}
+                <Text style={[chromeStyles.btnSecondaryText, copiado && { color: tc('#10b981') }]}>
                   {copiado ? 'Chave Copiada!' : 'Copiar Chave'}
                 </Text>
               </Pressable>
 
-              <Pressable style={styles.btnZap} onPress={abrirWhatsApp}>
-                <Send size={14} color="#111" />
-                <Text style={styles.btnZapText}>WhatsApp</Text>
+              <Pressable style={chromeStyles.btnZap} onPress={abrirWhatsApp}>
+                <Send size={14} color={tc('#111')} />
+                <Text style={chromeStyles.btnZapText}>WhatsApp</Text>
               </Pressable>
             </View>
           </View>
@@ -436,70 +446,7 @@ export function DanfseDocumentoModal({
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.9)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 12,
-  },
-  container: {
-    width: '100%',
-    maxWidth: 580,
-    maxHeight: '94%',
-    backgroundColor: '#0c0c0e',
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: '#24242c',
-    overflow: 'hidden',
-  },
-  topBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1c1c24',
-    backgroundColor: '#121216',
-  },
-  topBarLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  badgeOficial: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#062816',
-    borderWidth: 1,
-    borderColor: '#10b981',
-    borderRadius: 6,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  badgeOficialText: {
-    color: '#10b981',
-    fontSize: 9,
-    fontWeight: '900',
-    letterSpacing: 0.5,
-  },
-  topBarTitle: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: '800',
-  },
-  closeBtn: {
-    padding: 6,
-    borderRadius: 8,
-    backgroundColor: '#1c1c24',
-  },
-  scrollDocument: {
-    padding: 10,
-    paddingBottom: 16,
-  },
+
   danfsePaper: {
     backgroundColor: '#ffffff',
     borderRadius: 6,
@@ -647,65 +594,156 @@ const styles = StyleSheet.create({
     fontSize: 7,
     color: '#222',
     lineHeight: 10,
+  }
+});
+
+
+const chromeStyles = createThemedStyles({
+
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 12,
+  },
+  container: {
+    width: '100%',
+    maxWidth: 580,
+    maxHeight: '94%',
+    backgroundColor: ds.cores.superficie,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: ds.cores.borda,
+    overflow: 'hidden',
+  },
+  topBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: ds.cores.borda,
+    backgroundColor: ds.cores.superficie,
+  },
+  topBarLeft: {
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: 8,
+    flex: 1,
+    minWidth: 0,
+  },
+  badgeOficial: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#062816',
+    borderWidth: 1,
+    borderColor: '#10b981',
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  badgeOficialText: {
+    color: '#10b981',
+    fontSize: ds.fonte.etiqueta,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    lineHeight: 16,
+  },
+  topBarTitle: {
+    color: ds.cores.texto,
+    fontSize: ds.fonte.subtitulo,
+    fontWeight: '800',
+    lineHeight: 23,
+    flexShrink: 1,
+  },
+  closeBtn: {
+    padding: 6,
+    borderRadius: ds.raio.controle,
+    backgroundColor: '#1c1c24',
+    minHeight: ds.alvo.compacto,
+    justifyContent: 'center',
+    width: ds.alvo.compacto,
+    alignItems: 'center',
+  },
+  scrollDocument: {
+    padding: 10,
+    paddingBottom: 16,
   },
   actionFooter: {
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#121216',
+    backgroundColor: ds.cores.superficie,
     borderTopWidth: 1,
-    borderTopColor: '#1c1c24',
+    borderTopColor: ds.cores.borda,
     gap: 8,
   },
   btnBaixarPdf: {
-    backgroundColor: '#f3c21a',
-    borderRadius: 10,
+    backgroundColor: ds.cores.destaque,
+    borderRadius: ds.raio.controle,
     paddingVertical: 12,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
+    minHeight: ds.alvo.controle,
   },
   btnBaixarPdfText: {
     color: '#000',
-    fontSize: 13,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontSize: ds.fonte.controle,
+    fontWeight: '700',
+    textTransform: 'none',
     letterSpacing: 0.3,
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   actionBtnRow: {
     flexDirection: 'row',
     gap: 8,
+    flexWrap: 'wrap',
   },
   btnSecondary: {
     flex: 1,
-    backgroundColor: '#1e1e26',
-    borderRadius: 8,
+    backgroundColor: ds.cores.interacao,
+    borderRadius: ds.raio.controle,
     paddingVertical: 9,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 6,
     borderWidth: 1,
-    borderColor: '#323240',
+    borderColor: ds.cores.borda,
+    minHeight: ds.alvo.controle,
   },
   btnSecondaryText: {
-    color: '#fff',
-    fontSize: 11,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   btnZap: {
     flex: 1,
     backgroundColor: '#10b981',
-    borderRadius: 8,
+    borderRadius: ds.raio.controle,
     paddingVertical: 9,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 6,
+    minHeight: ds.alvo.controle,
   },
   btnZapText: {
     color: '#111',
-    fontSize: 11,
-    fontWeight: '900',
-  },
+    fontSize: ds.fonte.controle,
+    fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
+  }
 });

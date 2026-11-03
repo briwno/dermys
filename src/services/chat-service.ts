@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PERSONAS_TESTE } from '@/components/debug/types';
-import { supabase } from './supabase';
+import { supabase } from './data-client';
+import { assinarEventosDemo, demoAtiva, snapshotDemo } from './apresentacao-store';
 import type {
   CardAnamnesePayload,
   CardBriefingPayload,
@@ -216,7 +217,7 @@ export class ChatService {
       }
 
       // 2. Mensagens locais relevantes
-      const mensagensLocaisRelevantes = this.memoriaMensagens.filter(
+      const mensagensLocaisRelevantes = (demoAtiva() ? [] : this.memoriaMensagens).filter(
         (m) => m.remetente_id === usuarioId || m.destinatario_id === usuarioId
       );
 
@@ -357,6 +358,10 @@ export class ChatService {
    */
   static async carregarMensagens(usuarioId: string, contatoId: string): Promise<MensagemChat[]> {
     if (!usuarioId || !contatoId) return [];
+    if (demoAtiva()) return (snapshotDemo().tabelas.mensagens || []).filter(m =>
+      (m.remetente_id === usuarioId && m.destinatario_id === contatoId) ||
+      (m.remetente_id === contatoId && m.destinatario_id === usuarioId)
+    ).map(m => this.parsearMensagem(m));
     await this.garantirCacheLocal();
 
     let msgsSupabase: MensagemChat[] = [];
@@ -399,6 +404,11 @@ export class ChatService {
   ): Promise<MensagemChat | null> {
     const textoLimpo = conteudo.trim();
     if (!textoLimpo || !remetenteId || !destinatarioId) return null;
+    if (demoAtiva()) {
+      const { data, error } = await supabase.from('mensagens').insert({ remetente_id: remetenteId, destinatario_id: destinatarioId, conteudo: textoLimpo, lida: false }).select().single();
+      if (error || !data) throw new Error('Não foi possível salvar a mensagem da apresentação.');
+      return this.parsearMensagem(data);
+    }
     await this.garantirCacheLocal();
 
     const idGerado = `msg_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
@@ -529,12 +539,12 @@ export class ChatService {
     if (!usuarioId || !contatoId) return;
 
     // Atualiza cache local
-    for (const m of this.memoriaMensagens) {
+    for (const m of demoAtiva() ? [] : this.memoriaMensagens) {
       if (m.remetente_id === contatoId && m.destinatario_id === usuarioId) {
         m.lida = true;
       }
     }
-    this.persistirCacheLocal();
+    if (!demoAtiva()) this.persistirCacheLocal();
 
     try {
       await supabase
@@ -556,6 +566,9 @@ export class ChatService {
     contatoId: string,
     onNovaMensagem: (msg: MensagemChat) => void
   ) {
+    if (demoAtiva()) return assinarEventosDemo((tabela, raw) => {
+      if (tabela === 'mensagens' && ((raw.remetente_id === usuarioId && raw.destinatario_id === contatoId) || (raw.remetente_id === contatoId && raw.destinatario_id === usuarioId))) onNovaMensagem(this.parsearMensagem(raw));
+    });
     const listenerItem = { usuarioId, contatoId, callback: onNovaMensagem };
     this.listeners.add(listenerItem);
 

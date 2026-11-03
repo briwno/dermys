@@ -1,6 +1,7 @@
 import { obterAdaptadorFiscal } from './adapters';
 import { calcularSplitFiscal } from '@/services/split/split-service';
-import { supabase } from '@/services/supabase';
+import { supabase } from '@/services/data-client';
+import { demoAtiva } from '@/services/apresentacao-store';
 import type {
   FaixaAlertaTetoMei,
   ItemRelatorioMensalDASN,
@@ -39,7 +40,7 @@ export const FiscalService = {
           cnae_padrao: data.cnae_padrao || '9609-2/06',
           codigo_tributacao_municipio: data.codigo_tributacao_municipio || '06.01',
           aliquota_iss: Number(data.aliquota_iss || 0),
-          provedor_emissao: data.provedor_emissao || 'simulado',
+          provedor_emissao: demoAtiva() ? 'simulado' : data.provedor_emissao || 'simulado',
           provedor_api_key: data.provedor_api_key || '',
           provedor_ambiente: data.provedor_ambiente || 'homologacao',
           certificado_a1_url: data.certificado_a1_url || '',

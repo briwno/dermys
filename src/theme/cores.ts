@@ -114,6 +114,22 @@ function ehAmareloDestaque(hsl: Hsl): boolean {
 
 const cache = new Map<string, string>();
 
+// Tons de texto e ações semânticas com contraste também sobre superfícies claras.
+const CORES_SEMANTICAS_CLARAS: Record<string, string> = {
+  '#10b981': '#047857',
+  '#22c55e': '#15803d',
+  '#34d399': '#047857',
+  '#ef4444': '#b91c1c',
+  '#f87171': '#b91c1c',
+  '#f97316': '#c2410c',
+  '#f59e0b': '#92400e',
+  '#3b82f6': '#1d4ed8',
+  '#60a5fa': '#1d4ed8',
+  '#93c5fd': '#1e40af',
+  '#009ee3': '#006493',
+  '#a855f7': '#7e22ce',
+};
+
 /** Converte uma cor da paleta escura para seu equivalente no modo claro. */
 export function converterParaClaro(cor: string): string {
   const emCache = cache.get(cor);
@@ -125,6 +141,8 @@ export function converterParaClaro(cor: string): string {
 }
 
 function calcularCorClara(cor: string): string {
+  const semantica = CORES_SEMANTICAS_CLARAS[cor.trim().toLowerCase()];
+  if (semantica) return semantica;
   const rgba = interpretarCor(cor);
   if (!rgba) return cor; // 'transparent', nomes desconhecidos etc.
 

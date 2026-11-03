@@ -1,3 +1,4 @@
+import { avisar } from '@/services/feedback';
 import { Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 
@@ -42,7 +43,7 @@ export async function selecionarImagemGaleria(): Promise<string | null> {
   try {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) {
-      alert('Precisamos de permissão para acessar a galeria de fotos.');
+      avisar('Precisamos de permissão para acessar a galeria de fotos.');
       return null;
     }
 

@@ -1,3 +1,4 @@
+import { ds } from '@/theme/design-system';
 import { FiscalService } from '@/services/fiscal/fiscal-service';
 import type { RelatorioDASN } from '@/types/fiscal';
 import {
@@ -72,7 +73,7 @@ export function RelatorioDasnModal({
           <View style={styles.header}>
             <View style={styles.headerLeft}>
               <View style={styles.iconWrap}>
-                <FileSpreadsheet size={20} color={tc('#f3c21a')} />
+                <FileSpreadsheet size={20} color={tc(ds.cores.destaque)} />
               </View>
               <View>
                 <Text style={styles.title}>Relatório DASN-SIMEI</Text>
@@ -80,14 +81,14 @@ export function RelatorioDasnModal({
               </View>
             </View>
             <Pressable style={styles.closeBtn} onPress={onClose}>
-              <X size={18} color={tc('#9ca3af')} />
+              <X size={18} color={tc(ds.cores.textoSuave)} />
             </Pressable>
           </View>
 
           {/* Seletor de Ano */}
           <View style={styles.yearSelector}>
             <Pressable style={styles.yearNavBtn} onPress={() => setAno((a) => a - 1)}>
-              <ChevronLeft size={18} color={tc('#f3c21a')} />
+              <ChevronLeft size={18} color={tc(ds.cores.destaque)} />
             </Pressable>
             <Text style={styles.yearTitle}>Ano-Calendário {ano}</Text>
             <Pressable
@@ -97,7 +98,7 @@ export function RelatorioDasnModal({
             >
               <ChevronRight
                 size={18}
-                color={ano >= new Date().getFullYear() ? tc('#444') : tc('#f3c21a')}
+                color={ano >= new Date().getFullYear() ? tc('#444') : tc(ds.cores.destaque)}
               />
             </Pressable>
           </View>
@@ -105,7 +106,7 @@ export function RelatorioDasnModal({
           {/* Conteúdo */}
           {carregando ? (
             <View style={styles.loadingWrap}>
-              <ActivityIndicator color={tc('#f3c21a')} size="large" />
+              <ActivityIndicator color={tc(ds.cores.destaque)} size="large" />
               <Text style={styles.loadingText}>Consolidando dados fiscais de {ano}...</Text>
             </View>
           ) : !relatorio ? (
@@ -191,7 +192,7 @@ export function RelatorioDasnModal({
 
               {/* Dica da Declaração */}
               <View style={styles.tipBox}>
-                <HelpCircle size={14} color={tc('#f3c21a')} />
+                <HelpCircle size={14} color={tc(ds.cores.destaque)} />
                 <Text style={styles.tipText}>
                   Na declaração anual da Receita Federal (Portal do Empreendedor / Simples Nacional),
                   insira o campo "Receita Bruta de Prestação de Serviços" com o valor total acima.
@@ -203,7 +204,7 @@ export function RelatorioDasnModal({
           {/* Rodapé */}
           <View style={styles.footer}>
             <Pressable style={styles.copyBtn} onPress={copiarRelatorioTexto}>
-              {copiado ? <Check size={16} color={tc('#10b981')} /> : <Copy size={16} color={tc('#fff')} />}
+              {copiado ? <Check size={16} color={tc('#10b981')} /> : <Copy size={16} color={tc(ds.cores.texto)} />}
               <Text style={[styles.copyBtnText, copiado && { color: tc('#10b981') }]}>
                 {copiado ? 'Dados Copiados!' : 'Copiar Resumo da Declaração'}
               </Text>
@@ -227,11 +228,11 @@ const styles = createThemedStyles({
   },
   container: {
     maxHeight: '92%',
-    backgroundColor: '#0a0a0a',
+    backgroundColor: ds.cores.fundo,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     borderWidth: 1,
-    borderColor: '#222',
+    borderColor: ds.cores.borda,
     paddingTop: 18,
     paddingBottom: 24,
   },
@@ -242,12 +243,14 @@ const styles = createThemedStyles({
     paddingHorizontal: 20,
     paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#1a1a1a',
+    borderBottomColor: ds.cores.borda,
   },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    flexShrink: 1,
+    minWidth: 0,
   },
   iconWrap: {
     width: 38,
@@ -260,21 +263,26 @@ const styles = createThemedStyles({
     alignItems: 'center',
   },
   title: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '900',
+    color: ds.cores.texto,
+    fontSize: ds.fonte.modal,
+    fontWeight: '700',
+    lineHeight: 26,
+    flexShrink: 1,
   },
   sub: {
-    color: '#888',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   closeBtn: {
-    width: 32,
-    height: 32,
+    width: ds.alvo.compacto,
+    height: ds.alvo.compacto,
     borderRadius: 16,
-    backgroundColor: '#161616',
+    backgroundColor: ds.cores.elevada,
     justifyContent: 'center',
     alignItems: 'center',
+    minHeight: ds.alvo.compacto,
   },
   yearSelector: {
     flexDirection: 'row',
@@ -286,21 +294,24 @@ const styles = createThemedStyles({
     borderBottomColor: '#161616',
   },
   yearNavBtn: {
-    width: 36,
-    height: 36,
+    width: ds.alvo.compacto,
+    height: ds.alvo.compacto,
     borderRadius: 8,
-    backgroundColor: '#141414',
+    backgroundColor: ds.cores.elevada,
     borderWidth: 1,
-    borderColor: '#242424',
+    borderColor: ds.cores.borda,
     justifyContent: 'center',
     alignItems: 'center',
+    minHeight: ds.alvo.compacto,
   },
   yearTitle: {
-    color: '#f3c21a',
-    fontSize: 14,
-    fontWeight: '900',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.subtitulo,
+    fontWeight: '700',
+    textTransform: 'none',
+    letterSpacing: 0,
+    lineHeight: 23,
+    flexShrink: 1,
   },
   loadingWrap: {
     padding: 40,
@@ -308,8 +319,10 @@ const styles = createThemedStyles({
     gap: 12,
   },
   loadingText: {
-    color: '#888',
-    fontSize: 12,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -317,11 +330,11 @@ const styles = createThemedStyles({
     gap: 12,
   },
   summaryCard: {
-    backgroundColor: '#121212',
-    borderRadius: 14,
+    backgroundColor: ds.cores.superficie,
+    borderRadius: ds.raio.cartao,
     borderWidth: 1,
-    borderColor: '#1d1d1d',
-    padding: 14,
+    borderColor: ds.cores.borda,
+    padding: ds.espaco.padrao,
     gap: 8,
   },
   summaryHeader: {
@@ -332,59 +345,72 @@ const styles = createThemedStyles({
   },
   summaryTitle: {
     color: '#10b981',
-    fontSize: 11,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '800',
-    textTransform: 'uppercase',
+    textTransform: 'none',
+    lineHeight: 23,
+    flexShrink: 1,
   },
   summaryRow: {
     gap: 2,
   },
   summaryLabel: {
-    color: '#6b7280',
-    fontSize: 10,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.legenda,
     fontWeight: '700',
-    textTransform: 'uppercase',
+    textTransform: 'none',
+    lineHeight: 17,
   },
   summaryVal: {
-    color: '#d1d5db',
-    fontSize: 12,
+    color: ds.cores.textoSecundario,
+    fontSize: ds.fonte.corpo,
     fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   summaryValHighlight: {
-    color: '#f3c21a',
+    color: ds.cores.destaque,
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: '700',
+    lineHeight: 26,
+    flexShrink: 1,
   },
   summaryValBold: {
-    fontSize: 12,
+    fontSize: ds.fonte.corpo,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   tableCard: {
-    backgroundColor: '#121212',
-    borderRadius: 14,
+    backgroundColor: ds.cores.superficie,
+    borderRadius: ds.raio.cartao,
     borderWidth: 1,
-    borderColor: '#1d1d1d',
-    padding: 14,
+    borderColor: ds.cores.borda,
+    padding: ds.espaco.padrao,
     gap: 8,
   },
   tableTitle: {
-    color: '#fff',
-    fontSize: 12,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
+    textTransform: 'none',
+    letterSpacing: 0,
+    lineHeight: 23,
+    flexShrink: 1,
   },
   tableHeaderRow: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: '#222',
+    borderBottomColor: ds.cores.borda,
     paddingBottom: 6,
   },
   th: {
-    color: '#888',
-    fontSize: 10,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
     fontWeight: '800',
     textTransform: 'uppercase',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   tableRow: {
     flexDirection: 'row',
@@ -394,44 +420,55 @@ const styles = createThemedStyles({
     alignItems: 'center',
   },
   tdMonth: {
-    color: '#d1d5db',
-    fontSize: 11,
+    color: ds.cores.textoSecundario,
+    fontSize: ds.fonte.corpo,
     fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   td: {
-    color: '#666',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   tdValue: {
-    color: '#666',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
     fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   tdValuePositive: {
-    color: '#fff',
+    color: ds.cores.texto,
   },
   tableTotalRow: {
     flexDirection: 'row',
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: '#222',
+    borderTopColor: ds.cores.borda,
     alignItems: 'center',
   },
   totalLabel: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    color: ds.cores.texto,
+    fontSize: ds.fonte.legenda,
+    fontWeight: '700',
+    textTransform: 'none',
+    lineHeight: 17,
   },
   totalNotas: {
-    color: '#888',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
     fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   totalVal: {
-    color: '#f3c21a',
+    color: ds.cores.destaque,
     fontSize: 14,
-    fontWeight: '900',
+    fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   tipBox: {
     flexDirection: 'row',
@@ -445,9 +482,10 @@ const styles = createThemedStyles({
   },
   tipText: {
     flex: 1,
-    color: '#d1d5db',
-    fontSize: 10,
-    lineHeight: 14,
+    color: ds.cores.textoSecundario,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   footer: {
     flexDirection: 'row',
@@ -457,33 +495,40 @@ const styles = createThemedStyles({
   },
   copyBtn: {
     flex: 1.3,
-    minHeight: 46,
-    borderRadius: 12,
-    backgroundColor: '#1b1b1b',
+    minHeight: ds.alvo.controle,
+    borderRadius: ds.raio.controle,
+    backgroundColor: ds.cores.elevada,
     borderWidth: 1,
-    borderColor: '#2d2d2d',
+    borderColor: ds.cores.borda,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
   },
   copyBtnText: {
-    color: '#fff',
-    fontSize: 11,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   closeActionBtn: {
     flex: 0.7,
-    minHeight: 46,
+    minHeight: ds.alvo.compacto,
     borderRadius: 12,
-    backgroundColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
     justifyContent: 'center',
     alignItems: 'center',
+    width: ds.alvo.compacto,
   },
   closeActionBtnText: {
     color: '#111',
-    fontSize: 12,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontSize: ds.fonte.controle,
+    fontWeight: '700',
+    textTransform: 'none',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
 });

@@ -1,9 +1,11 @@
+import { demoAtiva } from '@/services/apresentacao-store';
+import { ds } from '@/theme/design-system';
 import { AftercareModal } from '@/components/aftercare-modal';
 import { DetalhesNotaModal } from '@/components/fiscal/detalhes-nota-modal';
 import { ReciboFiscalModal } from '@/components/recibo-fiscal-modal';
 import { AppModal } from '@/components/ui/app-modal';
 import { gerarReciboFiscal } from '@/services/mercadopago';
-import { supabase } from '@/services/supabase';
+import { supabase } from '@/services/data-client';
 import type { ReciboFiscal } from '@/types/financeiro';
 import type { NotaFiscalRegistro } from '@/types/fiscal';
 import {
@@ -215,7 +217,7 @@ export function ClienteAgendamentosTab({ perfil }: ClienteAgendamentosTabProps =
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      if (!session?.user) return;
+      if (!session?.user && !demoAtiva()) return;
 
       const temAlerta =
         temAlergia || temQueloide || temCondicaoSaude || isGestanteLactante || usaAnticoagulante;
@@ -238,7 +240,7 @@ export function ClienteAgendamentosTab({ perfil }: ClienteAgendamentosTabProps =
       // Salva ou atualiza a ficha vinculada ao agendamento
       await supabase.from('fichas_anamnese').insert({
         agendamento_id: agendamentoParaAnamnese.id,
-        cliente_id: session.user.id,
+        cliente_id: perfil?.id || perfil?.uid || session?.user?.id,
         artista_id: agendamentoParaAnamnese.artistaId,
         alergias: alergiasTexto,
         doencas_cronicas: condicoesTexto,
@@ -341,7 +343,7 @@ export function ClienteAgendamentosTab({ perfil }: ClienteAgendamentosTabProps =
         <View style={styles.anamneseAlertBanner}>
           <View style={styles.anamneseAlertHeader}>
             <View style={styles.anamneseIconWrap}>
-              <HeartPulse size={18} color={tc('#f3c21a')} />
+              <HeartPulse size={18} color={tc(ds.cores.destaque)} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.anamneseAlertTitle}>Ficha de Saúde Pré-Sessão</Text>
@@ -385,7 +387,7 @@ export function ClienteAgendamentosTab({ perfil }: ClienteAgendamentosTabProps =
 
       {/* Lista de Agendamentos */}
       {carregando ? (
-        <ActivityIndicator color={tc('#f3c21a')} style={{ marginTop: 20 }} />
+        <ActivityIndicator color={tc(ds.cores.destaque)} style={{ marginTop: 20 }} />
       ) : agendamentosFiltrados.length === 0 ? (
         <View style={styles.emptyWrap}>
           <Text style={styles.emptyTitle}>Nenhum agendamento encontrado</Text>
@@ -458,17 +460,17 @@ export function ClienteAgendamentosTab({ perfil }: ClienteAgendamentosTabProps =
               <View style={styles.pillsRow}>
                 <View style={styles.turnoPill}>
                   {item.turno === 'manha' ? (
-                    <Sun size={11} color={tc('#f3c21a')} />
+                    <Sun size={11} color={tc(ds.cores.destaque)} />
                   ) : item.turno === 'diaria' ? (
-                    <Zap size={11} color={tc('#f3c21a')} />
+                    <Zap size={11} color={tc(ds.cores.destaque)} />
                   ) : (
-                    <Sunset size={11} color={tc('#f3c21a')} />
+                    <Sunset size={11} color={tc(ds.cores.destaque)} />
                   )}
                   <Text style={styles.turnoPillText}>{turnoTexto}</Text>
                 </View>
 
                 <View style={styles.typePill}>
-                  <Sparkles size={11} color={tc('#9ca3af')} />
+                  <Sparkles size={11} color={tc(ds.cores.textoSuave)} />
                   <Text style={styles.typePillText}>
                     {item.tipoSessao === 'flash' ? 'Flash Autoral' : 'Projeto Exclusivo'}
                   </Text>
@@ -478,13 +480,13 @@ export function ClienteAgendamentosTab({ perfil }: ClienteAgendamentosTabProps =
               {/* Data, Horário e Detalhes do Briefing */}
               <View style={styles.gridInfo}>
                 <View style={styles.infoLine}>
-                  <Calendar size={13} color={tc('#f3c21a')} />
+                  <Calendar size={13} color={tc(ds.cores.destaque)} />
                   <Text style={styles.infoText}>
                     {item.data} às {item.horario}
                   </Text>
                 </View>
                 <View style={styles.infoLine}>
-                  <Sparkles size={13} color={tc('#f3c21a')} />
+                  <Sparkles size={13} color={tc(ds.cores.destaque)} />
                   <Text style={styles.infoText}>
                     {item.estilo} • {item.localCorpo || 'Corpo'} ({item.tamanhoCm || 'Médio'})
                   </Text>
@@ -516,7 +518,7 @@ export function ClienteAgendamentosTab({ perfil }: ClienteAgendamentosTabProps =
                   {item.anamneseAssinada ? (
                     <CheckCircle2 size={16} color={tc('#10b981')} />
                   ) : (
-                    <AlertCircle size={16} color={tc('#f3c21a')} />
+                    <AlertCircle size={16} color={tc(ds.cores.destaque)} />
                   )}
                   <View>
                     <Text
@@ -581,7 +583,7 @@ export function ClienteAgendamentosTab({ perfil }: ClienteAgendamentosTabProps =
 
                 {(isConcluido || isConfirmado) && (
                   <Pressable style={styles.btnRecibo} onPress={() => abrirRecibo(item)}>
-                    <FileText size={13} color={tc('#f3c21a')} />
+                    <FileText size={13} color={tc(ds.cores.destaque)} />
                     <Text style={styles.btnReciboText}>Recibo Fiscal</Text>
                   </Pressable>
                 )}
@@ -614,7 +616,7 @@ export function ClienteAgendamentosTab({ perfil }: ClienteAgendamentosTabProps =
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
               <View style={styles.modalHeaderLeft}>
-                <HeartPulse size={20} color={tc('#f3c21a')} />
+                <HeartPulse size={20} color={tc(ds.cores.destaque)} />
                 <View>
                   <Text style={styles.modalTitle}>Ficha de Saúde & Biossegurança</Text>
                   <Text style={styles.modalSub}>
@@ -626,13 +628,13 @@ export function ClienteAgendamentosTab({ perfil }: ClienteAgendamentosTabProps =
                 style={styles.closeBtn}
                 onPress={() => setAgendamentoParaAnamnese(null)}
               >
-                <X size={18} color={tc('#888')} />
+                <X size={18} color={tc(ds.cores.textoSuave)} />
               </Pressable>
             </View>
 
             <ScrollView contentContainerStyle={styles.modalScroll} showsVerticalScrollIndicator={false}>
               <View style={styles.anamneseInfoBox}>
-                <Info size={14} color={tc('#f3c21a')} />
+                <Info size={14} color={tc(ds.cores.destaque)} />
                 <Text style={styles.anamneseInfoText}>
                   Exigência da Vigilância Sanitária para proteção da sua saúde e preparo da bancada pelo tatuador.
                 </Text>
@@ -656,7 +658,7 @@ export function ClienteAgendamentosTab({ perfil }: ClienteAgendamentosTabProps =
                     value={detalheAlergia}
                     onChangeText={setDetalheAlergia}
                     placeholder="Especifique a substância ou pomada..."
-                    placeholderTextColor={tc('#666')}
+                    placeholderTextColor={tc(ds.cores.textoSuave)}
                     style={styles.detailInput}
                   />
                 )}
@@ -691,7 +693,7 @@ export function ClienteAgendamentosTab({ perfil }: ClienteAgendamentosTabProps =
                     value={detalheCondicao}
                     onChangeText={setDetalheCondicao}
                     placeholder="Detalhes médicos para conhecimento do artista..."
-                    placeholderTextColor={tc('#666')}
+                    placeholderTextColor={tc(ds.cores.textoSuave)}
                     style={styles.detailInput}
                   />
                 )}
@@ -796,7 +798,7 @@ export function ClienteAgendamentosTab({ perfil }: ClienteAgendamentosTabProps =
 
 const styles = createThemedStyles({
   container: {
-    gap: 14,
+    gap: ds.espaco.padrao,
   },
   anamneseAlertBanner: {
     backgroundColor: '#1c170c',
@@ -820,30 +822,37 @@ const styles = createThemedStyles({
     alignItems: 'center',
   },
   anamneseAlertTitle: {
-    color: '#f3c21a',
-    fontSize: 13,
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '800',
+    lineHeight: 23,
+    flexShrink: 1,
   },
   anamneseAlertSub: {
-    color: '#ccc',
-    fontSize: 11,
-    lineHeight: 16,
+    color: ds.cores.textoSecundario,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
     marginTop: 2,
+    flexShrink: 1,
   },
   btnCompletarAnamneseBanner: {
-    backgroundColor: '#f3c21a',
-    borderRadius: 10,
+    backgroundColor: ds.cores.destaque,
+    borderRadius: ds.raio.controle,
     paddingVertical: 10,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 6,
+    minHeight: ds.alvo.controle,
   },
   btnCompletarAnamneseBannerText: {
     color: '#111',
-    fontSize: 11,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
-    textTransform: 'uppercase',
+    textTransform: 'none',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   filterRow: {
     flexDirection: 'row',
@@ -852,54 +861,61 @@ const styles = createThemedStyles({
   filterBtn: {
     flex: 1,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: ds.raio.controle,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    minHeight: ds.alvo.compacto,
   },
   filterBtnActive: {
-    backgroundColor: '#f3c21a',
-    borderColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
+    borderColor: ds.cores.destaque,
   },
   filterBtnIdle: {
-    backgroundColor: '#111',
-    borderColor: '#222',
+    backgroundColor: ds.cores.superficie,
+    borderColor: ds.cores.borda,
   },
   filterBtnText: {
-    fontSize: 10,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
-    color: '#888',
-    textTransform: 'uppercase',
+    color: ds.cores.textoSuave,
+    textTransform: 'none',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   filterBtnTextActive: {
     color: '#111',
   },
   emptyWrap: {
-    backgroundColor: '#101010',
-    borderRadius: 16,
+    backgroundColor: ds.cores.superficie,
+    borderRadius: ds.raio.cartao,
     borderWidth: 1,
-    borderColor: '#1d1d1d',
+    borderColor: ds.cores.borda,
     padding: 30,
     alignItems: 'center',
     gap: 6,
   },
   emptyTitle: {
-    color: '#fff',
-    fontSize: 14,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '800',
+    lineHeight: 23,
+    flexShrink: 1,
   },
   emptySub: {
-    color: '#6b7280',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
     textAlign: 'center',
-    lineHeight: 16,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   card: {
-    borderRadius: 16,
+    borderRadius: ds.raio.cartao,
     borderWidth: 1,
-    borderColor: '#1e1e1e',
-    backgroundColor: '#101010',
-    padding: 14,
+    borderColor: ds.cores.borda,
+    backgroundColor: ds.cores.superficie,
+    padding: ds.espaco.padrao,
     gap: 10,
   },
   cardHeader: {
@@ -908,14 +924,18 @@ const styles = createThemedStyles({
     alignItems: 'flex-start',
   },
   artistName: {
-    color: '#fff',
-    fontSize: 15,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '800',
+    lineHeight: 23,
+    flexShrink: 1,
   },
   studioName: {
-    color: '#9ca3af',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
     marginTop: 2,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   statusBadge: {
     paddingHorizontal: 8,
@@ -944,13 +964,14 @@ const styles = createThemedStyles({
     backgroundColor: 'rgba(239, 68, 68, 0.15)',
   },
   statusText: {
-    fontSize: 9,
-    fontWeight: '900',
+    fontSize: ds.fonte.etiqueta,
+    fontWeight: '700',
+    lineHeight: 16,
   },
   statusTextConfirmado: { color: '#10b981' },
-  statusTextPendente: { color: '#f3c21a' },
+  statusTextPendente: { color: ds.cores.destaque },
   statusTextAndamento: { color: '#60a5fa' },
-  statusTextConcluido: { color: '#9ca3af' },
+  statusTextConcluido: { color: ds.cores.textoSuave },
   statusTextCancelado: { color: '#ef4444' },
   pillsRow: {
     flexDirection: 'row',
@@ -968,9 +989,10 @@ const styles = createThemedStyles({
     gap: 5,
   },
   turnoPillText: {
-    color: '#f3c21a',
-    fontSize: 10,
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.etiqueta,
     fontWeight: '800',
+    lineHeight: 16,
   },
   typePill: {
     backgroundColor: '#15151a',
@@ -985,11 +1007,12 @@ const styles = createThemedStyles({
   },
   typePillText: {
     color: '#aaa',
-    fontSize: 10,
+    fontSize: ds.fonte.etiqueta,
     fontWeight: '700',
+    lineHeight: 16,
   },
   gridInfo: {
-    backgroundColor: '#141414',
+    backgroundColor: ds.cores.elevada,
     borderRadius: 10,
     padding: 10,
     gap: 6,
@@ -1000,17 +1023,21 @@ const styles = createThemedStyles({
     gap: 6,
   },
   infoText: {
-    color: '#d1d5db',
-    fontSize: 12,
+    color: ds.cores.textoSecundario,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   descText: {
-    color: '#888',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
     fontStyle: 'italic',
     marginTop: 2,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   anamneseStatusCard: {
-    borderRadius: 10,
+    borderRadius: ds.raio.cartao,
     padding: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -1032,28 +1059,38 @@ const styles = createThemedStyles({
     flex: 1,
   },
   anamneseStatusTitle: {
-    color: '#f3c21a',
-    fontSize: 11,
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '800',
+    lineHeight: 23,
+    flexShrink: 1,
   },
   anamneseStatusSub: {
-    color: '#888',
-    fontSize: 9,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   btnPreencherAnamneseMini: {
-    backgroundColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: ds.raio.controle,
+    minHeight: ds.alvo.controle,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   btnPreencherAnamneseMiniText: {
     color: '#111',
-    fontSize: 10,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   finCard: {
     borderTopWidth: 1,
-    borderTopColor: '#1a1a1a',
+    borderTopColor: ds.cores.borda,
     paddingTop: 8,
     gap: 4,
   },
@@ -1063,10 +1100,11 @@ const styles = createThemedStyles({
     alignItems: 'center',
   },
   finLabel: {
-    color: '#6b7280',
-    fontSize: 10,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.legenda,
     fontWeight: '700',
-    textTransform: 'uppercase',
+    textTransform: 'none',
+    lineHeight: 17,
   },
   sinalPaidRow: {
     flexDirection: 'row',
@@ -1075,23 +1113,28 @@ const styles = createThemedStyles({
   },
   sinalPaidText: {
     color: '#10b981',
-    fontSize: 11,
+    fontSize: ds.fonte.corpo,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   finTotalVal: {
-    color: '#f3c21a',
+    color: ds.cores.destaque,
     fontSize: 14,
-    fontWeight: '900',
+    fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   actionsRow: {
     flexDirection: 'row',
     gap: 8,
     marginTop: 4,
+    flexWrap: 'wrap',
   },
   btnAftercare: {
     flex: 1,
-    minHeight: 38,
-    borderRadius: 8,
+    minHeight: ds.alvo.controle,
+    borderRadius: ds.raio.controle,
     backgroundColor: 'rgba(16, 185, 129, 0.12)',
     borderWidth: 1,
     borderColor: 'rgba(16, 185, 129, 0.3)',
@@ -1102,14 +1145,17 @@ const styles = createThemedStyles({
   },
   btnAftercareText: {
     color: '#10b981',
-    fontSize: 10,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
-    textTransform: 'uppercase',
+    textTransform: 'none',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   btnRecibo: {
     flex: 1,
-    minHeight: 38,
-    borderRadius: 8,
+    minHeight: ds.alvo.controle,
+    borderRadius: ds.raio.controle,
     backgroundColor: 'rgba(243, 194, 26, 0.1)',
     borderWidth: 1,
     borderColor: 'rgba(243, 194, 26, 0.3)',
@@ -1119,15 +1165,18 @@ const styles = createThemedStyles({
     gap: 6,
   },
   btnReciboText: {
-    color: '#f3c21a',
-    fontSize: 10,
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
-    textTransform: 'uppercase',
+    textTransform: 'none',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   btnCancelar: {
     paddingHorizontal: 12,
-    minHeight: 38,
-    borderRadius: 8,
+    minHeight: ds.alvo.controle,
+    borderRadius: ds.raio.controle,
     backgroundColor: 'rgba(239, 68, 68, 0.1)',
     borderWidth: 1,
     borderColor: 'rgba(239, 68, 68, 0.25)',
@@ -1151,8 +1200,11 @@ const styles = createThemedStyles({
   },
   btnCancelarText: {
     color: '#ef4444',
-    fontSize: 10,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   modalOverlay: {
     flex: 1,
@@ -1176,29 +1228,36 @@ const styles = createThemedStyles({
     paddingHorizontal: 20,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#1c1c24',
+    borderBottomColor: ds.cores.borda,
   },
   modalHeaderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
+    flexShrink: 1,
+    minWidth: 0,
   },
   modalTitle: {
-    color: '#fff',
-    fontSize: 16,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.modal,
     fontWeight: '800',
+    lineHeight: 26,
+    flexShrink: 1,
   },
   modalSub: {
-    color: '#888',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   closeBtn: {
-    width: 32,
-    height: 32,
+    width: ds.alvo.compacto,
+    height: ds.alvo.compacto,
     borderRadius: 8,
     backgroundColor: '#181820',
     justifyContent: 'center',
     alignItems: 'center',
+    minHeight: ds.alvo.compacto,
   },
   modalScroll: {
     paddingHorizontal: 20,
@@ -1216,10 +1275,11 @@ const styles = createThemedStyles({
     gap: 8,
   },
   anamneseInfoText: {
-    color: '#ccc',
-    fontSize: 11,
-    lineHeight: 16,
+    color: ds.cores.textoSecundario,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
     flex: 1,
+    flexShrink: 1,
   },
   formGroup: {
     gap: 10,
@@ -1240,9 +1300,10 @@ const styles = createThemedStyles({
   },
   formQuestion: {
     color: '#eee',
-    fontSize: 12,
+    fontSize: ds.fonte.corpo,
     fontWeight: '600',
-    lineHeight: 16,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   toggleBtn: {
     width: 44,
@@ -1253,7 +1314,7 @@ const styles = createThemedStyles({
     justifyContent: 'center',
   },
   toggleBtnActive: {
-    backgroundColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
   },
   toggleCircle: {
     width: 20,
@@ -1262,24 +1323,27 @@ const styles = createThemedStyles({
     backgroundColor: '#888',
   },
   toggleCircleActive: {
-    backgroundColor: '#111',
+    backgroundColor: ds.cores.superficie,
     alignSelf: 'flex-end',
   },
   detailInput: {
     backgroundColor: '#16161f',
-    borderRadius: 10,
+    borderRadius: ds.raio.campo,
     borderWidth: 1,
     borderColor: '#2e2e3d',
     padding: 10,
-    color: '#fff',
-    fontSize: 11,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.campo,
     marginTop: -4,
+    lineHeight: 23,
+    flexShrink: 1,
+    minHeight: ds.alvo.controle,
   },
   legalBox: {
-    backgroundColor: '#121217',
+    backgroundColor: ds.cores.superficie,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#242430',
+    borderColor: ds.cores.borda,
     padding: 12,
   },
   checkRow: {
@@ -1299,37 +1363,42 @@ const styles = createThemedStyles({
     marginTop: 2,
   },
   checkSquareActive: {
-    backgroundColor: '#f3c21a',
-    borderColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
+    borderColor: ds.cores.destaque,
   },
   legalText: {
     color: '#aaa',
-    fontSize: 10,
-    lineHeight: 15,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
     flex: 1,
+    flexShrink: 1,
   },
   modalFooter: {
     paddingHorizontal: 20,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: '#1c1c24',
+    borderTopColor: ds.cores.borda,
   },
   btnAssinarFicha: {
-    backgroundColor: '#f3c21a',
-    borderRadius: 14,
+    backgroundColor: ds.cores.destaque,
+    borderRadius: ds.raio.controle,
     paddingVertical: 14,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
+    minHeight: ds.alvo.controle,
   },
   btnDisabled: {
     opacity: 0.5,
   },
   btnAssinarFichaText: {
     color: '#111',
-    fontSize: 13,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontSize: ds.fonte.controle,
+    fontWeight: '700',
+    textTransform: 'none',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
 });

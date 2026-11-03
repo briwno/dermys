@@ -1,12 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, processLock } from '@supabase/supabase-js';
 import { Platform } from 'react-native';
 import 'react-native-url-polyfill/auto';
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
 
-const isServer = typeof window === 'undefined';
+const isServer = Platform.OS === 'web' && typeof window === 'undefined';
 
 // Storage em memória seguro para SSR / Prerendering no Node.js (Vercel Build)
 const memoryStorage = new Map<string, string>();
@@ -26,5 +26,6 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: !isServer,
     persistSession: !isServer,
     detectSessionInUrl: Platform.OS === 'web' && !isServer,
+    lock: processLock,
   },
 });

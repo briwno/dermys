@@ -39,7 +39,8 @@ async function run() {
   let consultas = 0;
   const servico = load('dre-service.ts', {
     './dre': dre,
-    './supabase': { supabase: { rpc: (nome) => {
+    './apresentacao-store': { demoAtiva: () => false },
+    './data-client': { supabase: { rpc: (nome) => {
       if (nome === 'financeiro_pode_acessar') return Promise.resolve({ data: true, error: null });
       return { range: async (inicio, fim) => {
         consultas++;

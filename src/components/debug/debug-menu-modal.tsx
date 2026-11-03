@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   ActivityIndicator,
   Image,
+  KeyboardAvoidingView,
   Modal,
   Platform,
   ScrollView,
@@ -10,6 +11,8 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ApresentacaoPainel } from './apresentacao-painel';
 import {
   AlertTriangle,
   ArrowRight,
@@ -29,6 +32,7 @@ import {
   Maximize2,
   MessageSquare,
   Palette,
+  Play,
   RefreshCw,
   Send,
   ShieldCheck,
@@ -45,6 +49,7 @@ import { useDebug } from './debug-context';
 import { MODELOS_DISPOSITIVOS, PERSONAS_TESTE, type ModeloDispositivo, type PersonaTeste } from './types';
 
 export function DebugMenuModal() {
+  const insets = useSafeAreaInsets();
   const {
     modoMoldura,
     setModoMoldura,
@@ -63,7 +68,7 @@ export function DebugMenuModal() {
     deslogarParaAuth,
   } = useDebug();
 
-  const [abaAtiva, setAbaAtiva] = useState<'personas' | 'navegacao' | 'dispositivo' | 'simulador'>('personas');
+  const [abaAtiva, setAbaAtiva] = useState<'personas' | 'navegacao' | 'dispositivo' | 'simulador' | 'apresentacao'>('apresentacao');
   if (!menuAberto) return null;
 
   const isArtista = perfilAtual?.role === 'artista' || perfilAtual?.tipo_perfil === 'artista';
@@ -75,13 +80,13 @@ export function DebugMenuModal() {
       animationType="fade"
       onRequestClose={() => setMenuAberto(false)}
     >
-      <View style={styles.modalBackdrop}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={[styles.modalBackdrop, Platform.OS !== 'web' && { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 8, paddingHorizontal: 8 }]}>
         <View style={styles.modalCard}>
           {/* Header */}
           <View style={styles.modalHeader}>
             <View style={{ flex: 1, minWidth: 0, paddingRight: 12 }}>
-              <Text style={styles.modalTitle}>Central de Testes & Desenvolvimento</Text>
-              <Text style={styles.modalSubtitle}>Dermys Developer Tools • Ações, Personas e Simuladores</Text>
+              <Text style={styles.modalTitle}>Estúdio de testes</Text>
+              <Text style={styles.modalSubtitle}>Apresentação, perfis e cenários</Text>
             </View>
 
             <TouchableOpacity
@@ -95,6 +100,7 @@ export function DebugMenuModal() {
 
           {/* Abas Superiores */}
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={styles.tabsRow}>
+            <TouchableOpacity style={[styles.tabButton, abaAtiva === 'apresentacao' && styles.tabButtonActive]} onPress={() => setAbaAtiva('apresentacao')}><Play size={14} color="#f3c21a" /><Text style={[styles.tabButtonText, abaAtiva === 'apresentacao' && styles.tabButtonTextActive]}>Apresentar</Text></TouchableOpacity>
             <TouchableOpacity
               style={[styles.tabButton, abaAtiva === 'personas' && styles.tabButtonActive]}
               onPress={() => setAbaAtiva('personas')}
@@ -115,7 +121,7 @@ export function DebugMenuModal() {
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
+            {Platform.OS === 'web' && <TouchableOpacity
               style={[styles.tabButton, abaAtiva === 'dispositivo' && styles.tabButtonActive]}
               onPress={() => setAbaAtiva('dispositivo')}
             >
@@ -123,7 +129,7 @@ export function DebugMenuModal() {
               <Text style={[styles.tabButtonText, abaAtiva === 'dispositivo' && styles.tabButtonTextActive]}>
                 Dispositivo
               </Text>
-            </TouchableOpacity>
+            </TouchableOpacity>}
 
             <TouchableOpacity
               style={[styles.tabButton, abaAtiva === 'simulador' && styles.tabButtonActive]}
@@ -137,7 +143,8 @@ export function DebugMenuModal() {
           </ScrollView>
 
           {/* Conteúdo da Aba */}
-          <ScrollView style={styles.modalContentScroll} showsVerticalScrollIndicator={false}>
+          <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" style={styles.modalContentScroll} showsVerticalScrollIndicator={false}>
+            {abaAtiva === 'apresentacao' && <ApresentacaoPainel />}
             {/* ABA 1: PERSONAS */}
             {abaAtiva === 'personas' && (
               <View style={styles.tabContentStack}>
@@ -416,7 +423,7 @@ export function DebugMenuModal() {
             {abaAtiva === 'simulador' && <DebugSimulador />}
           </ScrollView>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -433,7 +440,8 @@ const styles = StyleSheet.create({
   modalCard: {
     width: '100%',
     maxWidth: 680,
-    maxHeight: '90%',
+    maxHeight: '100%',
+    flexShrink: 1,
     backgroundColor: '#121214',
     borderRadius: 14,
     borderWidth: 1,
@@ -460,7 +468,10 @@ const styles = StyleSheet.create({
     fontSize: 11,
   },
   closeBtn: {
-    padding: 6,
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   tabsRow: {
     flexDirection: 'row',
@@ -472,6 +483,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#1a1a20',
   },
   tabButton: {
+    minHeight: 48,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,

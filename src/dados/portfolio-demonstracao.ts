@@ -1,4 +1,5 @@
 import manifest from '../../assets/demo/tattoos/manifest.json';
+import { imagensTatuagensDemo } from './imagens-demonstracao';
 import type { ItemPortfolio } from '@/types/artista-detalhado';
 
 export const PORTFOLIOS_DEMONSTRACAO = manifest.reduce<Record<string, ItemPortfolio[]>>((portfolios, item) => {
@@ -8,7 +9,7 @@ export const PORTFOLIOS_DEMONSTRACAO = manifest.reduce<Record<string, ItemPortfo
     artistaId: item.artistId,
     titulo: item.title,
     estilo: item.style,
-    imagemUrl: `https://iklbyztvjvxfhgupmkvw.supabase.co/storage/v1/object/public/portfolios/demo/generated-v1/${item.file}`,
+    imagemUrl: imagensTatuagensDemo[item.file],
     disponivel: false,
   });
   return portfolios;

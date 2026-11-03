@@ -13,14 +13,16 @@ import {
   DeviceFrameWrapper,
 } from '@/components/debug';
 import { processarRetornoOAuthUrl } from '@/services/auth-oauth';
-import { supabase } from '@/services/supabase';
+import { supabase } from '@/services/data-client';
+import { restaurarDemoSalva } from '@/services/apresentacao-store';
+import { ApresentacaoStatus } from '@/components/debug/apresentacao-status';
 import { deveCarregarPerfilAuth, obterPersonaTeste, obterRevisaoPersona, restaurarPersonaTeste, selecionarPersonaTeste } from '@/services/persona-teste';
 import { PERSONAS_TESTE } from '@/components/debug/types';
 import { DashboardArtista } from '@/telas/artist-dashboard';
 import { TelaAutenticacao, type SessaoAuthInfo } from '@/telas/auth-screen';
 import { DashboardCliente } from '@/telas/client-dashboard';
 import { normalizarPerfil, verificarStatusPerfil, type PerfilUsuario } from '@/types/auth';
-import { createThemedStyles, tc, useTheme } from '@/theme';
+import { createThemedStyles, ds, tc, useTheme } from '@/theme';
 
 export default function TelaInicial() {
   // Assina o tema. Como o React Compiler memoiza o JSX, a árvore de conteúdo é
@@ -116,6 +118,7 @@ export default function TelaInicial() {
 
     async function verificarSessao() {
       try {
+        await restaurarDemoSalva();
         const personaId = await restaurarPersonaTeste(PERSONAS_TESTE.map((p) => p.id));
         if (personaId && montado) {
           const revisao = obterRevisaoPersona();
@@ -306,7 +309,9 @@ export default function TelaInicial() {
     >
       <DeviceFrameWrapper>
         <StatusBar style={modoClaro ? 'dark' : 'light'} />
+        <ApresentacaoStatus />
         <DebugRefreshBoundary><Fragment key={modo}>{renderConteudo()}</Fragment></DebugRefreshBoundary>
+        <DebugFloatingButton />
         <DebugMenuModal />
       </DeviceFrameWrapper>
     </DebugProvider>
@@ -316,13 +321,13 @@ export default function TelaInicial() {
 const styles = createThemedStyles({
   container: {
     flex: 1,
-    backgroundColor: '#070707',
+    backgroundColor: ds.cores.fundo,
     alignItems: 'center',
     justifyContent: 'center',
   },
   shell: {
     flex: 1,
-    backgroundColor: '#050505',
+    backgroundColor: ds.cores.fundo,
   },
   content: {
     flex: 1,

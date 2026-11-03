@@ -1,3 +1,4 @@
+import { ds } from '@/theme/design-system';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
@@ -8,6 +9,7 @@ import {
   Platform,
   Pressable,
   ScrollView,
+  type ScrollViewInstance,
   StyleSheet,
   Text,
   View,
@@ -118,7 +120,7 @@ export function CartaoArtistaFeed({
 }: CartaoArtistaFeedProps) {
   const [indiceAtivo, setIndiceAtivo] = useState(0);
   const [larguraMidia, setLarguraMidia] = useState(0);
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
   const ultimoToque = useRef(0);
   const timerToque = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -288,7 +290,7 @@ export function CartaoArtistaFeed({
         )}
         <View style={styles.topRow} pointerEvents="box-none">
           <View style={styles.styleChip} pointerEvents="none">
-            <Sparkles size={11} color={tc('#f3c21a')} />
+            <Sparkles size={11} color={tc(ds.cores.destaque)} />
             <Text style={styles.styleChipText}>{obraAtual.estilo || item.estilo}</Text>
           </View>
           {item.distanciaFormatada ? (
@@ -350,7 +352,7 @@ export function CartaoArtistaFeed({
         </Pressable>
 
         <View style={styles.sideAction}>
-          <Star size={28} color={tc('#f3c21a')} fill={tc('#f3c21a')} />
+          <Star size={28} color={tc(ds.cores.destaque)} fill={tc(ds.cores.destaque)} />
           <Text style={sobreFoto.sideActionText}>{item.notaMedia?.toFixed(1) ?? '5.0'}</Text>
         </View>
       </View>
@@ -441,7 +443,7 @@ const styles = createThemedStyles({
     gap: 4,
   },
   progressBarActive: {
-    backgroundColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
   },
   topRow: {
     flexDirection: 'row',
@@ -460,23 +462,27 @@ const styles = createThemedStyles({
     paddingVertical: 5,
   },
   styleChipText: {
-    color: '#f3c21a',
-    fontSize: 11,
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.corpo,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   distanceChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 3,
-    backgroundColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
     borderRadius: 14,
     paddingHorizontal: 9,
     paddingVertical: 5,
   },
   distanceChipText: {
     color: '#000000',
-    fontSize: 11,
-    fontWeight: '900',
+    fontSize: ds.fonte.corpo,
+    fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   sideActions: {
     position: 'absolute',
@@ -494,7 +500,7 @@ const styles = createThemedStyles({
     height: 46,
     borderRadius: 23,
     borderWidth: 2,
-    borderColor: '#f3c21a',
+    borderColor: ds.cores.destaque,
   },
   avatarPlaceholder: {
     backgroundColor: '#262630',
@@ -502,7 +508,7 @@ const styles = createThemedStyles({
     alignItems: 'center',
   },
   avatarLetter: {
-    color: '#ffffff',
+    color: ds.cores.texto,
     fontSize: 16,
     fontWeight: '800',
   },
@@ -512,7 +518,7 @@ const styles = createThemedStyles({
     width: 18,
     height: 18,
     borderRadius: 9,
-    backgroundColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -535,7 +541,7 @@ const styles = createThemedStyles({
     maxWidth: '80%',
   },
   captionTag: {
-    color: '#f3c21a',
+    color: ds.cores.destaque,
     fontWeight: '700',
   },
   ctaRow: {
@@ -546,20 +552,27 @@ const styles = createThemedStyles({
     gap: 10,
   },
   priceValue: {
-    color: '#f3c21a',
+    color: ds.cores.destaque,
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: '700',
+    lineHeight: 26,
+    flexShrink: 1,
   },
   ctaBtn: {
-    backgroundColor: '#f3c21a',
-    borderRadius: 12,
+    backgroundColor: ds.cores.destaque,
+    borderRadius: ds.raio.controle,
     paddingHorizontal: 16,
     paddingVertical: 10,
+    minHeight: ds.alvo.compacto,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   ctaText: {
     color: '#000000',
-    fontSize: 12,
-    fontWeight: '900',
+    fontSize: ds.fonte.controle,
+    fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   swipeHint: {
     flexDirection: 'row',
@@ -597,53 +610,65 @@ const sobreFoto = StyleSheet.create({
     paddingVertical: 2,
   },
   navBtn: {
-    width: 28,
-    height: 28,
+    width: ds.alvo.compacto,
+    height: ds.alvo.compacto,
     borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
+    minHeight: ds.alvo.compacto,
   },
   navText: {
     color: BRANCO,
-    fontSize: 11,
+    fontSize: ds.fonte.corpo,
     fontWeight: '800',
     minWidth: 26,
     textAlign: 'center',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   sideActionText: {
     color: BRANCO,
-    fontSize: 11,
+    fontSize: ds.fonte.corpo,
     fontWeight: '800',
     textShadowColor: 'rgba(0,0,0,0.6)',
     textShadowRadius: 4,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   artistName: {
     color: BRANCO,
-    fontSize: 17,
-    fontWeight: '900',
+    fontSize: ds.fonte.subtitulo,
+    fontWeight: '700',
     letterSpacing: -0.3,
     flexShrink: 1,
+    lineHeight: 23,
   },
   studioText: {
     color: '#d4d4d8',
-    fontSize: 12,
+    fontSize: ds.fonte.corpo,
     maxWidth: '80%',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   captionText: {
     color: '#f4f4f5',
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
     maxWidth: '80%',
     marginTop: 2,
+    flexShrink: 1,
   },
   priceLabel: {
     color: '#a1a1aa',
-    fontSize: 10,
+    fontSize: ds.fonte.legenda,
     fontWeight: '600',
+    lineHeight: 17,
   },
   swipeHintText: {
     color: '#d4d4d8',
-    fontSize: 11,
+    fontSize: ds.fonte.corpo,
     fontWeight: '600',
+    lineHeight: 20,
+    flexShrink: 1,
   },
 });

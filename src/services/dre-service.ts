@@ -1,4 +1,5 @@
-import { supabase } from './supabase';
+import { supabase } from './data-client';
+import { demoAtiva, lancamentosDemo } from './apresentacao-store';
 import { CampoDre, camposDre, valoresDreVazios, ValoresDre } from './dre';
 
 export interface LancamentoDre {
@@ -30,6 +31,7 @@ export function somarLancamentosDre(lancamentos: LancamentoDre[]): ValoresDre {
 
 export const DreService = {
   async listar(artistaId: string, inicio: string, fim: string): Promise<LancamentoDre[]> {
+    if (demoAtiva()) return lancamentosDemo(artistaId, inicio, fim) as LancamentoDre[];
     const { data: permitido, error: erroAcesso } = await supabase.rpc('financeiro_pode_acessar', { p_artista_id: artistaId });
     if (erroAcesso) throw new Error('Entre na sua conta para acessar a DRE sincronizada.');
     if (!permitido) throw new Error('Sua conta não tem acesso financeiro a este artista. Personas de teste exigem uma permissão concedida no servidor.');

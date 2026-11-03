@@ -1,6 +1,7 @@
+import { ds } from '@/theme/design-system';
 import { Logo } from '@/components/logo';
 import { AUTH_REDIRECT_URL, iniciarLoginGoogle } from '@/services/auth-oauth';
-import { supabase } from '@/services/supabase';
+import { supabase } from '@/services/data-client';
 import { createThemedStyles, tc } from '@/theme';
 import {
   normalizarPerfil,
@@ -449,7 +450,7 @@ export function TelaAutenticacao({
   const renderBoasVindas = () => (
     <View style={styles.sectionCenter}>
       <View style={styles.brandWrap}>
-        <Logo size={200} color={tc('#f3c21a')} />
+        <Logo size={200} color={tc(ds.cores.destaque)} />
 
         <View style={styles.brandTextWrap}>
           <Text style={styles.brandTitle}>DERMYS</Text>
@@ -509,7 +510,7 @@ export function TelaAutenticacao({
           onPress={() => setTipoPerfil('cliente')}
         >
           <View style={styles.roleHead}>
-            <Compass size={20} color={tipoPerfil === 'cliente' ? tc('#f3c21a') : tc('#6b7280')} />
+            <Compass size={20} color={tipoPerfil === 'cliente' ? tc(ds.cores.destaque) : tc(ds.cores.textoSuave)} />
             <View style={[styles.roleDot, tipoPerfil === 'cliente' ? styles.roleDotOn : styles.roleDotOff]} />
           </View>
           <Text style={styles.roleTitle}>Cliente</Text>
@@ -522,7 +523,7 @@ export function TelaAutenticacao({
           onPress={() => setTipoPerfil('artista')}
         >
           <View style={styles.roleHead}>
-            <Palette size={20} color={tipoPerfil === 'artista' ? tc('#f3c21a') : tc('#6b7280')} />
+            <Palette size={20} color={tipoPerfil === 'artista' ? tc(ds.cores.destaque) : tc(ds.cores.textoSuave)} />
             <View style={[styles.roleDot, tipoPerfil === 'artista' ? styles.roleDotOn : styles.roleDotOff]} />
           </View>
           <Text style={styles.roleTitle}>Tatuador / Estúdio</Text>
@@ -582,7 +583,7 @@ export function TelaAutenticacao({
         <View style={styles.inputWrap}>
           {!opcoes?.multiline && (
             <View style={styles.inputIcon}>
-              <IconComp size={18} color={pendente ? tc('#f3c21a') : tc('#6f6f6f')} />
+              <IconComp size={18} color={pendente ? tc(ds.cores.destaque) : tc('#6f6f6f')} />
             </View>
           )}
           <TextInput
@@ -621,7 +622,7 @@ export function TelaAutenticacao({
             <Image source={{ uri: userFotoUrl }} style={styles.userAvatarImg} />
           ) : (
             <View style={styles.userAvatarFallback}>
-              <User size={24} color={tc('#f3c21a')} />
+              <User size={24} color={tc(ds.cores.destaque)} />
             </View>
           )}
           <View style={styles.completeHeaderTextWrap}>
@@ -649,7 +650,7 @@ export function TelaAutenticacao({
           <View style={styles.statusBannerHead}>
             {totalFaltantes > 0 ? (
               <>
-                <AlertCircle size={18} color={tc('#f3c21a')} />
+                <AlertCircle size={18} color={tc(ds.cores.destaque)} />
                 <Text style={styles.statusBannerTitle}>
                   Faltam {totalFaltantes} {totalFaltantes === 1 ? 'informação' : 'informações'} para ativar seu perfil
                 </Text>
@@ -687,7 +688,7 @@ export function TelaAutenticacao({
               activeOpacity={0.85}
               onPress={() => setTipoPerfil('cliente')}
             >
-              <Compass size={22} color={tipoPerfil === 'cliente' ? tc('#f3c21a') : tc('#888')} />
+              <Compass size={22} color={tipoPerfil === 'cliente' ? tc(ds.cores.destaque) : tc(ds.cores.textoSuave)} />
               <Text
                 style={[
                   styles.roleSelectTitle,
@@ -707,7 +708,7 @@ export function TelaAutenticacao({
               activeOpacity={0.85}
               onPress={() => setTipoPerfil('artista')}
             >
-              <Palette size={22} color={tipoPerfil === 'artista' ? tc('#f3c21a') : tc('#888')} />
+              <Palette size={22} color={tipoPerfil === 'artista' ? tc(ds.cores.destaque) : tc(ds.cores.textoSuave)} />
               <Text
                 style={[
                   styles.roleSelectTitle,
@@ -831,7 +832,7 @@ export function TelaAutenticacao({
           style={styles.switchAccountBtn}
           activeOpacity={0.8}
         >
-          <LogOut size={14} color={tc('#777')} />
+          <LogOut size={14} color={tc(ds.cores.textoSuave)} />
           <Text style={styles.switchAccountText}>Trocar de conta ou Sair</Text>
         </TouchableOpacity>
       </View>
@@ -962,106 +963,142 @@ export function TelaAutenticacao({
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         {conteudo}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = createThemedStyles({
-  safeArea: { flex: 1, backgroundColor: '#050505' },
+  safeArea: { flex: 1, backgroundColor: ds.cores.fundo },
   scrollContent: { flexGrow: 1, paddingHorizontal: 20, paddingVertical: 20, justifyContent: 'center' },
   sectionCenter: { gap: 24 },
   sectionStack: { gap: 18 },
   brandWrap: { alignItems: 'center', gap: 16 },
   brandTextWrap: { alignItems: 'center', gap: 2 },
-  brandTitle: { color: '#f3c21a', fontSize: 52, fontWeight: '900', textTransform: 'uppercase', letterSpacing: -2, lineHeight: 52 },
-  brandSubTitle: { color: '#f5f5f5', textTransform: 'uppercase', fontSize: 12, fontWeight: '800', letterSpacing: 2.2 },
+  brandTitle: { color: ds.cores.destaque, fontSize: 52, fontWeight: '900', textTransform: 'uppercase', letterSpacing: -2, lineHeight: 52 },
+  brandSubTitle: { color: ds.cores.texto, textTransform: 'uppercase', fontSize: ds.fonte.subtitulo, fontWeight: '800', letterSpacing: 2.2,
+    lineHeight: 23,
+    flexShrink: 1, },
   headerWrap: { gap: 6 },
-  screenTitle: { color: '#f3c21a', fontSize: 26, fontWeight: '900', textTransform: 'uppercase', fontStyle: 'italic', letterSpacing: -1 },
-  screenMeta: { color: '#888', textTransform: 'uppercase', fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
+  screenTitle: { color: ds.cores.destaque, fontSize: ds.fonte.titulo, fontWeight: '900', textTransform: 'none', fontStyle: 'italic', letterSpacing: -1,
+    lineHeight: 34,
+    flexShrink: 1, },
+  screenMeta: { color: ds.cores.textoSuave, textTransform: 'uppercase', fontSize: ds.fonte.marca, fontWeight: '800', letterSpacing: 1.5,
+    lineHeight: 15, },
   completeHeader: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   completeHeaderTextWrap: { flex: 1, gap: 4 },
-  userAvatarImg: { width: 50, height: 50, borderRadius: 25, borderWidth: 2, borderColor: '#f3c21a' },
-  userAvatarFallback: { width: 50, height: 50, borderRadius: 25, backgroundColor: '#181818', borderWidth: 1, borderColor: '#333', justifyContent: 'center', alignItems: 'center' },
+  userAvatarImg: { width: 50, height: 50, borderRadius: 25, borderWidth: 2, borderColor: ds.cores.destaque },
+  userAvatarFallback: { width: 50, height: 50, borderRadius: 25, backgroundColor: ds.cores.elevada, borderWidth: 1, borderColor: ds.cores.borda, justifyContent: 'center', alignItems: 'center' },
   statusBanner: { borderRadius: 14, padding: 14, gap: 10, borderWidth: 1 },
   statusBannerPending: { backgroundColor: 'rgba(243, 194, 26, 0.08)', borderColor: 'rgba(243, 194, 26, 0.3)' },
   statusBannerSuccess: { backgroundColor: 'rgba(34, 197, 94, 0.08)', borderColor: 'rgba(34, 197, 94, 0.3)' },
   statusBannerHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  statusBannerTitle: { color: '#f3c21a', fontSize: 13, fontWeight: '800' },
+  statusBannerTitle: { color: ds.cores.destaque, fontSize: ds.fonte.subtitulo, fontWeight: '800',
+    lineHeight: 23,
+    flexShrink: 1, },
   badgesWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   missingBadge: { backgroundColor: '#1e1b12', borderWidth: 1, borderColor: '#f3c21a66', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
-  missingBadgeText: { color: '#f3c21a', fontSize: 11, fontWeight: '700' },
+  missingBadgeText: { color: ds.cores.destaque, fontSize: ds.fonte.etiqueta, fontWeight: '700',
+    lineHeight: 16, },
   roleSectionWrap: { gap: 8 },
-  sectionLabel: { color: '#999', fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1 },
+  sectionLabel: { color: ds.cores.textoSuave, fontSize: ds.fonte.legenda, fontWeight: '800', textTransform: 'none', letterSpacing: 0,
+    lineHeight: 17, },
   roleCardRow: { flexDirection: 'row', gap: 10 },
-  roleSelectCard: { flex: 1, borderRadius: 14, borderWidth: 1.5, padding: 14, alignItems: 'center', gap: 4 },
-  roleSelectCardIdle: { backgroundColor: '#101010', borderColor: '#222' },
-  roleSelectCardActive: { backgroundColor: '#191811', borderColor: '#f3c21a' },
-  roleSelectTitle: { color: '#888', fontSize: 14, fontWeight: '800' },
-  roleSelectTitleActive: { color: '#fff' },
-  roleSelectSubtitle: { color: '#666', fontSize: 10, fontWeight: '600' },
+  roleSelectCard: { flex: 1, borderRadius: ds.raio.cartao, borderWidth: 1.5, padding: ds.espaco.padrao, alignItems: 'center', gap: 4 },
+  roleSelectCardIdle: { backgroundColor: ds.cores.superficie, borderColor: ds.cores.borda },
+  roleSelectCardActive: { backgroundColor: '#191811', borderColor: ds.cores.destaque },
+  roleSelectTitle: { color: ds.cores.textoSuave, fontSize: ds.fonte.subtitulo, fontWeight: '800',
+    lineHeight: 23,
+    flexShrink: 1, },
+  roleSelectTitleActive: { color: ds.cores.texto },
+  roleSelectSubtitle: { color: ds.cores.textoSuave, fontSize: ds.fonte.subtitulo, fontWeight: '600',
+    lineHeight: 23,
+    flexShrink: 1, },
   actionsWrap: { gap: 12 },
   rowButtons: { flexDirection: 'row', gap: 12 },
   growOne: { flex: 1 },
   growTwo: { flex: 2 },
-  buttonBase: { minHeight: 54, borderRadius: 14, justifyContent: 'center', alignItems: 'center', flexDirection: 'row', gap: 10, paddingHorizontal: 16 },
-  buttonGhost: { backgroundColor: '#1d1d1d', borderWidth: 1, borderColor: '#2d2d2d' },
-  buttonPrimary: { backgroundColor: '#f3c21a' },
+  buttonBase: { minHeight: 54, borderRadius: ds.raio.controle, justifyContent: 'center', alignItems: 'center', flexDirection: 'row', gap: 10, paddingHorizontal: 16 },
+  buttonGhost: { backgroundColor: '#1d1d1d', borderWidth: 1, borderColor: ds.cores.borda },
+  buttonPrimary: { backgroundColor: ds.cores.destaque },
   buttonGoogle: { backgroundColor: '#ffffff' },
   buttonDisabled: { opacity: 0.6 },
-  buttonTextBase: { fontSize: 14, fontWeight: '900', textTransform: 'uppercase', letterSpacing: 0.8 },
+  buttonTextBase: { fontSize: ds.fonte.controle, fontWeight: '700', textTransform: 'none', letterSpacing: 0,
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center', },
   buttonTextDark: { color: '#111' },
-  buttonTextLight: { color: '#fff' },
+  buttonTextLight: { color: ds.cores.texto },
   buttonTextGoogle: { color: '#1f2937' },
   separatorWrap: { flexDirection: 'row', alignItems: 'center', gap: 12, marginVertical: 2 },
-  separatorLine: { flex: 1, height: 1, backgroundColor: '#222' },
-  separatorText: { color: '#666', fontSize: 12, fontWeight: '700', textTransform: 'uppercase' },
+  separatorLine: { flex: 1, height: 1, backgroundColor: ds.cores.borda },
+  separatorText: { color: ds.cores.textoSuave, fontSize: ds.fonte.corpo, fontWeight: '700', textTransform: 'none',
+    lineHeight: 20,
+    flexShrink: 1, },
   cardList: { gap: 10 },
-  roleCard: { borderRadius: 16, borderWidth: 1, padding: 14, gap: 4 },
-  roleCardIdle: { backgroundColor: '#101010', borderColor: '#222' },
-  roleCardActive: { backgroundColor: '#161616', borderColor: '#f3c21a' },
+  roleCard: { borderRadius: ds.raio.cartao, borderWidth: 1, padding: ds.espaco.padrao, gap: 4 },
+  roleCardIdle: { backgroundColor: ds.cores.superficie, borderColor: ds.cores.borda },
+  roleCardActive: { backgroundColor: ds.cores.elevada, borderColor: ds.cores.destaque },
   roleHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   roleDot: { width: 10, height: 10, borderRadius: 5 },
   roleDotOff: { backgroundColor: '#333' },
-  roleDotOn: { backgroundColor: '#f3c21a' },
-  roleTitle: { color: '#fff', fontSize: 16, fontWeight: '800' },
-  roleDescription: { color: '#888', fontSize: 11 },
+  roleDotOn: { backgroundColor: ds.cores.destaque },
+  roleTitle: { color: ds.cores.texto, fontSize: ds.fonte.subtitulo, fontWeight: '800',
+    lineHeight: 23,
+    flexShrink: 1, },
+  roleDescription: { color: ds.cores.textoSuave, fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1, },
   inputStack: { gap: 12 },
   inputContainer: { gap: 6 },
   inputLabelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  inputLabelText: { color: '#aaa', fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.8 },
-  requiredStar: { color: '#f3c21a', fontWeight: '900' },
-  inputPendenteTag: { color: '#f3c21a', fontSize: 10, fontWeight: '800', textTransform: 'uppercase' },
+  inputLabelText: { color: '#aaa', fontSize: ds.fonte.legenda, fontWeight: '700', textTransform: 'none', letterSpacing: 0,
+    lineHeight: 17, },
+  requiredStar: { color: ds.cores.destaque, fontWeight: '900' },
+  inputPendenteTag: { color: ds.cores.destaque, fontSize: ds.fonte.corpo, fontWeight: '800', textTransform: 'uppercase',
+    lineHeight: 20,
+    flexShrink: 1, },
   inputWrap: { position: 'relative', justifyContent: 'center' },
   inputIcon: { position: 'absolute', left: 16, zIndex: 2 },
   input: {
     minHeight: 50,
-    borderRadius: 12,
-    backgroundColor: '#111111',
+    borderRadius: ds.raio.campo,
+    backgroundColor: ds.cores.superficie,
     borderWidth: 1,
-    borderColor: '#222',
-    color: '#fff',
-    fontSize: 14,
+    borderColor: ds.cores.borda,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.campo,
     paddingHorizontal: 16,
+    lineHeight: 23,
+    flexShrink: 1,
   },
   inputWithIcon: { paddingLeft: 46 },
   inputMultiline: { minHeight: 74, paddingVertical: 12 },
   inputPendenteBorder: { borderColor: 'rgba(243, 194, 26, 0.4)' },
-  inputDisabled: { backgroundColor: '#0c0c0c', color: '#888', borderColor: '#1a1a1a' },
+  inputDisabled: { backgroundColor: '#0c0c0c', color: ds.cores.textoSuave, borderColor: ds.cores.borda },
   stylePillsScroll: { flexDirection: 'row', gap: 8, paddingVertical: 4 },
   stylePill: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1 },
-  stylePillIdle: { backgroundColor: '#121212', borderColor: '#262626' },
-  stylePillActive: { backgroundColor: '#f3c21a', borderColor: '#f3c21a' },
-  stylePillText: { fontSize: 12, fontWeight: '700' },
-  stylePillTextIdle: { color: '#888' },
+  stylePillIdle: { backgroundColor: ds.cores.superficie, borderColor: ds.cores.borda },
+  stylePillActive: { backgroundColor: ds.cores.destaque, borderColor: ds.cores.destaque },
+  stylePillText: { fontSize: ds.fonte.etiqueta, fontWeight: '700',
+    lineHeight: 16, },
+  stylePillTextIdle: { color: ds.cores.textoSuave },
   stylePillTextActive: { color: '#111' },
   errorBanner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: 'rgba(239, 68, 68, 0.15)', borderWidth: 1, borderColor: 'rgba(239, 68, 68, 0.4)', borderRadius: 10, padding: 10 },
-  errorText: { color: '#ef4444', fontSize: 12, fontWeight: '700', flex: 1 },
-  backLink: { alignItems: 'center', paddingVertical: 6 },
-  backLinkText: { color: '#777', fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1 },
-  switchAccountBtn: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6, paddingVertical: 10 },
-  switchAccountText: { color: '#777', fontSize: 12, fontWeight: '700' },
+  errorText: { color: '#ef4444', fontSize: ds.fonte.corpo, fontWeight: '700', flex: 1,
+    lineHeight: 20,
+    flexShrink: 1, },
+  backLink: { alignItems: 'center', paddingVertical: 6,
+    minHeight: ds.alvo.controle,
+    justifyContent: 'center', },
+  backLinkText: { color: ds.cores.textoSuave, fontSize: ds.fonte.corpo, fontWeight: '700', textTransform: 'none', letterSpacing: 0,
+    lineHeight: 20,
+    flexShrink: 1, },
+  switchAccountBtn: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6, paddingVertical: 10,
+    minHeight: ds.alvo.controle, },
+  switchAccountText: { color: ds.cores.textoSuave, fontSize: ds.fonte.legenda, fontWeight: '700',
+    lineHeight: 17, },
 });

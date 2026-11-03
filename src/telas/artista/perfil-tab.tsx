@@ -1,7 +1,10 @@
+import { avisar } from '@/services/feedback';
+import { ds } from '@/theme/design-system';
 import { AppModal } from '@/components/ui/app-modal';
 import { selecionarImagemGaleria } from '@/services/image-picker-helper';
 import { PortfolioService } from '@/services/portfolio-service';
-import { supabase } from '@/services/supabase';
+import { supabase } from '@/services/data-client';
+import { confirmarAcao } from '@/services/feedback';
 import type { ItemPortfolio } from '@/types/artista-detalhado';
 import type { PerfilUsuario } from '@/types/auth';
 import { BotaoAlternarTema, createThemedStyles, tc } from '@/theme';
@@ -131,11 +134,11 @@ export function ArtistaPerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
   // 2. AÇÃO: Salvar nova obra no portfólio
   const handleSalvarNovaObra = async () => {
     if (!novaImagemUrl.trim()) {
-      alert('Selecione ou insira uma imagem para a obra.');
+      avisar('Selecione ou insira uma imagem para a obra.');
       return;
     }
     if (!novoTitulo.trim()) {
-      alert('Dê um título à obra (ex: Floral Botânico).');
+      avisar('Dê um título à obra (ex: Floral Botânico).');
       return;
     }
 
@@ -162,7 +165,7 @@ export function ArtistaPerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
       exibirAlerta('Obra publicada com sucesso! Ela já aparece no Explorar.');
     } catch (err) {
       console.warn('Erro ao salvar obra:', err);
-      alert('Não foi possível salvar a obra. Tente novamente.');
+      avisar('Não foi possível salvar a obra. Tente novamente.');
     } finally {
       setSalvandoObra(false);
     }
@@ -170,9 +173,7 @@ export function ArtistaPerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
 
   // 3. AÇÃO: Remover obra do portfólio
   const handleRemoverObra = async (obraId: string) => {
-    const confirmar = Platform.OS === 'web'
-      ? window.confirm('Deseja realmente remover esta obra do seu portfólio?')
-      : true;
+    const confirmar = await confirmarAcao('Deseja realmente remover esta obra do seu portfólio?');
 
     if (!confirmar) return;
 
@@ -181,7 +182,7 @@ export function ArtistaPerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
       setObras((prev) => prev.filter((o) => o.id !== obraId));
       exibirAlerta('Obra removida do portfólio.');
     } catch {
-      alert('Erro ao remover obra.');
+      avisar('Erro ao remover obra.');
     }
   };
 
@@ -195,7 +196,7 @@ export function ArtistaPerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
 
   const handleSalvarFotoPerfil = async () => {
     if (!urlFotoTemporaria.trim()) {
-      alert('Escolha ou insira a URL da foto de perfil.');
+      avisar('Escolha ou insira a URL da foto de perfil.');
       return;
     }
 
@@ -204,13 +205,12 @@ export function ArtistaPerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
       const fotoFinal = urlFotoTemporaria.trim();
 
       // Atualiza Supabase
-      try {
-        await supabase
+      {
+        const { data, error } = await supabase
           .from('profiles')
           .update({ foto_url: fotoFinal })
-          .eq('id', artistaId);
-      } catch {
-        // silencioso
+          .eq('id', artistaId).select('id').single();
+        if (error || !data) throw new Error('Não foi possível salvar a foto.');
       }
 
       const atualizado: PerfilUsuario = {
@@ -227,7 +227,7 @@ export function ArtistaPerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
       setUrlFotoTemporaria('');
       exibirAlerta('Foto de perfil atualizada!');
     } catch {
-      alert('Erro ao atualizar foto de perfil.');
+      avisar('Erro ao atualizar foto de perfil.');
     } finally {
       setSalvandoFoto(false);
     }
@@ -254,13 +254,12 @@ export function ArtistaPerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
         percentual_sinal: sinalNum,
       };
 
-      try {
-        await supabase
+      {
+        const { data, error } = await supabase
           .from('profiles')
           .update(payloadDb)
-          .eq('id', artistaId);
-      } catch {
-        // silencioso
+          .eq('id', artistaId).select('id').single();
+        if (error || !data) throw new Error('Não foi possível salvar os dados.');
       }
 
       const atualizado: PerfilUsuario = {
@@ -290,7 +289,7 @@ export function ArtistaPerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
       setModalDadosAberto(false);
       exibirAlerta('Dados do perfil salvos com sucesso!');
     } catch {
-      alert('Erro ao salvar dados do perfil.');
+      avisar('Erro ao salvar dados do perfil.');
     } finally {
       setSalvandoDados(false);
     }
@@ -316,7 +315,7 @@ export function ArtistaPerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
             <Image source={{ uri: fotoAtual }} style={styles.avatarImg} />
           ) : (
             <View style={styles.avatar}>
-              <Palette size={32} color={tc('#f3c21a')} />
+              <Palette size={32} color={tc(ds.cores.destaque)} />
             </View>
           )}
 
@@ -357,7 +356,7 @@ export function ArtistaPerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
             setModalDadosAberto(true);
           }}
         >
-          <Edit3 size={13} color={tc('#f3c21a')} />
+          <Edit3 size={13} color={tc(ds.cores.destaque)} />
           <Text style={styles.btnEditarPerfilText}>Editar Dados do Estúdio</Text>
         </Pressable>
       </View>
@@ -370,7 +369,7 @@ export function ArtistaPerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
         <View style={styles.portfolioHeaderRow}>
           <View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <ImageIcon size={18} color={tc('#f3c21a')} />
+              <ImageIcon size={18} color={tc(ds.cores.destaque)} />
               <Text style={styles.cardTitle}>Meu Portfólio & Flashes</Text>
             </View>
             <Text style={styles.portfolioSubtitle}>
@@ -394,10 +393,10 @@ export function ArtistaPerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
         </View>
 
         {carregandoObras ? (
-          <ActivityIndicator color={tc('#f3c21a')} style={{ marginVertical: 20 }} />
+          <ActivityIndicator color={tc(ds.cores.destaque)} style={{ marginVertical: 20 }} />
         ) : obras.length === 0 ? (
           <View style={styles.emptyPortfolioBox}>
-            <ImageIcon size={28} color={tc('#6b7280')} />
+            <ImageIcon size={28} color={tc(ds.cores.textoSuave)} />
             <Text style={styles.emptyPortfolioTitle}>Nenhuma obra cadastrada ainda</Text>
             <Text style={styles.emptyPortfolioSub}>
               Adicione fotos de tatuagens e flashes autorais para aparecer no feed Explorar.
@@ -411,7 +410,7 @@ export function ArtistaPerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
                   <Image source={{ uri: obra.imagemUrl }} style={styles.portfolioImg} />
                   
                   <View style={styles.zoomBtnMini}>
-                    <Maximize2 size={11} color={tc('#fff')} />
+                    <Maximize2 size={11} color={tc(ds.cores.texto)} />
                   </View>
 
                   <Pressable
@@ -455,7 +454,7 @@ export function ArtistaPerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
       {/* Dados Fiscais & Recebimento */}
       <View style={styles.card}>
         <View style={styles.cardHeaderRow}>
-          <FileCheck2 size={16} color={tc('#f3c21a')} />
+          <FileCheck2 size={16} color={tc(ds.cores.destaque)} />
           <Text style={styles.cardTitle}>Dados Fiscais & Pagamento</Text>
         </View>
 
@@ -485,22 +484,22 @@ export function ArtistaPerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
         <Text style={styles.cardTitle}>Localização & Contato</Text>
 
         <View style={styles.itemRow}>
-          <Building size={14} color={tc('#6b7280')} />
+          <Building size={14} color={tc(ds.cores.textoSuave)} />
           <Text style={styles.itemVal}>{perfil.nome_estudio || perfil.nomeEstudio || 'Estúdio Particular'}</Text>
         </View>
 
         <View style={styles.itemRow}>
-          <MapPin size={14} color={tc('#6b7280')} />
+          <MapPin size={14} color={tc(ds.cores.textoSuave)} />
           <Text style={styles.itemVal}>{perfil.endereco_estudio || perfil.enderecoEstudio || 'Endereço não informado'}</Text>
         </View>
 
         <View style={styles.itemRow}>
-          <Phone size={14} color={tc('#6b7280')} />
+          <Phone size={14} color={tc(ds.cores.textoSuave)} />
           <Text style={styles.itemVal}>{perfil.telefone || '(11) 98888-8888'}</Text>
         </View>
 
         <View style={styles.itemRow}>
-          <Mail size={14} color={tc('#6b7280')} />
+          <Mail size={14} color={tc(ds.cores.textoSuave)} />
           <Text style={styles.itemVal}>{perfil.email}</Text>
         </View>
       </View>
@@ -525,11 +524,11 @@ export function ArtistaPerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Plus size={18} color={tc('#f3c21a')} />
+                <Plus size={18} color={tc(ds.cores.destaque)} />
                 <Text style={styles.modalTitle}>Adicionar Foto ao Portfólio</Text>
               </View>
               <Pressable onPress={() => setModalNovaObraAberto(false)}>
-                <X size={20} color={tc('#fff')} />
+                <X size={20} color={tc(ds.cores.texto)} />
               </Pressable>
             </View>
 
@@ -545,7 +544,7 @@ export function ArtistaPerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
                       style={styles.removePreviewBtn}
                       onPress={() => setNovaImagemUrl('')}
                     >
-                      <X size={14} color={tc('#fff')} />
+                      <X size={14} color={tc(ds.cores.texto)} />
                     </Pressable>
                   </View>
                 ) : (
@@ -563,7 +562,7 @@ export function ArtistaPerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
                     <TextInput
                       style={styles.input}
                       placeholder="https://exemplo.com/foto-tattoo.jpg"
-                      placeholderTextColor={tc('#6b7280')}
+                      placeholderTextColor={tc(ds.cores.textoSuave)}
                       value={novaImagemUrl}
                       onChangeText={setNovaImagemUrl}
                     />
@@ -577,7 +576,7 @@ export function ArtistaPerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
                 <TextInput
                   style={styles.input}
                   placeholder="Ex: Serpente Floral Fine Line"
-                  placeholderTextColor={tc('#6b7280')}
+                  placeholderTextColor={tc(ds.cores.textoSuave)}
                   value={novoTitulo}
                   onChangeText={setNovoTitulo}
                 />
@@ -610,7 +609,7 @@ export function ArtistaPerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
                 <TextInput
                   style={styles.input}
                   placeholder="Ex: 450"
-                  placeholderTextColor={tc('#6b7280')}
+                  placeholderTextColor={tc(ds.cores.textoSuave)}
                   keyboardType="numeric"
                   value={novoPreco}
                   onChangeText={setNovoPreco}
@@ -641,7 +640,7 @@ export function ArtistaPerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
                 <TextInput
                   style={[styles.input, { height: 60, textAlignVertical: 'top' }]}
                   placeholder="Tamanho sugerido, local do corpo ideal, cicatrização..."
-                  placeholderTextColor={tc('#6b7280')}
+                  placeholderTextColor={tc(ds.cores.textoSuave)}
                   multiline
                   value={novaDescricao}
                   onChangeText={setNovaDescricao}
@@ -680,11 +679,11 @@ export function ArtistaPerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Camera size={18} color={tc('#f3c21a')} />
+                <Camera size={18} color={tc(ds.cores.destaque)} />
                 <Text style={styles.modalTitle}>Alterar Foto de Perfil</Text>
               </View>
               <Pressable onPress={() => setModalFotoAberto(false)}>
-                <X size={20} color={tc('#fff')} />
+                <X size={20} color={tc(ds.cores.texto)} />
               </Pressable>
             </View>
 
@@ -695,7 +694,7 @@ export function ArtistaPerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
                   <Image source={{ uri: urlFotoTemporaria }} style={styles.avatarPreviewModal} />
                 ) : (
                   <View style={styles.avatarPreviewModalEmpty}>
-                    <Camera size={36} color={tc('#6b7280')} />
+                    <Camera size={36} color={tc(ds.cores.textoSuave)} />
                   </View>
                 )}
               </View>
@@ -713,7 +712,7 @@ export function ArtistaPerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
               <TextInput
                 style={styles.input}
                 placeholder="https://exemplo.com/sua-foto.jpg"
-                placeholderTextColor={tc('#6b7280')}
+                placeholderTextColor={tc(ds.cores.textoSuave)}
                 value={urlFotoTemporaria}
                 onChangeText={setUrlFotoTemporaria}
               />
@@ -749,11 +748,11 @@ export function ArtistaPerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
           <View style={[styles.modalContent, { maxHeight: '90%' }]}>
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Edit3 size={18} color={tc('#f3c21a')} />
+                <Edit3 size={18} color={tc(ds.cores.destaque)} />
                 <Text style={styles.modalTitle}>Editar Dados do Estúdio</Text>
               </View>
               <Pressable onPress={() => setModalDadosAberto(false)}>
-                <X size={20} color={tc('#fff')} />
+                <X size={20} color={tc(ds.cores.texto)} />
               </Pressable>
             </View>
 
@@ -765,7 +764,7 @@ export function ArtistaPerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
                   value={formNome}
                   onChangeText={setFormNome}
                   placeholder="Seu nome"
-                  placeholderTextColor={tc('#6b7280')}
+                  placeholderTextColor={tc(ds.cores.textoSuave)}
                 />
               </View>
 
@@ -776,7 +775,7 @@ export function ArtistaPerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
                   value={formEstudio}
                   onChangeText={setFormEstudio}
                   placeholder="Nome do estúdio ou 'Estúdio Particular'"
-                  placeholderTextColor={tc('#6b7280')}
+                  placeholderTextColor={tc(ds.cores.textoSuave)}
                 />
               </View>
 
@@ -787,7 +786,7 @@ export function ArtistaPerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
                   value={formEndereco}
                   onChangeText={setFormEndereco}
                   placeholder="Rua, número, bairro"
-                  placeholderTextColor={tc('#6b7280')}
+                  placeholderTextColor={tc(ds.cores.textoSuave)}
                 />
               </View>
 
@@ -798,7 +797,7 @@ export function ArtistaPerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
                   value={formCidade}
                   onChangeText={setFormCidade}
                   placeholder="São Paulo, SP"
-                  placeholderTextColor={tc('#6b7280')}
+                  placeholderTextColor={tc(ds.cores.textoSuave)}
                 />
               </View>
 
@@ -809,7 +808,7 @@ export function ArtistaPerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
                   value={formTelefone}
                   onChangeText={setFormTelefone}
                   placeholder="(11) 99999-9999"
-                  placeholderTextColor={tc('#6b7280')}
+                  placeholderTextColor={tc(ds.cores.textoSuave)}
                 />
               </View>
 
@@ -820,7 +819,7 @@ export function ArtistaPerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
                   value={formEstilo}
                   onChangeText={setFormEstilo}
                   placeholder="Fine Line, Blackwork..."
-                  placeholderTextColor={tc('#6b7280')}
+                  placeholderTextColor={tc(ds.cores.textoSuave)}
                 />
               </View>
 
@@ -832,7 +831,7 @@ export function ArtistaPerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
                   onChangeText={setFormPrecoInicial}
                   keyboardType="numeric"
                   placeholder="350"
-                  placeholderTextColor={tc('#6b7280')}
+                  placeholderTextColor={tc(ds.cores.textoSuave)}
                 />
               </View>
 
@@ -843,7 +842,7 @@ export function ArtistaPerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
                   value={formPix}
                   onChangeText={setFormPix}
                   placeholder="chave@pix.com.br"
-                  placeholderTextColor={tc('#6b7280')}
+                  placeholderTextColor={tc(ds.cores.textoSuave)}
                 />
               </View>
 
@@ -855,7 +854,7 @@ export function ArtistaPerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
                   onChangeText={setFormSinal}
                   keyboardType="numeric"
                   placeholder="30"
-                  placeholderTextColor={tc('#6b7280')}
+                  placeholderTextColor={tc(ds.cores.textoSuave)}
                 />
               </View>
 
@@ -866,7 +865,7 @@ export function ArtistaPerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
                   value={formBio}
                   onChangeText={setFormBio}
                   placeholder="Fale sobre sua experiência, técnicas..."
-                  placeholderTextColor={tc('#6b7280')}
+                  placeholderTextColor={tc(ds.cores.textoSuave)}
                   multiline
                 />
               </View>
@@ -897,7 +896,7 @@ export function ArtistaPerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
         <AppModal visible={!!obraZoom} transparent onRequestClose={() => setObraZoom(null)}>
           <View style={styles.zoomOverlay}>
             <Pressable style={styles.zoomCloseBtn} onPress={() => setObraZoom(null)}>
-              <X size={20} color={tc('#fff')} />
+              <X size={20} color={tc(ds.cores.texto)} />
             </Pressable>
             <Image source={{ uri: obraZoom.imagemUrl }} style={styles.zoomImg} resizeMode="contain" />
             <View style={styles.zoomCard}>
@@ -921,27 +920,29 @@ export function ArtistaPerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
 
 const styles = createThemedStyles({
   container: {
-    gap: 14,
+    gap: ds.espaco.secao,
   },
   feedbackToast: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderRadius: 10,
   },
   feedbackToastText: {
     color: '#000',
-    fontSize: 12,
+    fontSize: ds.fonte.corpo,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   profileHeader: {
-    backgroundColor: '#101010',
-    borderRadius: 16,
+    backgroundColor: ds.cores.superficie,
+    borderRadius: ds.raio.cartao,
     borderWidth: 1,
-    borderColor: '#1d1d1d',
+    borderColor: ds.cores.borda,
     padding: 20,
     alignItems: 'center',
     gap: 6,
@@ -955,13 +956,13 @@ const styles = createThemedStyles({
     height: 72,
     borderRadius: 36,
     borderWidth: 2,
-    borderColor: '#f3c21a',
+    borderColor: ds.cores.destaque,
   },
   avatar: {
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: '#171717',
+    backgroundColor: ds.cores.elevada,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -969,7 +970,7 @@ const styles = createThemedStyles({
     position: 'absolute',
     bottom: -2,
     right: -2,
-    backgroundColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
     width: 26,
     height: 26,
     borderRadius: 13,
@@ -979,14 +980,18 @@ const styles = createThemedStyles({
     borderColor: '#101010',
   },
   name: {
-    color: '#fff',
-    fontSize: 19,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '800',
+    lineHeight: 23,
+    flexShrink: 1,
   },
   studio: {
-    color: '#f3c21a',
-    fontSize: 13,
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.corpo,
     fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   badgePro: {
     flexDirection: 'row',
@@ -1002,8 +1007,9 @@ const styles = createThemedStyles({
   },
   badgeProText: {
     color: '#10b981',
-    fontSize: 10,
+    fontSize: ds.fonte.etiqueta,
     fontWeight: '700',
+    lineHeight: 16,
   },
   btnEditarPerfil: {
     flexDirection: 'row',
@@ -1011,22 +1017,27 @@ const styles = createThemedStyles({
     gap: 6,
     backgroundColor: '#1c1c1f',
     borderWidth: 1,
-    borderColor: '#2e2e33',
+    borderColor: ds.cores.borda,
     paddingVertical: 8,
     paddingHorizontal: 14,
-    borderRadius: 10,
+    borderRadius: ds.raio.controle,
     marginTop: 8,
+    minHeight: ds.alvo.controle,
+    justifyContent: 'center',
   },
   btnEditarPerfilText: {
-    color: '#f3c21a',
-    fontSize: 11,
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   card: {
-    backgroundColor: '#101010',
-    borderRadius: 16,
+    backgroundColor: ds.cores.superficie,
+    borderRadius: ds.raio.cartao,
     borderWidth: 1,
-    borderColor: '#1d1d1d',
+    borderColor: ds.cores.borda,
     padding: 16,
     gap: 12,
   },
@@ -1036,9 +1047,11 @@ const styles = createThemedStyles({
     gap: 8,
   },
   cardTitle: {
-    color: '#fff',
-    fontSize: 14,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.secao,
     fontWeight: '800',
+    lineHeight: 26,
+    flexShrink: 1,
   },
   portfolioHeaderRow: {
     flexDirection: 'row',
@@ -1046,23 +1059,30 @@ const styles = createThemedStyles({
     alignItems: 'flex-start',
   },
   portfolioSubtitle: {
-    color: '#8e8e93',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.subtitulo,
     marginTop: 2,
+    lineHeight: 23,
+    flexShrink: 1,
   },
   btnAddObra: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
     paddingVertical: 7,
     paddingHorizontal: 12,
-    borderRadius: 8,
+    borderRadius: ds.raio.controle,
+    minHeight: ds.alvo.controle,
+    justifyContent: 'center',
   },
   btnAddObraText: {
     color: '#000',
-    fontSize: 11,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   emptyPortfolioBox: {
     paddingVertical: 24,
@@ -1076,15 +1096,19 @@ const styles = createThemedStyles({
     borderStyle: 'dashed',
   },
   emptyPortfolioTitle: {
-    color: '#fff',
-    fontSize: 13,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '700',
+    lineHeight: 23,
+    flexShrink: 1,
   },
   emptyPortfolioSub: {
-    color: '#71717a',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
     textAlign: 'center',
     paddingHorizontal: 20,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   portfolioGrid: {
     flexDirection: 'row',
@@ -1094,7 +1118,7 @@ const styles = createThemedStyles({
   portfolioCard: {
     width: '48%',
     backgroundColor: '#161619',
-    borderRadius: 12,
+    borderRadius: ds.raio.cartao,
     borderWidth: 1,
     borderColor: '#232328',
     overflow: 'hidden',
@@ -1125,20 +1149,23 @@ const styles = createThemedStyles({
     top: 6,
     right: 6,
     backgroundColor: 'rgba(0,0,0,0.7)',
-    width: 24,
-    height: 24,
+    width: ds.alvo.compacto,
+    height: ds.alvo.compacto,
     borderRadius: 6,
     justifyContent: 'center',
     alignItems: 'center',
+    minHeight: ds.alvo.compacto,
   },
   portfolioCardInfo: {
     padding: 8,
     gap: 4,
   },
   portfolioCardTitle: {
-    color: '#fff',
-    fontSize: 11,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '700',
+    lineHeight: 23,
+    flexShrink: 1,
   },
   portfolioBadgeRow: {
     flexDirection: 'row',
@@ -1152,9 +1179,11 @@ const styles = createThemedStyles({
     borderRadius: 6,
   },
   tagEstiloText: {
-    color: '#d1d5db',
-    fontSize: 9,
+    color: ds.cores.textoSecundario,
+    fontSize: ds.fonte.corpo,
     fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   tagDisponivelPill: {
     backgroundColor: 'rgba(243, 194, 26, 0.15)',
@@ -1163,9 +1192,11 @@ const styles = createThemedStyles({
     borderRadius: 6,
   },
   tagDisponivelText: {
-    color: '#f3c21a',
-    fontSize: 9,
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.corpo,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   tagCicatrizadaPill: {
     backgroundColor: 'rgba(16, 185, 129, 0.15)',
@@ -1175,14 +1206,18 @@ const styles = createThemedStyles({
   },
   tagCicatrizadaText: {
     color: '#10b981',
-    fontSize: 9,
+    fontSize: ds.fonte.corpo,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   portfolioPreco: {
-    color: '#f3c21a',
-    fontSize: 12,
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.corpo,
     fontWeight: '800',
     marginTop: 2,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   itemRow: {
     flexDirection: 'row',
@@ -1191,29 +1226,36 @@ const styles = createThemedStyles({
     paddingVertical: 2,
   },
   itemLabel: {
-    color: '#9ca3af',
-    fontSize: 12,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.legenda,
+    lineHeight: 17,
   },
   itemVal: {
-    color: '#fff',
-    fontSize: 12,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.corpo,
     flexShrink: 1,
     textAlign: 'right',
+    lineHeight: 20,
   },
   itemValBold: {
-    color: '#fff',
-    fontSize: 12,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.corpo,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   itemValHighlight: {
-    color: '#f3c21a',
-    fontSize: 12,
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.corpo,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   descText: {
-    color: '#d1d5db',
-    fontSize: 12.5,
-    lineHeight: 18,
+    color: ds.cores.textoSecundario,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
 
   // Estilos dos Modais
@@ -1224,10 +1266,10 @@ const styles = createThemedStyles({
     padding: 16,
   },
   modalContent: {
-    backgroundColor: '#121215',
-    borderRadius: 18,
+    backgroundColor: ds.cores.superficie,
+    borderRadius: ds.raio.modal,
     borderWidth: 1,
-    borderColor: '#26262c',
+    borderColor: ds.cores.borda,
     padding: 18,
     maxHeight: '85%',
     gap: 12,
@@ -1237,51 +1279,63 @@ const styles = createThemedStyles({
     justifyContent: 'space-between',
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: '#202026',
+    borderBottomColor: ds.cores.borda,
     paddingBottom: 12,
   },
   modalTitle: {
-    color: '#fff',
-    fontSize: 15,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.modal,
     fontWeight: '800',
+    lineHeight: 26,
+    flexShrink: 1,
   },
   inputLabel: {
-    color: '#d1d5db',
-    fontSize: 11,
+    color: ds.cores.textoSecundario,
+    fontSize: ds.fonte.legenda,
     fontWeight: '700',
     marginBottom: 4,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    textTransform: 'none',
+    letterSpacing: 0,
+    lineHeight: 17,
   },
   input: {
-    backgroundColor: '#1b1b20',
+    backgroundColor: ds.cores.elevada,
     borderWidth: 1,
-    borderColor: '#2c2c34',
-    borderRadius: 10,
+    borderColor: ds.cores.borda,
+    borderRadius: ds.raio.campo,
     paddingHorizontal: 12,
-    paddingVertical: 9,
-    color: '#fff',
-    fontSize: 13,
+    paddingVertical: 12,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.campo,
+    lineHeight: 23,
+    flexShrink: 1,
+    minHeight: ds.alvo.controle,
   },
   btnEscolherGaleria: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
     paddingVertical: 11,
-    borderRadius: 10,
+    borderRadius: ds.raio.controle,
+    minHeight: ds.alvo.controle,
   },
   btnEscolherGaleriaText: {
     color: '#000',
-    fontSize: 12,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   orText: {
-    color: '#8e8e93',
-    fontSize: 10.5,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
     textAlign: 'center',
     marginVertical: 2,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   previewContainer: {
     position: 'relative',
@@ -1289,7 +1343,7 @@ const styles = createThemedStyles({
     borderRadius: 10,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#3a3a44',
+    borderColor: ds.cores.borda,
   },
   previewImg: {
     width: '100%',
@@ -1313,16 +1367,18 @@ const styles = createThemedStyles({
     borderRadius: 14,
     backgroundColor: '#1d1d23',
     borderWidth: 1,
-    borderColor: '#2d2d36',
+    borderColor: ds.cores.borda,
   },
   estiloChipActive: {
-    backgroundColor: '#f3c21a',
-    borderColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
+    borderColor: ds.cores.destaque,
   },
   estiloChipText: {
-    color: '#9ca3af',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
     fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   estiloChipTextActive: {
     color: '#000',
@@ -1332,34 +1388,43 @@ const styles = createThemedStyles({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#18181d',
+    backgroundColor: ds.cores.elevada,
     padding: 10,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#26262e',
+    borderColor: ds.cores.borda,
   },
   toggleLabel: {
-    color: '#fff',
-    fontSize: 11.5,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.legenda,
     fontWeight: '700',
+    lineHeight: 17,
   },
   toggleSub: {
-    color: '#71717a',
-    fontSize: 10,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   toggleBtn: {
     backgroundColor: '#26262e',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 6,
+    borderRadius: ds.raio.controle,
+    minHeight: ds.alvo.controle,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   toggleBtnActive: {
     backgroundColor: '#10b981',
   },
   toggleBtnText: {
-    color: '#8e8e93',
-    fontSize: 10,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   toggleBtnTextActive: {
     color: '#000',
@@ -1369,30 +1434,34 @@ const styles = createThemedStyles({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
     paddingVertical: 12,
-    borderRadius: 10,
+    borderRadius: ds.raio.controle,
     marginTop: 6,
+    minHeight: ds.alvo.controle,
   },
   btnConfirmarText: {
     color: '#000',
-    fontSize: 13,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   avatarPreviewModal: {
     width: 90,
     height: 90,
     borderRadius: 45,
     borderWidth: 2,
-    borderColor: '#f3c21a',
+    borderColor: ds.cores.destaque,
   },
   avatarPreviewModalEmpty: {
     width: 90,
     height: 90,
     borderRadius: 45,
-    backgroundColor: '#1b1b20',
+    backgroundColor: ds.cores.elevada,
     borderWidth: 1,
-    borderColor: '#2d2d36',
+    borderColor: ds.cores.borda,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1420,33 +1489,41 @@ const styles = createThemedStyles({
     height: '60%',
   },
   zoomCard: {
-    backgroundColor: '#121215',
+    backgroundColor: ds.cores.superficie,
     padding: 16,
-    borderRadius: 14,
+    borderRadius: ds.raio.cartao,
     borderWidth: 1,
-    borderColor: '#26262c',
+    borderColor: ds.cores.borda,
     width: '90%',
     marginTop: 14,
     gap: 4,
   },
   zoomCardTitle: {
-    color: '#fff',
-    fontSize: 15,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '800',
+    lineHeight: 23,
+    flexShrink: 1,
   },
   zoomCardStyle: {
-    color: '#9ca3af',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   zoomCardPrice: {
-    color: '#f3c21a',
+    color: ds.cores.destaque,
     fontSize: 14,
     fontWeight: '800',
     marginTop: 4,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   zoomCardDesc: {
-    color: '#d1d5db',
-    fontSize: 11,
+    color: ds.cores.textoSecundario,
+    fontSize: ds.fonte.corpo,
     marginTop: 2,
+    lineHeight: 20,
+    flexShrink: 1,
   },
 });

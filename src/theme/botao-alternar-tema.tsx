@@ -1,3 +1,4 @@
+import { ds } from '@/theme/design-system';
 import { Moon, Sun } from 'lucide-react-native';
 import React, { useEffect, useRef } from 'react';
 import { Animated, Pressable, Text, View } from 'react-native';
@@ -41,7 +42,7 @@ export function BotaoAlternarTema() {
         style={({ pressed }) => [styles.linha, pressed && styles.linhaPressionada]}
       >
         <View style={styles.iconeWrap}>
-          {modoClaro ? <Sun size={18} color={tc('#f3c21a')} /> : <Moon size={18} color={tc('#f3c21a')} />}
+          {modoClaro ? <Sun size={18} color={tc(ds.cores.destaque)} /> : <Moon size={18} color={tc(ds.cores.destaque)} />}
         </View>
 
         <View style={styles.textos}>
@@ -53,7 +54,7 @@ export function BotaoAlternarTema() {
 
         <View style={[styles.trilho, modoClaro && styles.trilhoAtivo]}>
           <Animated.View style={[styles.bolinha, { transform: [{ translateX: deslocamento }] }]}>
-            {modoClaro ? <Sun size={12} color={tc('#f3c21a')} /> : <Moon size={12} color={tc('#888')} />}
+            {modoClaro ? <Sun size={12} color={tc(ds.cores.destaque)} /> : <Moon size={12} color={tc(ds.cores.textoSuave)} />}
           </Animated.View>
         </View>
       </Pressable>
@@ -63,19 +64,21 @@ export function BotaoAlternarTema() {
 
 const styles = createThemedStyles({
   card: {
-    backgroundColor: '#101010',
-    borderRadius: 14,
+    backgroundColor: ds.cores.superficie,
+    borderRadius: ds.raio.cartao,
     borderWidth: 1,
-    borderColor: '#1d1d1d',
+    borderColor: ds.cores.borda,
     padding: 16,
     gap: 12,
   },
   cardTitle: {
-    color: '#f3c21a',
-    fontSize: 12,
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.secao,
     fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    textTransform: 'none',
+    letterSpacing: 0,
+    lineHeight: 26,
+    flexShrink: 1,
   },
   linha: {
     flexDirection: 'row',
@@ -101,13 +104,17 @@ const styles = createThemedStyles({
     gap: 2,
   },
   titulo: {
-    color: '#fff',
-    fontSize: 14,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.modal,
     fontWeight: '800',
+    lineHeight: 26,
+    flexShrink: 1,
   },
   descricao: {
-    color: '#9ca3af',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   trilho: {
     width: 52,
@@ -115,19 +122,19 @@ const styles = createThemedStyles({
     borderRadius: 999,
     backgroundColor: '#1d1d1d',
     borderWidth: 1,
-    borderColor: '#2a2a2a',
+    borderColor: ds.cores.borda,
     padding: 2,
     justifyContent: 'center',
   },
   trilhoAtivo: {
-    backgroundColor: '#f3c21a',
-    borderColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
+    borderColor: ds.cores.destaque,
   },
   bolinha: {
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: '#050505',
+    backgroundColor: ds.cores.fundo,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',

@@ -1,6 +1,8 @@
+import { avisar } from '@/services/feedback';
+import { ds } from '@/theme/design-system';
 import { AppModal } from '@/components/ui/app-modal';
 import { selecionarImagemGaleria } from '@/services/image-picker-helper';
-import { supabase } from '@/services/supabase';
+import { supabase } from '@/services/data-client';
 import type { PerfilUsuario } from '@/types/auth';
 import { BotaoAlternarTema, createThemedStyles, tc } from '@/theme';
 import {
@@ -81,7 +83,7 @@ export function ClientePerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
   // 2. AÇÃO: Salvar nova foto de perfil
   const handleSalvarFotoPerfil = async () => {
     if (!urlFotoTemporaria.trim()) {
-      alert('Selecione ou informe a URL da foto.');
+      avisar('Selecione ou informe a URL da foto.');
       return;
     }
 
@@ -90,13 +92,12 @@ export function ClientePerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
       const fotoFinal = urlFotoTemporaria.trim();
 
       // Atualiza Supabase
-      try {
-        await supabase
+      {
+        const { data, error } = await supabase
           .from('profiles')
           .update({ foto_url: fotoFinal })
-          .eq('id', clienteId);
-      } catch {
-        // silencioso
+          .eq('id', clienteId).select('id').single();
+        if (error || !data) throw new Error('Não foi possível salvar a foto.');
       }
 
       const atualizado: PerfilUsuario = {
@@ -113,7 +114,7 @@ export function ClientePerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
       setUrlFotoTemporaria('');
       exibirAlerta('Foto de perfil atualizada!');
     } catch {
-      alert('Erro ao atualizar foto.');
+      avisar('Erro ao atualizar foto.');
     } finally {
       setSalvandoFoto(false);
     }
@@ -130,13 +131,12 @@ export function ClientePerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
         biografia: formBio.trim(),
       };
 
-      try {
-        await supabase
+      {
+        const { data, error } = await supabase
           .from('profiles')
           .update(payloadDb)
-          .eq('id', clienteId);
-      } catch {
-        // silencioso
+          .eq('id', clienteId).select('id').single();
+        if (error || !data) throw new Error('Não foi possível salvar os dados.');
       }
 
       const atualizado: PerfilUsuario = {
@@ -156,7 +156,7 @@ export function ClientePerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
       setModalDadosAberto(false);
       exibirAlerta('Dados pessoais atualizados com sucesso!');
     } catch {
-      alert('Erro ao salvar dados.');
+      avisar('Erro ao salvar dados.');
     } finally {
       setSalvandoDados(false);
     }
@@ -179,7 +179,7 @@ export function ClientePerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
             <Image source={{ uri: fotoAtual }} style={styles.avatarImg} />
           ) : (
             <View style={styles.avatar}>
-              <User size={32} color={tc('#f3c21a')} />
+              <User size={32} color={tc(ds.cores.destaque)} />
             </View>
           )}
 
@@ -207,7 +207,7 @@ export function ClientePerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
             setModalDadosAberto(true);
           }}
         >
-          <Edit3 size={13} color={tc('#f3c21a')} />
+          <Edit3 size={13} color={tc(ds.cores.destaque)} />
           <Text style={styles.btnEditarPerfilText}>Editar Meus Dados</Text>
         </Pressable>
       </View>
@@ -220,17 +220,17 @@ export function ClientePerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
         <Text style={styles.cardTitle}>Dados Pessoais</Text>
 
         <View style={styles.itemRow}>
-          <Mail size={14} color={tc('#6b7280')} />
+          <Mail size={14} color={tc(ds.cores.textoSuave)} />
           <Text style={styles.itemVal}>{perfil.email}</Text>
         </View>
 
         <View style={styles.itemRow}>
-          <Phone size={14} color={tc('#6b7280')} />
+          <Phone size={14} color={tc(ds.cores.textoSuave)} />
           <Text style={styles.itemVal}>{perfil.telefone || '(11) 99999-9999'}</Text>
         </View>
 
         <View style={styles.itemRow}>
-          <MapPin size={14} color={tc('#6b7280')} />
+          <MapPin size={14} color={tc(ds.cores.textoSuave)} />
           <Text style={styles.itemVal}>{perfil.cidade || 'São Paulo, SP'}</Text>
         </View>
       </View>
@@ -238,7 +238,7 @@ export function ClientePerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
       {/* Preferências de Estilo */}
       <View style={styles.card}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <Heart size={16} color={tc('#f3c21a')} />
+          <Heart size={16} color={tc(ds.cores.destaque)} />
           <Text style={styles.cardTitle}>Preferências & Gostos de Tatuagem</Text>
         </View>
         <Text style={styles.descText}>
@@ -258,11 +258,11 @@ export function ClientePerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Camera size={18} color={tc('#f3c21a')} />
+                <Camera size={18} color={tc(ds.cores.destaque)} />
                 <Text style={styles.modalTitle}>Alterar Foto de Perfil</Text>
               </View>
               <Pressable onPress={() => setModalFotoAberto(false)}>
-                <X size={20} color={tc('#fff')} />
+                <X size={20} color={tc(ds.cores.texto)} />
               </Pressable>
             </View>
 
@@ -272,7 +272,7 @@ export function ClientePerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
                   <Image source={{ uri: urlFotoTemporaria }} style={styles.avatarPreviewModal} />
                 ) : (
                   <View style={styles.avatarPreviewModalEmpty}>
-                    <User size={36} color={tc('#6b7280')} />
+                    <User size={36} color={tc(ds.cores.textoSuave)} />
                   </View>
                 )}
               </View>
@@ -290,7 +290,7 @@ export function ClientePerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
               <TextInput
                 style={styles.input}
                 placeholder="https://exemplo.com/sua-foto.jpg"
-                placeholderTextColor={tc('#6b7280')}
+                placeholderTextColor={tc(ds.cores.textoSuave)}
                 value={urlFotoTemporaria}
                 onChangeText={setUrlFotoTemporaria}
               />
@@ -326,11 +326,11 @@ export function ClientePerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Edit3 size={18} color={tc('#f3c21a')} />
+                <Edit3 size={18} color={tc(ds.cores.destaque)} />
                 <Text style={styles.modalTitle}>Editar Dados Pessoais</Text>
               </View>
               <Pressable onPress={() => setModalDadosAberto(false)}>
-                <X size={20} color={tc('#fff')} />
+                <X size={20} color={tc(ds.cores.texto)} />
               </Pressable>
             </View>
 
@@ -342,7 +342,7 @@ export function ClientePerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
                   value={formNome}
                   onChangeText={setFormNome}
                   placeholder="Seu nome"
-                  placeholderTextColor={tc('#6b7280')}
+                  placeholderTextColor={tc(ds.cores.textoSuave)}
                 />
               </View>
 
@@ -353,7 +353,7 @@ export function ClientePerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
                   value={formTelefone}
                   onChangeText={setFormTelefone}
                   placeholder="(11) 99999-9999"
-                  placeholderTextColor={tc('#6b7280')}
+                  placeholderTextColor={tc(ds.cores.textoSuave)}
                 />
               </View>
 
@@ -364,7 +364,7 @@ export function ClientePerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
                   value={formCidade}
                   onChangeText={setFormCidade}
                   placeholder="São Paulo, SP"
-                  placeholderTextColor={tc('#6b7280')}
+                  placeholderTextColor={tc(ds.cores.textoSuave)}
                 />
               </View>
 
@@ -375,7 +375,7 @@ export function ClientePerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
                   value={formBio}
                   onChangeText={setFormBio}
                   placeholder="Ex: Fine Line, Blackwork, Botânica..."
-                  placeholderTextColor={tc('#6b7280')}
+                  placeholderTextColor={tc(ds.cores.textoSuave)}
                   multiline
                 />
               </View>
@@ -404,27 +404,29 @@ export function ClientePerfilTab({ perfil, onAtualizarPerfil }: PropsPerfilTab) 
 
 const styles = createThemedStyles({
   container: {
-    gap: 14,
+    gap: ds.espaco.secao,
   },
   feedbackToast: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderRadius: 10,
   },
   feedbackToastText: {
     color: '#000',
-    fontSize: 12,
+    fontSize: ds.fonte.corpo,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   profileHeader: {
-    backgroundColor: '#101010',
-    borderRadius: 16,
+    backgroundColor: ds.cores.superficie,
+    borderRadius: ds.raio.cartao,
     borderWidth: 1,
-    borderColor: '#1d1d1d',
+    borderColor: ds.cores.borda,
     padding: 20,
     alignItems: 'center',
     gap: 6,
@@ -438,13 +440,13 @@ const styles = createThemedStyles({
     height: 68,
     borderRadius: 34,
     borderWidth: 2,
-    borderColor: '#f3c21a',
+    borderColor: ds.cores.destaque,
   },
   avatar: {
     width: 68,
     height: 68,
     borderRadius: 34,
-    backgroundColor: '#171717',
+    backgroundColor: ds.cores.elevada,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -452,7 +454,7 @@ const styles = createThemedStyles({
     position: 'absolute',
     bottom: -2,
     right: -2,
-    backgroundColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
     width: 26,
     height: 26,
     borderRadius: 13,
@@ -462,13 +464,17 @@ const styles = createThemedStyles({
     borderColor: '#101010',
   },
   name: {
-    color: '#fff',
-    fontSize: 18,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '800',
+    lineHeight: 23,
+    flexShrink: 1,
   },
   email: {
-    color: '#9ca3af',
-    fontSize: 12,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   btnEditarPerfil: {
     flexDirection: 'row',
@@ -476,29 +482,36 @@ const styles = createThemedStyles({
     gap: 6,
     backgroundColor: '#1c1c1f',
     borderWidth: 1,
-    borderColor: '#2e2e33',
+    borderColor: ds.cores.borda,
     paddingVertical: 8,
     paddingHorizontal: 14,
-    borderRadius: 10,
+    borderRadius: ds.raio.controle,
     marginTop: 8,
+    minHeight: ds.alvo.controle,
+    justifyContent: 'center',
   },
   btnEditarPerfilText: {
-    color: '#f3c21a',
-    fontSize: 11,
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   card: {
-    backgroundColor: '#101010',
-    borderRadius: 16,
+    backgroundColor: ds.cores.superficie,
+    borderRadius: ds.raio.cartao,
     borderWidth: 1,
-    borderColor: '#1d1d1d',
+    borderColor: ds.cores.borda,
     padding: 16,
     gap: 10,
   },
   cardTitle: {
-    color: '#fff',
-    fontSize: 14,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.secao,
     fontWeight: '800',
+    lineHeight: 26,
+    flexShrink: 1,
   },
   itemRow: {
     flexDirection: 'row',
@@ -507,13 +520,16 @@ const styles = createThemedStyles({
     paddingVertical: 4,
   },
   itemVal: {
-    color: '#d1d5db',
-    fontSize: 13,
+    color: ds.cores.textoSecundario,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   descText: {
-    color: '#9ca3af',
-    fontSize: 12.5,
-    lineHeight: 18,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
 
   // Modais
@@ -524,10 +540,10 @@ const styles = createThemedStyles({
     padding: 16,
   },
   modalContent: {
-    backgroundColor: '#121215',
-    borderRadius: 18,
+    backgroundColor: ds.cores.superficie,
+    borderRadius: ds.raio.modal,
     borderWidth: 1,
-    borderColor: '#26262c',
+    borderColor: ds.cores.borda,
     padding: 18,
     maxHeight: '85%',
     gap: 12,
@@ -537,81 +553,97 @@ const styles = createThemedStyles({
     justifyContent: 'space-between',
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: '#202026',
+    borderBottomColor: ds.cores.borda,
     paddingBottom: 12,
   },
   modalTitle: {
-    color: '#fff',
-    fontSize: 15,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.modal,
     fontWeight: '800',
+    lineHeight: 26,
+    flexShrink: 1,
   },
   inputLabel: {
-    color: '#d1d5db',
-    fontSize: 11,
+    color: ds.cores.textoSecundario,
+    fontSize: ds.fonte.legenda,
     fontWeight: '700',
     marginBottom: 4,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    textTransform: 'none',
+    letterSpacing: 0,
+    lineHeight: 17,
   },
   input: {
-    backgroundColor: '#1b1b20',
+    backgroundColor: ds.cores.elevada,
     borderWidth: 1,
-    borderColor: '#2c2c34',
-    borderRadius: 10,
+    borderColor: ds.cores.borda,
+    borderRadius: ds.raio.campo,
     paddingHorizontal: 12,
-    paddingVertical: 9,
-    color: '#fff',
-    fontSize: 13,
+    paddingVertical: 12,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.campo,
+    lineHeight: 23,
+    flexShrink: 1,
+    minHeight: ds.alvo.controle,
   },
   btnEscolherGaleria: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
     paddingVertical: 11,
-    borderRadius: 10,
+    borderRadius: ds.raio.controle,
+    minHeight: ds.alvo.controle,
   },
   btnEscolherGaleriaText: {
     color: '#000',
-    fontSize: 12,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   orText: {
-    color: '#8e8e93',
-    fontSize: 10.5,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
     textAlign: 'center',
     marginVertical: 2,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   btnConfirmar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
     paddingVertical: 12,
-    borderRadius: 10,
+    borderRadius: ds.raio.controle,
     marginTop: 6,
+    minHeight: ds.alvo.controle,
   },
   btnConfirmarText: {
     color: '#000',
-    fontSize: 13,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   avatarPreviewModal: {
     width: 90,
     height: 90,
     borderRadius: 45,
     borderWidth: 2,
-    borderColor: '#f3c21a',
+    borderColor: ds.cores.destaque,
   },
   avatarPreviewModalEmpty: {
     width: 90,
     height: 90,
     borderRadius: 45,
-    backgroundColor: '#1b1b20',
+    backgroundColor: ds.cores.elevada,
     borderWidth: 1,
-    borderColor: '#2d2d36',
+    borderColor: ds.cores.borda,
     justifyContent: 'center',
     alignItems: 'center',
   },

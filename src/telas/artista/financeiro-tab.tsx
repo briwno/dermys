@@ -1,3 +1,4 @@
+import { ds } from '@/theme/design-system';
 import { ConfigFiscalModal } from '@/components/fiscal/config-fiscal-modal';
 import { DrePainel } from '@/components/fiscal/dre-painel';
 import { DetalhesNotaModal } from '@/components/fiscal/detalhes-nota-modal';
@@ -8,7 +9,7 @@ import { TermometroMei } from '@/components/fiscal/termometro-mei';
 import { ReciboFiscalModal } from '@/components/recibo-fiscal-modal';
 import { FiscalService } from '@/services/fiscal/fiscal-service';
 import { gerarReciboFiscal } from '@/services/mercadopago';
-import { supabase } from '@/services/supabase';
+import { supabase } from '@/services/data-client';
 import type { PerfilUsuario } from '@/types/auth';
 import type { ReciboFiscal, TransacaoFinanceira } from '@/types/financeiro';
 import type {
@@ -251,7 +252,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
         <View style={[styles.cardHighlight, styles.cardHalf]}>
           <View style={styles.cardTopRow}>
             <Text style={styles.cardHighlightLabel}>Saldo Disponível</Text>
-            <Wallet size={15} color={tc('#f3c21a')} />
+            <Wallet size={15} color={tc(ds.cores.destaque)} />
           </View>
           <Text style={styles.cardHighlightValue}>{saldoLiberado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</Text>
           <Text style={styles.cardSubText}>Liberado Mercado Pago</Text>
@@ -281,7 +282,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
           style={styles.fiscalActionBtn}
           onPress={() => setModalPdfAberto(true)}
         >
-          <FileText size={15} color={tc('#f3c21a')} />
+          <FileText size={15} color={tc(ds.cores.destaque)} />
           <Text style={styles.fiscalActionBtnText}>Relatórios PDF</Text>
         </Pressable>
 
@@ -311,7 +312,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
         >
           <FileCheck2
             size={14}
-            color={secaoAtiva === 'NOTAS_FISCAIS' ? tc('#111') : tc('#888')}
+            color={secaoAtiva === 'NOTAS_FISCAIS' ? tc('#111') : tc(ds.cores.textoSuave)}
           />
           <Text
             style={[
@@ -332,7 +333,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
         >
           <PieChart
             size={14}
-            color={secaoAtiva === 'TRANSACOES' ? tc('#111') : tc('#888')}
+            color={secaoAtiva === 'TRANSACOES' ? tc('#111') : tc(ds.cores.textoSuave)}
           />
           <Text
             style={[
@@ -352,7 +353,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
       {secaoAtiva === 'NOTAS_FISCAIS' && (
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
-            <FileCheck2 size={16} color={tc('#f3c21a')} />
+            <FileCheck2 size={16} color={tc(ds.cores.destaque)} />
             <Text style={styles.sectionTitle}>Histórico de Documentos Fiscais</Text>
           </View>
 
@@ -386,7 +387,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
 
           {/* Lista de Notas Fiscais */}
           {carregando ? (
-            <ActivityIndicator color={tc('#f3c21a')} style={{ marginVertical: 20 }} />
+            <ActivityIndicator color={tc(ds.cores.destaque)} style={{ marginVertical: 20 }} />
           ) : notasFiltradas.length === 0 ? (
             <View style={styles.emptyWrap}>
               <Text style={styles.emptyTitle}>Nenhuma nota fiscal encontrada</Text>
@@ -413,11 +414,11 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
                       {isAut ? (
                         <ShieldCheck size={18} color={tc('#10b981')} />
                       ) : isProc ? (
-                        <Clock size={18} color={tc('#f3c21a')} />
+                        <Clock size={18} color={tc(ds.cores.destaque)} />
                       ) : isRej ? (
                         <AlertCircle size={18} color={tc('#ef4444')} />
                       ) : (
-                        <XCircle size={18} color={tc('#888')} />
+                        <XCircle size={18} color={tc(ds.cores.textoSuave)} />
                       )}
                     </View>
 
@@ -487,7 +488,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
       {secaoAtiva === 'TRANSACOES' && (
         <View style={styles.sectionCard}>
           <View style={styles.sectionHeader}>
-            <PieChart size={16} color={tc('#f3c21a')} />
+            <PieChart size={16} color={tc(ds.cores.destaque)} />
             <Text style={styles.sectionTitle}>Extrato de Transações</Text>
           </View>
 
@@ -520,7 +521,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
 
           {/* Lista de Transações */}
           {carregando ? (
-            <ActivityIndicator color={tc('#f3c21a')} style={{ marginVertical: 20 }} />
+            <ActivityIndicator color={tc(ds.cores.destaque)} style={{ marginVertical: 20 }} />
           ) : transacoesFiltradas.length === 0 ? (
             <View style={styles.emptyWrap}>
               <Text style={styles.emptyTitle}>Nenhuma transação nesta categoria</Text>
@@ -605,7 +606,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
       {/* Configurações de Pagamento e Chave PIX */}
       {secaoAtiva === 'TRANSACOES' && <View style={styles.sectionCard}>
         <View style={styles.sectionHeader}>
-          <QrCode size={16} color={tc('#f3c21a')} />
+          <QrCode size={16} color={tc(ds.cores.destaque)} />
           <Text style={styles.sectionTitle}>Chave PIX & Sinal de Reserva</Text>
         </View>
 
@@ -615,7 +616,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
             value={chavePix}
             onChangeText={setChavePix}
             placeholder="Ex: CPF, CNPJ, E-mail ou Telefone"
-            placeholderTextColor={tc('#666')}
+            placeholderTextColor={tc(ds.cores.textoSuave)}
             style={styles.input}
           />
         </View>
@@ -627,7 +628,7 @@ export function ArtistaFinanceiroTab({ perfil }: PropsFinanceiroTab) {
             onChangeText={setPercentualSinal}
             keyboardType="numeric"
             placeholder="30"
-            placeholderTextColor={tc('#666')}
+            placeholderTextColor={tc(ds.cores.textoSuave)}
             style={styles.input}
           />
         </View>
@@ -727,10 +728,10 @@ const styles = createThemedStyles({
     minWidth: 0,
   },
   cardHighlight: {
-    backgroundColor: '#111',
+    backgroundColor: ds.cores.superficie,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#222',
+    borderColor: ds.cores.borda,
     padding: 14,
     gap: 4,
   },
@@ -744,37 +745,44 @@ const styles = createThemedStyles({
     alignItems: 'center',
   },
   cardHighlightLabel: {
-    color: '#f3c21a',
-    fontSize: 11,
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.legenda,
     fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    textTransform: 'none',
+    letterSpacing: 0,
+    lineHeight: 17,
   },
   cardCustodiaLabel: {
     color: '#60a5fa',
-    fontSize: 11,
+    fontSize: ds.fonte.legenda,
     fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    textTransform: 'none',
+    letterSpacing: 0,
+    lineHeight: 17,
   },
   cardHighlightValue: {
-    color: '#fff',
+    color: ds.cores.texto,
     fontSize: 20,
-    fontWeight: '900',
+    fontWeight: '700',
     letterSpacing: -0.5,
     marginTop: 2,
+    lineHeight: 24,
+    flexShrink: 1,
   },
   cardCustodiaValue: {
     color: '#93c5fd',
     fontSize: 20,
-    fontWeight: '900',
+    fontWeight: '700',
     letterSpacing: -0.5,
     marginTop: 2,
+    lineHeight: 24,
+    flexShrink: 1,
   },
   cardSubText: {
-    color: '#a1a1aa',
-    fontSize: 12,
-    lineHeight: 17,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   fiscalActionsRow: {
     flexDirection: 'row',
@@ -788,67 +796,76 @@ const styles = createThemedStyles({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#141414',
+    backgroundColor: ds.cores.elevada,
     borderWidth: 1,
-    borderColor: '#242424',
-    minHeight: 48,
+    borderColor: ds.cores.borda,
+    minHeight: ds.alvo.controle,
     paddingVertical: 14,
     paddingHorizontal: 12,
-    borderRadius: 10,
+    borderRadius: ds.raio.controle,
   },
   fiscalActionBtnPrimary: {
     flexBasis: '100%',
-    backgroundColor: '#f3c21a',
-    borderColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
+    borderColor: ds.cores.destaque,
   },
   fiscalActionBtnPrimaryText: {
     color: '#000000',
-    fontSize: 14,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   fiscalActionBtnText: {
-    color: '#ffffff',
-    fontSize: 13,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.controle,
     fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   sectionToggleWrap: {
     flexDirection: 'row',
-    backgroundColor: '#111',
+    backgroundColor: ds.cores.superficie,
     borderRadius: 10,
     padding: 3,
     borderWidth: 1,
-    borderColor: '#1f1f1f',
+    borderColor: ds.cores.borda,
     gap: 4,
   },
   sectionToggleBtn: {
     flex: 1,
     minWidth: 0,
-    minHeight: 46,
+    minHeight: ds.alvo.controle,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: ds.raio.controle,
   },
   sectionToggleBtnActive: {
-    backgroundColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
   },
   sectionToggleBtnText: {
     color: '#b4b4bc',
-    fontSize: 13,
+    fontSize: ds.fonte.controle,
     fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   sectionToggleBtnTextActive: {
     color: '#000',
     fontWeight: '800',
   },
   sectionCard: {
-    backgroundColor: '#101010',
-    borderRadius: 14,
+    backgroundColor: ds.cores.superficie,
+    borderRadius: ds.raio.cartao,
     borderWidth: 1,
-    borderColor: '#1e1e1e',
-    padding: 14,
+    borderColor: ds.cores.borda,
+    padding: ds.espaco.padrao,
     gap: 12,
   },
   sectionHeader: {
@@ -857,11 +874,12 @@ const styles = createThemedStyles({
     gap: 8,
   },
   sectionTitle: {
-    color: '#fff',
-    fontSize: 13,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.secao,
     fontWeight: '800',
     flexShrink: 1,
-    letterSpacing: 0.5,
+    letterSpacing: 0,
+    lineHeight: 26,
   },
   filterRow: {
     flexDirection: 'row',
@@ -874,20 +892,22 @@ const styles = createThemedStyles({
     borderWidth: 1,
   },
   filterTagIdle: {
-    backgroundColor: '#161616',
-    borderColor: '#242424',
+    backgroundColor: ds.cores.elevada,
+    borderColor: ds.cores.borda,
   },
   filterTagActive: {
-    backgroundColor: '#262626',
-    borderColor: '#f3c21a',
+    backgroundColor: ds.cores.interacao,
+    borderColor: ds.cores.destaque,
   },
   filterTagText: {
-    color: '#888',
-    fontSize: 10,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
     fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   filterTagTextActive: {
-    color: '#f3c21a',
+    color: ds.cores.destaque,
     fontWeight: '800',
   },
   transacoesList: {
@@ -896,10 +916,10 @@ const styles = createThemedStyles({
   transacaoItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#141414',
+    backgroundColor: ds.cores.elevada,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#1f1f1f',
+    borderColor: ds.cores.borda,
     padding: 10,
     gap: 10,
   },
@@ -921,22 +941,28 @@ const styles = createThemedStyles({
     justifyContent: 'space-between',
   },
   transacaoCliente: {
-    color: '#fff',
-    fontSize: 12,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.corpo,
     fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   notaTipoPill: {
-    color: '#888',
-    fontSize: 9,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
     fontWeight: '800',
     backgroundColor: '#1f1f1f',
     paddingHorizontal: 5,
     paddingVertical: 1,
     borderRadius: 4,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   transacaoDesc: {
-    color: '#777',
-    fontSize: 10,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   transacaoBadgeRow: {
     flexDirection: 'row',
@@ -959,7 +985,7 @@ const styles = createThemedStyles({
     backgroundColor: 'rgba(243, 194, 26, 0.1)',
   },
   badgePendenteText: {
-    color: '#f3c21a',
+    color: ds.cores.destaque,
   },
   badgeRejeitado: {
     backgroundColor: 'rgba(239, 68, 68, 0.1)',
@@ -971,7 +997,7 @@ const styles = createThemedStyles({
     backgroundColor: 'rgba(107, 114, 128, 0.1)',
   },
   badgeCanceladoText: {
-    color: '#6b7280',
+    color: ds.cores.textoSuave,
   },
   badgeCustodia: {
     backgroundColor: 'rgba(59, 130, 246, 0.1)',
@@ -980,30 +1006,40 @@ const styles = createThemedStyles({
     color: '#60a5fa',
   },
   statusBadgeText: {
-    fontSize: 9,
+    fontSize: ds.fonte.etiqueta,
     fontWeight: '800',
+    lineHeight: 16,
   },
   transacaoData: {
-    color: '#666',
-    fontSize: 9,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   transacaoValores: {
     alignItems: 'flex-end',
     gap: 2,
   },
   valorBrutoText: {
-    color: '#fff',
-    fontSize: 12,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.corpo,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   taxaMpText: {
     color: '#ef4444',
-    fontSize: 9,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   verReciboBtnText: {
-    color: '#f3c21a',
-    fontSize: 9,
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.controle,
     fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   emptyWrap: {
     padding: 24,
@@ -1012,47 +1048,59 @@ const styles = createThemedStyles({
     gap: 4,
   },
   emptyTitle: {
-    color: '#fff',
-    fontSize: 12,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '700',
+    lineHeight: 23,
+    flexShrink: 1,
   },
   emptySub: {
-    color: '#666',
-    fontSize: 10,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
     textAlign: 'center',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   inputGroup: {
     gap: 4,
   },
   inputLabel: {
-    color: '#888',
-    fontSize: 10,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.legenda,
     fontWeight: '700',
-    textTransform: 'uppercase',
+    textTransform: 'none',
+    lineHeight: 17,
   },
   input: {
-    backgroundColor: '#161616',
-    borderRadius: 8,
+    backgroundColor: ds.cores.elevada,
+    borderRadius: ds.raio.campo,
     borderWidth: 1,
-    borderColor: '#242424',
+    borderColor: ds.cores.borda,
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    color: '#fff',
-    fontSize: 12,
+    paddingVertical: 12,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.campo,
+    lineHeight: 23,
+    flexShrink: 1,
+    minHeight: ds.alvo.controle,
   },
   saveBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#f3c21a',
-    borderRadius: 8,
+    backgroundColor: ds.cores.destaque,
+    borderRadius: ds.raio.controle,
     paddingVertical: 9,
     marginTop: 4,
+    minHeight: ds.alvo.controle,
   },
   saveBtnText: {
     color: '#000',
-    fontSize: 11,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
 });

@@ -1,3 +1,4 @@
+import { ds } from '@/theme/design-system';
 import React from 'react';
 import {
   Platform,
@@ -8,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import { AppModal } from '@/components/ui/app-modal';
+import { compartilharPdf, copiarTexto, escaparHtml } from '@/services/documentos-mobile';
 import {
   CheckCircle,
   Copy,
@@ -43,6 +45,7 @@ export function RelatorioFiscalPdfModal({
   onClose,
 }: RelatorioFiscalPdfModalProps) {
   const [copiado, setCopiado] = React.useState(false);
+  const [erro, setErro] = React.useState('');
 
   if (!visivel) return null;
 
@@ -70,13 +73,16 @@ export function RelatorioFiscalPdfModal({
   );
   const totalLiquido = totalBrutoTransacoes - totalTaxas;
 
-  const handleImprimir = () => {
+  const handleImprimir = async () => {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
       window.print();
+    } else {
+      try { await compartilharPdf(`<html><head><meta charset="utf-8"></head><body style="font-family:Arial;padding:24px"><h1>Dermys · Relatório demonstrativo</h1><pre style="white-space:pre-wrap;font-family:Arial;font-size:14px;line-height:1.6">${escaparHtml(textoRelatorio())}</pre></body></html>`); }
+      catch { setErro('Não foi possível exportar o PDF.'); }
     }
   };
 
-  const handleCopiarTexto = () => {
+  const textoRelatorio = () => {
     const linhas = [
       `======================================================`,
       `RELATÓRIO FISCAL & FINANCEIRO CONSOLIDADO — DERMYS`,
@@ -103,17 +109,15 @@ export function RelatorioFiscalPdfModal({
       `======================================================`,
     ];
 
-    if (Platform.OS === 'web' && typeof navigator !== 'undefined') {
-      navigator.clipboard.writeText(linhas.join('\n'));
-      setCopiado(true);
-      setTimeout(() => setCopiado(false), 2500);
-    }
+    return linhas.join('\n');
   };
+  const handleCopiarTexto = async () => { try { await copiarTexto(textoRelatorio()); setCopiado(true); setTimeout(() => setCopiado(false), 2500); } catch { setErro('Não foi possível copiar o relatório.'); } };
 
   return (
     <AppModal visible={visivel} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.modalBackdrop}>
         <View style={styles.modalContainer}>
+          {erro ? <Text accessibilityRole="alert" style={{ color: '#f87171', padding: 12 }}>{erro}</Text> : null}
           {/* Header Superior da Barra de Ações */}
           <View style={styles.modalHeader}>
             <View style={styles.modalHeaderTitleWrap}>
@@ -425,15 +429,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
+    flexShrink: 1,
+    minWidth: 0,
   },
   modalTitle: {
     color: '#ffffff',
-    fontSize: 15,
+    fontSize: ds.fonte.modal,
     fontWeight: '800',
+    lineHeight: 26,
+    flexShrink: 1,
   },
   modalSubtitle: {
     color: '#888888',
-    fontSize: 11,
+    fontSize: ds.fonte.subtitulo,
+    lineHeight: 23,
+    flexShrink: 1,
   },
   modalHeaderActions: {
     flexDirection: 'row',
@@ -453,8 +463,11 @@ const styles = StyleSheet.create({
   },
   actionHeaderBtnText: {
     color: '#ffffff',
-    fontSize: 11,
+    fontSize: ds.fonte.controle,
     fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   actionHeaderBtnGold: {
     backgroundColor: '#f3c21a',
@@ -462,12 +475,17 @@ const styles = StyleSheet.create({
   },
   actionHeaderBtnGoldText: {
     color: '#000000',
-    fontSize: 11,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   closeBtn: {
     padding: 6,
     marginLeft: 4,
+    minHeight: ds.alvo.controle,
+    justifyContent: 'center',
   },
   scrollArea: {
     flex: 1,
@@ -493,14 +511,18 @@ const styles = StyleSheet.create({
   sheetBrandLogo: {
     color: '#000000',
     fontSize: 22,
-    fontWeight: '900',
+    fontWeight: '700',
     letterSpacing: 1.5,
+    lineHeight: 26,
+    flexShrink: 1,
   },
   sheetBrandTag: {
     color: '#666666',
-    fontSize: 10,
+    fontSize: ds.fonte.corpo,
     fontWeight: '700',
     letterSpacing: 0.8,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   sheetMetaWrap: {
     alignItems: 'flex-end',
@@ -508,8 +530,10 @@ const styles = StyleSheet.create({
   },
   sheetMetaText: {
     color: '#444444',
-    fontSize: 11,
+    fontSize: ds.fonte.corpo,
     fontWeight: '600',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   divider: {
     height: 1,
@@ -521,10 +545,12 @@ const styles = StyleSheet.create({
   },
   sectionBlockTitle: {
     color: '#000000',
-    fontSize: 12,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
+    textTransform: 'none',
+    letterSpacing: 0,
+    lineHeight: 23,
+    flexShrink: 1,
   },
   gridTwoCols: {
     flexDirection: 'row',
@@ -537,14 +563,17 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     color: '#6b7280',
-    fontSize: 10,
+    fontSize: ds.fonte.legenda,
     fontWeight: '600',
-    textTransform: 'uppercase',
+    textTransform: 'none',
+    lineHeight: 17,
   },
   infoValue: {
     color: '#111827',
-    fontSize: 12,
+    fontSize: ds.fonte.corpo,
     fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   summaryGrid: {
     flexDirection: 'row',
@@ -555,20 +584,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9fafb',
     borderWidth: 1,
     borderColor: '#e5e7eb',
-    borderRadius: 8,
+    borderRadius: ds.raio.cartao,
     padding: 10,
     gap: 2,
   },
   summaryCardLabel: {
     color: '#6b7280',
-    fontSize: 9,
+    fontSize: ds.fonte.legenda,
     fontWeight: '700',
-    textTransform: 'uppercase',
+    textTransform: 'none',
+    lineHeight: 17,
   },
   summaryCardNumber: {
     color: '#111827',
     fontSize: 14,
-    fontWeight: '900',
+    fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   table: {
     borderWidth: 1,
@@ -586,9 +618,11 @@ const styles = StyleSheet.create({
   },
   tableHeaderCell: {
     color: '#4b5563',
-    fontSize: 10,
+    fontSize: ds.fonte.corpo,
     fontWeight: '800',
     textTransform: 'uppercase',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   tableRow: {
     flexDirection: 'row',
@@ -600,13 +634,17 @@ const styles = StyleSheet.create({
   },
   tableCell: {
     color: '#1f2937',
-    fontSize: 11,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   emptyTableText: {
     color: '#6b7280',
-    fontSize: 11,
+    fontSize: ds.fonte.corpo,
     fontStyle: 'italic',
     paddingVertical: 8,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   signatureBlock: {
     alignItems: 'center',
@@ -615,10 +653,11 @@ const styles = StyleSheet.create({
   },
   signatureText: {
     color: '#6b7280',
-    fontSize: 10,
+    fontSize: ds.fonte.corpo,
     textAlign: 'center',
-    lineHeight: 14,
+    lineHeight: 20,
     maxWidth: '90%',
+    flexShrink: 1,
   },
   signatureLine: {
     width: 200,
@@ -629,11 +668,15 @@ const styles = StyleSheet.create({
   },
   signatureName: {
     color: '#111827',
-    fontSize: 12,
+    fontSize: ds.fonte.corpo,
     fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   signatureRole: {
     color: '#6b7280',
-    fontSize: 10,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
 });

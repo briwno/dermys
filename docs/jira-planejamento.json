@@ -1,0 +1,178 @@
+{
+  "projeto": "Dermys",
+  "projetoJiraInformado": "SCRUM",
+  "quadro": "https://dermyss.atlassian.net/jira/software/projects/SCRUM/boards/1",
+  "documentacao": "https://dermyss.atlassian.net/wiki/spaces/Dermys/pages/5013505/Introdu+o",
+  "situacao": "Proposta original reconciliada e publicada no Jira. Consultar jira-publicado.json para o mapa dos itens e seus status verificados em 2026-11-03.",
+  "publicacao": { "itensTotais": 44, "concluidos": 34, "atividadesFuturas": 9, "epicoFuturo": "SCRUM-24", "linksDeCommitAdicionados": 34, "confluenceAlterado": false },
+  "criteriosDePublicacao": [
+    "Ler o quadro, os tipos de item e os status existentes antes de criar tarefas.",
+    "Ler o Confluence e adaptar o escopo à documentação real.",
+    "Pesquisar itens equivalentes para atualizar ou complementar, evitando duplicação.",
+    "Registrar funcionalidades anteriores como levantamento retrospectivo, sem inventar sprints, datas de execução, estimativas ou responsáveis.",
+    "Conforme orientação do usuário, marcar a implementação entregue como Concluído; acompanhar homologação no iPhone e atividades ainda não executadas em tarefas futuras separadas.",
+    "Relacionar as tarefas à documentação e aos épicos que já existirem. Criar novos agrupamentos somente quando necessários."
+  ],
+  "itens": [
+    {
+      "titulo": "Preservar o perfil de teste durante a renovação da sessão",
+      "tema": "Acesso e perfis",
+      "estadoConhecido": "Implementado no código; validar no aparelho",
+      "descricao": "Manter a persona selecionada separada da identidade autenticada, evitando retornar à conta de Bruno durante os testes.",
+      "aceite": ["Selecionar uma persona, navegar e colocar o app em segundo plano.", "Ao retornar, a persona continua ativa.", "Trocas rápidas não permitem que uma resposta antiga substitua a seleção atual."],
+      "evidencias": ["src/services/persona-teste.ts", "scripts/test-persona-dre-service.cjs"]
+    },
+    {
+      "titulo": "Apresentar artistas e obras no Explore",
+      "tema": "Descoberta",
+      "estadoConhecido": "Implementado no código; validar navegação",
+      "descricao": "Disponibilizar mosaico e feed por obra, com acesso ao perfil do artista e busca por estilo e localidade.",
+      "aceite": ["Alternar entre os dois modos de visualização.", "Abrir uma obra e acessar o perfil correspondente.", "Filtros por estilo e região apresentam resultados coerentes."],
+      "evidencias": ["src/telas/cliente/inicio-tab.tsx", "src/components/cliente/feed-mosaico.tsx"]
+    },
+    {
+      "titulo": "Compactar a descoberta e recolher o cabeçalho durante a rolagem",
+      "tema": "Experiência mobile",
+      "estadoConhecido": "Implementado no código; fluidez visual pendente",
+      "descricao": "Reduzir busca e categorias, recolher o cabeçalho ao descer e revelar ao subir, mantendo a posição do conteúdo.",
+      "aceite": ["A rolagem não remonta a lista a cada mudança de altura.", "O cabeçalho retorna ao subir ou ao chegar ao topo.", "A busca permanece acessível durante a digitação."],
+      "evidencias": ["src/components/cliente/use-cabecalho-feed.ts", "src/telas/cliente/inicio-tab.tsx"]
+    },
+    {
+      "titulo": "Guardar artistas salvos por perfil",
+      "tema": "Descoberta",
+      "estadoConhecido": "Implementado no código; validar persistência visual",
+      "descricao": "Persistir favoritos no aparelho e oferecer filtro de artistas salvos, com busca que aceita palavras sem acentos.",
+      "aceite": ["Salvar um artista e reencontrá-lo após reabrir o app.", "Trocar de perfil sem misturar as preferências.", "Mostrar uma orientação quando a coleção estiver vazia."],
+      "evidencias": ["src/components/cliente/use-artistas-salvos.ts"]
+    },
+    {
+      "titulo": "Gerenciar perfil e portfólio do artista",
+      "tema": "Perfis e portfólio",
+      "estadoConhecido": "Implementado no código; validar operações",
+      "descricao": "Editar dados do estúdio e administrar obras do portfólio, incluindo seleção de imagens no celular.",
+      "aceite": ["Editar dados e conferir o resultado ao abrir novamente o perfil.", "Adicionar uma obra e encontrá-la no portfólio.", "Solicitar confirmação antes de remover uma obra."],
+      "evidencias": ["src/telas/artista/perfil-tab.tsx", "src/services/portfolio-service.ts"]
+    },
+    {
+      "titulo": "Enviar briefing e solicitação de reserva",
+      "tema": "Atendimento",
+      "estadoConhecido": "Implementado no código; validar jornada completa",
+      "descricao": "Registrar projeto, referências, região do corpo e tamanho, vinculando a solicitação ao cliente e ao artista ativos.",
+      "aceite": ["Enviar uma solicitação pelo perfil de cliente.", "A reserva possui identificador válido antes de ser referenciada no chat.", "Falhas de gravação não são apresentadas como sucesso."],
+      "evidencias": ["src/telas/cliente/modal-reserva.tsx"]
+    },
+    {
+      "titulo": "Negociar orçamento e acompanhar o atendimento pelo chat",
+      "tema": "Atendimento",
+      "estadoConhecido": "Implementado no código; validar interação entre perfis",
+      "descricao": "Utilizar mensagens e cards de briefing, orçamento, sinal e conclusão para contextualizar o atendimento.",
+      "aceite": ["Cliente e artista acessam a conversa correspondente.", "O orçamento referencia a reserva correta.", "Cards e mensagens continuam disponíveis ao reabrir a conversa."],
+      "evidencias": ["src/services/chat-service.ts", "src/components/chat/painel-chat-realtime.tsx"]
+    },
+    {
+      "titulo": "Gerenciar os estados da agenda do artista",
+      "tema": "Atendimento",
+      "estadoConhecido": "Implementado no código; validar transições",
+      "descricao": "Acompanhar solicitações pendentes, confirmação, atendimento em andamento, conclusão e cancelamento.",
+      "aceite": ["Alterar somente o agendamento selecionado.", "Cliente e artista visualizam o estado atualizado.", "Uma falha ao salvar impede a exibição de conclusão bem-sucedida."],
+      "evidencias": ["src/telas/artista/agenda-tab.tsx", "src/telas/cliente/agendamentos-tab.tsx"]
+    },
+    {
+      "titulo": "Vincular ficha de anamnese ao atendimento",
+      "tema": "Atendimento",
+      "estadoConhecido": "Implementado no código; validar formulário",
+      "descricao": "Registrar o preenchimento e a assinatura da ficha e indicar alertas de saúde no atendimento. Usar apenas dados fictícios na apresentação.",
+      "aceite": ["A ficha fica vinculada à reserva e aos perfis corretos.", "O artista visualiza assinatura e alertas.", "A apresentação utiliza informações fictícias."],
+      "evidencias": ["src/telas/cliente/agendamentos-tab.tsx", "src/components/chat/painel-chat-realtime.tsx"]
+    },
+    {
+      "titulo": "Demonstrar sinal em custódia e quitação simulada",
+      "tema": "Financeiro e fiscal",
+      "estadoConhecido": "Simulação implementada; não é pagamento real",
+      "descricao": "Separar geração do sinal da aprovação simulada e mostrar a liberação dos valores ao concluir o atendimento.",
+      "aceite": ["Gerar o sinal não marca automaticamente a reserva como paga.", "A aprovação depende de uma ação explícita de simulação.", "A quitação atualiza as transações e o atendimento correspondente."],
+      "evidencias": ["src/services/mercadopago.ts", "scripts/test-apresentacao.cjs"]
+    },
+    {
+      "titulo": "Consolidar receitas e despesas na DRE gerencial",
+      "tema": "Financeiro e fiscal",
+      "estadoConhecido": "Implementado; regras cobertas por testes",
+      "descricao": "Apurar resultado por competência, com serviços concluídos, despesas, taxas, estornos e lançamentos manuais.",
+      "aceite": ["Custódia não é reconhecida como receita de serviço concluído.", "Recibos não duplicam o faturamento.", "Estornos reduzem o resultado.", "Exibir períodos mensal e anual e permitir exportação."],
+      "evidencias": ["src/services/dre.ts", "src/services/dre-service.ts", "src/components/fiscal/dre-painel.tsx", "scripts/test-dre.cjs"]
+    },
+    {
+      "titulo": "Apresentar documentos fiscais simulados e relatórios",
+      "tema": "Financeiro e fiscal",
+      "estadoConhecido": "Simulação implementada; validar exportação no iPhone",
+      "descricao": "Exibir histórico, detalhes de documentos e relatórios, identificando os exemplos demonstrativos sem afirmar emissão fiscal real.",
+      "aceite": ["Consultar um documento relacionado ao atendimento.", "A demonstração indica que o documento não tem validade fiscal.", "Exportar ou compartilhar PDF no iPhone."],
+      "evidencias": ["src/telas/artista/financeiro-tab.tsx", "src/services/documentos-mobile.ts"]
+    },
+    {
+      "titulo": "Preparar e restaurar o cenário de apresentação",
+      "tema": "Demonstração acadêmica",
+      "estadoConhecido": "Implementado; fluxo local coberto por testes",
+      "descricao": "Criar um cenário local reproduzível com perfis, atendimentos, conversas, pagamentos e despesas, preservando o ambiente conectado.",
+      "aceite": ["Preparar o cenário com uma ação.", "Percorrer as etapas até recibo e DRE.", "Restaurar somente os dados locais da demonstração.", "Os dados de PC e celular permanecem independentes."],
+      "evidencias": ["src/services/apresentacao-store.ts", "scripts/test-apresentacao.cjs"]
+    },
+    {
+      "titulo": "Disponibilizar ferramentas de teste no computador e no celular",
+      "tema": "Demonstração acadêmica",
+      "estadoConhecido": "Implementado; validar acesso por toque",
+      "descricao": "Oferecer 18 cenários, geração automática de dados e troca de personas. No celular, usar um acesso flutuante discreto sem moldura.",
+      "aceite": ["Abrir as ferramentas pelo ponto discreto no iPhone.", "Gerar dados no perfil selecionado.", "Executar cinco ciclos automáticos sem sobreposição.", "Parar a geração ao fechar o painel ou mudar de perfil."],
+      "evidencias": ["src/components/debug/debug-floating-button.tsx", "src/components/debug/debug-simulador.tsx", "src/services/debug-service.ts"]
+    },
+    {
+      "titulo": "Compatibilizar o projeto com Expo Go SDK 58",
+      "tema": "Experiência mobile",
+      "estadoConhecido": "Atualizado; tipos, testes e exportações aprovados nesta sessão",
+      "descricao": "Alinhar Expo, React Native e dependências ao Expo Go do iPhone, com áreas seguras, teclado e modais adaptados.",
+      "aceite": ["Expo Doctor sem incompatibilidades de dependências.", "Exportações web e iOS concluídas.", "Abrir o projeto no iPhone com o novo QR code."],
+      "evidencias": ["package.json", "src/app/_layout.tsx", "src/components/ui/app-modal.tsx"]
+    },
+    {
+      "titulo": "Homologar a experiência no iPhone físico",
+      "tema": "Validação",
+      "estadoConhecido": "Pendente de execução no aparelho",
+      "descricao": "Validar abertura no Expo Go, áreas seguras, teclado, rolagem, seleção de imagens, compartilhamento e restauração de persona.",
+      "aceite": ["Registrar aparelho, versão do iOS e versão do Expo Go utilizados.", "Executar os fluxos de cliente e artista.", "Anexar evidências reais e abrir defeitos encontrados sem marcar a validação como concluída antes do teste."],
+      "evidencias": ["docs/apresentacao-faculdade.md"]
+    },
+    {
+      "titulo": "Ensaiar a jornada completa que será apresentada à banca",
+      "tema": "Validação",
+      "estadoConhecido": "Pendente de ensaio",
+      "descricao": "Executar descoberta, reserva, sinal, atendimento, quitação, recibo e DRE em sequência, incluindo troca de perfil.",
+      "aceite": ["Percorrer a sequência sem intervenção no código.", "Confirmar valores e documentos nas telas.", "Restaurar o cenário e repetir a apresentação."],
+      "evidencias": ["docs/apresentacao-faculdade.md"]
+    },
+    {
+      "titulo": "Revisar a documentação do Confluence para o escopo acadêmico",
+      "tema": "Documentação e apresentação",
+      "estadoConhecido": "Pendente de leitura do conteúdo remoto",
+      "descricao": "Conferir introdução, problema, público, requisitos, arquitetura e tecnologias atuais; relacionar os itens do Jira aos trechos correspondentes.",
+      "aceite": ["Usar a documentação existente como base.", "Distinguir funcionalidades implementadas de objetivos futuros.", "Informar que pagamentos e emissão fiscal são simulados para a demonstração."],
+      "evidencias": ["https://dermyss.atlassian.net/wiki/spaces/Dermys/pages/5013505/Introdu+o", "package.json"]
+    },
+    {
+      "titulo": "Montar três slides para apoiar o vídeo de apresentação",
+      "tema": "Documentação e apresentação",
+      "estadoConhecido": "Pendente de produção",
+      "descricao": "Criar três slides: apresentação do Dermys; tecnologias e organização do projeto; problema e solução. Seguir a identidade preta e amarela.",
+      "aceite": ["Manter exatamente três slides.", "Usar pouco texto e elementos legíveis no vídeo.", "Exibir somente ferramentas e materiais efetivamente utilizados pela equipe.", "Confirmar os nomes dos integrantes antes de publicar."],
+      "evidencias": ["Orientações do quadro enviadas pelo usuário nesta conversa"]
+    },
+    {
+      "titulo": "Produzir vídeo de contingência de aproximadamente cinco minutos",
+      "tema": "Documentação e apresentação",
+      "estadoConhecido": "Pendente de roteiro final, gravação e edição",
+      "descricao": "Intercalar os três slides com capturas da organização do projeto e da jornada no app. O vídeo servirá como plano B para a apresentação presencial.",
+      "aceite": ["Mostrar o processo fora do sistema e o fluxo dentro do aplicativo.", "Apresentar cliente e artista com dados fictícios.", "Manter duração aproximada de cinco minutos, com áudio compreensível.", "Testar a reprodução do arquivo final no computador da apresentação."],
+      "evidencias": ["Solicitação do usuário nesta conversa", "docs/apresentacao-faculdade.md"]
+    }
+  ]
+}

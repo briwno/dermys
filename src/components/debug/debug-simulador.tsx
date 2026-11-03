@@ -5,6 +5,7 @@ import { CENARIOS_DEBUG, DebugService, novoIdDebug, resolverAlvosDebug, type Cen
 import { lerValorDre } from '@/services/dre';
 import { useDebug } from './debug-context';
 import { PERSONAS_TESTE } from './types';
+import { useApresentacao } from './use-apresentacao';
 
 const GRUPOS = ['Pagamentos', 'Despesas', 'Agenda', 'Cenários completos', 'Histórico'] as const;
 const resumir = (r: ResultadoDebug) => [
@@ -17,6 +18,7 @@ const hojeLocal = () => {
 };
 
 export function DebugSimulador() {
+  const demo = useApresentacao();
   const { perfilAtual, atualizarDadosTeste, navegarParaAba, setMenuAberto } = useDebug();
   const perfilId = perfilAtual?.id || perfilAtual?.uid || '';
   const artista = perfilAtual?.role === 'artista' || perfilAtual?.tipo_perfil === 'artista';
@@ -137,7 +139,7 @@ export function DebugSimulador() {
       <Text style={s.eyebrow}>GERAR NO PERFIL ATIVO</Text>
       <Text style={s.titulo}>{perfilAtual?.nomeExibicao || perfilAtual?.nome_exibicao || 'Perfil selecionado'}</Text>
       <Text style={s.ajuda}>{artista ? 'Artista: receitas e despesas serão deste perfil.' : 'Cliente: agendamentos e pagamentos serão deste perfil. Despesas e DRE pertencem ao artista escolhido abaixo.'}</Text>
-      <Text style={s.ajuda}>Os dados são acrescentados no Supabase com identificação de teste, sem substituir os existentes. Nenhuma cobrança, nota fiscal ou mensagem é enviada.</Text>
+      <Text style={s.ajuda}>{demo.ativo ? 'Os dados são acrescentados somente à apresentação neste aparelho. Você pode removê-los pelo histórico ou restaurar todo o cenário.' : 'Os dados são acrescentados no Supabase com identificação de teste, sem substituir os existentes. Nenhuma cobrança, nota fiscal ou mensagem é enviada.'}</Text>
     </View>
     <Text style={s.label}>{artista ? 'Cliente de demonstração' : 'Artista do cenário'}</Text>
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.linha}>{parceiros.map((p) => <Pressable key={p.id} disabled={bloqueado} onPress={() => setOutroId(p.id)} style={[s.chip, outroId === p.id && s.selecionado]} accessibilityState={{ selected: outroId === p.id }}><Text style={outroId === p.id ? s.textoAtivo : s.texto}>{p.nome}</Text></Pressable>)}</ScrollView>
@@ -148,7 +150,7 @@ export function DebugSimulador() {
     <View style={s.linha}><Text style={s.label}>Repetições do cenário</Text>{[1, 3, 5].map((q) => <Pressable key={q} disabled={bloqueado} onPress={() => setQuantidade(q)} style={[s.chip, quantidade === q && s.selecionado]}><Text style={quantidade === q ? s.textoAtivo : s.texto}>{q}×</Text></Pressable>)}</View>
     {feedback && <View style={[s.feedback, feedback.erro && s.feedbackErro]}><Text accessibilityRole={feedback.erro ? 'alert' : undefined} accessibilityLiveRegion="polite" style={feedback.erro ? s.erro : s.texto}>{feedback.texto}</Text></View>}
     {pendente && <View style={s.card}><Text style={s.ajuda}>Pedido preservado para repetir com o mesmo identificador e evitar duplicação.</Text><View style={s.linha}><Pressable disabled={ocupado || automatico} onPress={() => executar(pendente)} style={s.botao}><Text style={s.textoAtivo}>Tentar novamente</Text></Pressable><Pressable disabled={ocupado} onPress={() => setPendente(undefined)} style={s.secundario}><Text style={s.texto}>Encerrar tentativa</Text></Pressable></View></View>}
-    {ocupado && <View style={s.linha}><ActivityIndicator color="#f3c21a" /><Text style={s.ajuda}>Processando no Supabase…</Text></View>}
+    {ocupado && <View style={s.linha}><ActivityIndicator color="#f3c21a" /><Text style={s.ajuda}>{demo.ativo ? 'Salvando no aparelho…' : 'Processando no Supabase…'}</Text></View>}
     <View style={s.card}><View style={s.linha}><Database size={18} color="#f3c21a" /><Text style={s.subtitulo}>Simulação automática</Text></View><Text style={s.ajuda}>Cinco ciclos, a cada 10 segundos: PIX, material, cartão, despesa fixa e estorno. Uma repetição por ciclo. Para ao fechar o painel ou trocar de perfil; uma ação em andamento termina normalmente.</Text><Pressable disabled={(ocupado && !automatico) || !!pendente} style={automatico ? s.secundario : s.botao} onPress={() => { if (!automatico) setCiclos(0); setAutomatico(!automatico); }}>{automatico ? <Square size={15} color="#ddd" /> : <Play size={15} color="#111" />}<Text style={automatico ? s.texto : s.textoAtivo}>{automatico ? `Parar · ${ciclos}/5 concluídos` : 'Iniciar cinco ciclos'}</Text></Pressable></View>
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.linha}>{GRUPOS.map((g) => <Pressable key={g} onPress={() => setGrupo(g)} style={[s.chip, grupo === g && s.selecionado]}><Text style={grupo === g ? s.textoAtivo : s.texto}>{g}</Text></Pressable>)}</ScrollView>
     {grupo !== 'Histórico' ? CENARIOS_DEBUG.filter((c) => c.grupo === grupo).map((c) => <View key={c.id} style={s.card}><Text style={s.subtitulo}>{c.titulo}</Text><Text style={s.ajuda}>{c.descricao}</Text><Pressable disabled={bloqueado} onPress={() => gerar(c.id)} style={[s.botao, bloqueado && s.desabilitado]} accessibilityLabel={`Gerar cenário: ${c.titulo}`}><Play size={14} color="#111" /><Text style={s.textoAtivo}>Gerar {quantidade}×</Text></Pressable></View>) : <View style={s.stack}>

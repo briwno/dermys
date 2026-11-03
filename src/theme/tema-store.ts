@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, type ViewStyle, type TextStyle, type ImageStyle } from 'react-native';
 
 import { converterParaClaro } from './cores';
 
@@ -50,8 +50,9 @@ function converterEstilo(estilo: EstiloGenerico): EstiloGenerico {
  * Recebe os estilos da paleta escura e gera automaticamente a versão clara.
  * Cada propriedade do objeto retornado resolve o estilo do modo atual.
  */
-export function createThemedStyles<T extends StyleSheet.NamedStyles<T> | StyleSheet.NamedStyles<any>>(
-  estilos: T & StyleSheet.NamedStyles<any>
+type EstilosNomeados<T> = { [P in keyof T]: ViewStyle | TextStyle | ImageStyle };
+export function createThemedStyles<T extends EstilosNomeados<T>>(
+  estilos: T & EstilosNomeados<any>
 ): T {
   const escuro = StyleSheet.create(estilos);
   let claro: T | null = null;
@@ -62,9 +63,9 @@ export function createThemedStyles<T extends StyleSheet.NamedStyles<T> | StyleSh
       for (const [nome, estilo] of Object.entries(estilos as Record<string, EstiloGenerico>)) {
         convertido[nome] = converterEstilo(estilo);
       }
-      claro = StyleSheet.create(convertido as unknown as T & StyleSheet.NamedStyles<any>);
+      claro = StyleSheet.create(convertido as unknown as T & EstilosNomeados<any>);
     }
-    return claro;
+    return claro!;
   };
 
   const resultado = {} as T;

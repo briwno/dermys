@@ -1,3 +1,4 @@
+import { ds } from '@/theme/design-system';
 import { FiscalService } from '@/services/fiscal/fiscal-service';
 import { calcularSplitFiscal } from '@/services/split/split-service';
 import type {
@@ -137,7 +138,7 @@ export function EmissaoNfseModal({
           <View style={styles.header}>
             <View style={styles.headerLeft}>
               <View style={styles.iconWrap}>
-                <FileCheck2 size={20} color={tc('#f3c21a')} />
+                <FileCheck2 size={20} color={tc(ds.cores.destaque)} />
               </View>
               <View>
                 <Text style={styles.title}>Emissão de Documento Fiscal</Text>
@@ -145,7 +146,7 @@ export function EmissaoNfseModal({
               </View>
             </View>
             <Pressable style={styles.closeBtn} onPress={onClose}>
-              <X size={18} color={tc('#9ca3af')} />
+              <X size={18} color={tc(ds.cores.textoSuave)} />
             </Pressable>
           </View>
 
@@ -157,7 +158,7 @@ export function EmissaoNfseModal({
                 style={[styles.typeBtn, tipoDoc === 'NFSE' && styles.typeBtnActive]}
                 onPress={() => setTipoDoc('NFSE')}
               >
-                <FileCheck2 size={16} color={tipoDoc === 'NFSE' ? tc('#111') : tc('#888')} />
+                <FileCheck2 size={16} color={tipoDoc === 'NFSE' ? tc('#111') : tc(ds.cores.textoSuave)} />
                 <Text style={[styles.typeBtnText, tipoDoc === 'NFSE' && styles.typeBtnTextActive]}>
                   NFS-e (Nota Fiscal)
                 </Text>
@@ -167,7 +168,7 @@ export function EmissaoNfseModal({
                 style={[styles.typeBtn, tipoDoc === 'RECIBO_SIMPLES' && styles.typeBtnActive]}
                 onPress={() => setTipoDoc('RECIBO_SIMPLES')}
               >
-                <FileText size={16} color={tipoDoc === 'RECIBO_SIMPLES' ? tc('#111') : tc('#888')} />
+                <FileText size={16} color={tipoDoc === 'RECIBO_SIMPLES' ? tc('#111') : tc(ds.cores.textoSuave)} />
                 <Text
                   style={[
                     styles.typeBtnText,
@@ -189,7 +190,7 @@ export function EmissaoNfseModal({
                   value={nomeCliente}
                   onChangeText={setNomeCliente}
                   placeholder="Nome completo do cliente"
-                  placeholderTextColor={tc('#666')}
+                  placeholderTextColor={tc(ds.cores.textoSuave)}
                   style={styles.input}
                 />
               </View>
@@ -201,7 +202,7 @@ export function EmissaoNfseModal({
                     value={cpfCliente}
                     onChangeText={setCpfCliente}
                     placeholder="000.000.000-00"
-                    placeholderTextColor={tc('#666')}
+                    placeholderTextColor={tc(ds.cores.textoSuave)}
                     style={styles.input}
                   />
                 </View>
@@ -212,7 +213,7 @@ export function EmissaoNfseModal({
                     value={telefoneCliente}
                     onChangeText={setTelefoneCliente}
                     placeholder="(11) 98888-8888"
-                    placeholderTextColor={tc('#666')}
+                    placeholderTextColor={tc(ds.cores.textoSuave)}
                     style={styles.input}
                   />
                 </View>
@@ -224,7 +225,7 @@ export function EmissaoNfseModal({
                   value={emailCliente}
                   onChangeText={setEmailCliente}
                   placeholder="cliente@email.com"
-                  placeholderTextColor={tc('#666')}
+                  placeholderTextColor={tc(ds.cores.textoSuave)}
                   style={styles.input}
                 />
               </View>
@@ -240,7 +241,7 @@ export function EmissaoNfseModal({
                   value={descricao}
                   onChangeText={setDescricao}
                   placeholder="Ex: Tatuagem Artística Fine Line no antebraço"
-                  placeholderTextColor={tc('#666')}
+                  placeholderTextColor={tc(ds.cores.textoSuave)}
                   multiline
                   numberOfLines={3}
                   style={[styles.input, { minHeight: 64, textAlignVertical: 'top', paddingTop: 8 }]}
@@ -254,8 +255,8 @@ export function EmissaoNfseModal({
                   onChangeText={setValor}
                   keyboardType="numeric"
                   placeholder="350.00"
-                  placeholderTextColor={tc('#666')}
-                  style={[styles.input, { fontSize: 16, fontWeight: '900', color: tc('#f3c21a') }]}
+                  placeholderTextColor={tc(ds.cores.textoSuave)}
+                  style={[styles.input, { fontSize: 16, fontWeight: '900', color: tc(ds.cores.destaque) }]}
                 />
               </View>
             </View>
@@ -263,7 +264,7 @@ export function EmissaoNfseModal({
             {/* Resumo de Split e Não-Bitributação */}
             <View style={styles.splitCard}>
               <View style={styles.splitHeader}>
-                <Percent size={14} color={tc('#f3c21a')} />
+                <Percent size={14} color={tc(ds.cores.destaque)} />
                 <Text style={styles.splitTitle}>Estrutura de Split & Tributação</Text>
               </View>
 
@@ -334,11 +335,11 @@ const styles = createThemedStyles({
   },
   container: {
     maxHeight: '92%',
-    backgroundColor: '#0a0a0a',
+    backgroundColor: ds.cores.fundo,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     borderWidth: 1,
-    borderColor: '#222',
+    borderColor: ds.cores.borda,
     paddingTop: 18,
     paddingBottom: 24,
   },
@@ -349,12 +350,14 @@ const styles = createThemedStyles({
     paddingHorizontal: 20,
     paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#1a1a1a',
+    borderBottomColor: ds.cores.borda,
   },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    flexShrink: 1,
+    minWidth: 0,
   },
   iconWrap: {
     width: 38,
@@ -367,21 +370,26 @@ const styles = createThemedStyles({
     alignItems: 'center',
   },
   title: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '900',
+    color: ds.cores.texto,
+    fontSize: ds.fonte.modal,
+    fontWeight: '700',
+    lineHeight: 26,
+    flexShrink: 1,
   },
   sub: {
-    color: '#888',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   closeBtn: {
-    width: 32,
-    height: 32,
+    width: ds.alvo.compacto,
+    height: ds.alvo.compacto,
     borderRadius: 16,
-    backgroundColor: '#161616',
+    backgroundColor: ds.cores.elevada,
     justifyContent: 'center',
     alignItems: 'center',
+    minHeight: ds.alvo.compacto,
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -394,62 +402,70 @@ const styles = createThemedStyles({
   },
   typeBtn: {
     flex: 1,
-    minHeight: 44,
-    borderRadius: 10,
-    backgroundColor: '#161616',
+    minHeight: ds.alvo.controle,
+    borderRadius: ds.raio.controle,
+    backgroundColor: ds.cores.elevada,
     borderWidth: 1,
-    borderColor: '#262626',
+    borderColor: ds.cores.borda,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
   },
   typeBtnActive: {
-    backgroundColor: '#f3c21a',
-    borderColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
+    borderColor: ds.cores.destaque,
   },
   typeBtnText: {
-    color: '#888',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   typeBtnTextActive: {
     color: '#111',
     fontWeight: '900',
   },
   sectionCard: {
-    backgroundColor: '#121212',
-    borderRadius: 14,
+    backgroundColor: ds.cores.superficie,
+    borderRadius: ds.raio.cartao,
     borderWidth: 1,
-    borderColor: '#1d1d1d',
-    padding: 14,
+    borderColor: ds.cores.borda,
+    padding: ds.espaco.padrao,
     gap: 10,
   },
   sectionTitle: {
-    color: '#f3c21a',
-    fontSize: 11,
-    fontWeight: '900',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.secao,
+    fontWeight: '700',
+    textTransform: 'none',
+    letterSpacing: 0,
+    lineHeight: 26,
+    flexShrink: 1,
   },
   inputGroup: {
     gap: 4,
   },
   inputLabel: {
-    color: '#9ca3af',
-    fontSize: 10,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.legenda,
     fontWeight: '700',
-    textTransform: 'uppercase',
+    textTransform: 'none',
+    lineHeight: 17,
   },
   input: {
-    minHeight: 44,
-    backgroundColor: '#161616',
+    minHeight: ds.alvo.controle,
+    backgroundColor: ds.cores.elevada,
     borderWidth: 1,
-    borderColor: '#282828',
-    borderRadius: 10,
+    borderColor: ds.cores.borda,
+    borderRadius: ds.raio.campo,
     paddingHorizontal: 12,
-    color: '#fff',
-    fontSize: 13,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.campo,
+    lineHeight: 23,
+    flexShrink: 1,
   },
   rowInputs: {
     flexDirection: 'row',
@@ -457,10 +473,10 @@ const styles = createThemedStyles({
   },
   splitCard: {
     backgroundColor: '#0d0d0d',
-    borderRadius: 12,
+    borderRadius: ds.raio.cartao,
     borderWidth: 1,
-    borderColor: '#222',
-    padding: 12,
+    borderColor: ds.cores.borda,
+    padding: ds.espaco.padrao,
     gap: 6,
   },
   splitHeader: {
@@ -470,10 +486,12 @@ const styles = createThemedStyles({
     marginBottom: 2,
   },
   splitTitle: {
-    color: '#f3c21a',
-    fontSize: 11,
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '800',
-    textTransform: 'uppercase',
+    textTransform: 'none',
+    lineHeight: 23,
+    flexShrink: 1,
   },
   splitRow: {
     flexDirection: 'row',
@@ -481,39 +499,48 @@ const styles = createThemedStyles({
     alignItems: 'center',
   },
   splitLabel: {
-    color: '#888',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.legenda,
+    lineHeight: 17,
   },
   splitValBold: {
-    color: '#fff',
-    fontSize: 12,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.corpo,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   splitValMuted: {
     color: '#ef4444',
-    fontSize: 11,
+    fontSize: ds.fonte.corpo,
     fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   splitDivider: {
     height: 1,
-    backgroundColor: '#222',
+    backgroundColor: ds.cores.borda,
     marginVertical: 4,
   },
   splitLabelTotal: {
-    color: '#fff',
-    fontSize: 12,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.legenda,
     fontWeight: '800',
+    lineHeight: 17,
   },
   splitValTotal: {
     color: '#10b981',
     fontSize: 14,
-    fontWeight: '900',
+    fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   splitNotice: {
-    color: '#6b7280',
-    fontSize: 10,
-    lineHeight: 14,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
     marginTop: 4,
+    flexShrink: 1,
   },
   errorBox: {
     backgroundColor: 'rgba(239, 68, 68, 0.15)',
@@ -524,8 +551,10 @@ const styles = createThemedStyles({
   },
   errorText: {
     color: '#ef4444',
-    fontSize: 11,
+    fontSize: ds.fonte.corpo,
     fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   footer: {
     flexDirection: 'row',
@@ -535,24 +564,27 @@ const styles = createThemedStyles({
   },
   cancelBtn: {
     flex: 0.8,
-    minHeight: 46,
-    borderRadius: 12,
-    backgroundColor: '#1b1b1b',
+    minHeight: ds.alvo.controle,
+    borderRadius: ds.raio.controle,
+    backgroundColor: ds.cores.elevada,
     borderWidth: 1,
-    borderColor: '#2d2d2d',
+    borderColor: ds.cores.borda,
     justifyContent: 'center',
     alignItems: 'center',
   },
   cancelBtnText: {
-    color: '#888',
-    fontSize: 12,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   emitBtn: {
     flex: 1.3,
-    minHeight: 46,
-    borderRadius: 12,
-    backgroundColor: '#f3c21a',
+    minHeight: ds.alvo.controle,
+    borderRadius: ds.raio.controle,
+    backgroundColor: ds.cores.destaque,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
@@ -560,8 +592,11 @@ const styles = createThemedStyles({
   },
   emitBtnText: {
     color: '#111',
-    fontSize: 12,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontSize: ds.fonte.controle,
+    fontWeight: '700',
+    textTransform: 'none',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
 });

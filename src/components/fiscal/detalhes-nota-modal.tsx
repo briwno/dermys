@@ -1,3 +1,4 @@
+import { ds } from '@/theme/design-system';
 import {
   imprimirOuBaixarPdfDanfse,
   montarDadosDanfse,
@@ -116,7 +117,7 @@ export function DetalhesNotaModal({
           <View style={styles.header}>
             <View style={styles.headerLeft}>
               <View style={styles.iconWrap}>
-                <FileCheck2 size={20} color={tc('#f3c21a')} />
+                <FileCheck2 size={20} color={tc(ds.cores.destaque)} />
               </View>
               <View>
                 <Text style={styles.title}>
@@ -128,7 +129,7 @@ export function DetalhesNotaModal({
               </View>
             </View>
             <Pressable style={styles.closeBtn} onPress={onClose}>
-              <X size={18} color={tc('#9ca3af')} />
+              <X size={18} color={tc(ds.cores.textoSuave)} />
             </Pressable>
           </View>
 
@@ -150,11 +151,11 @@ export function DetalhesNotaModal({
               {isAutorizada ? (
                 <ShieldCheck size={18} color={tc('#10b981')} />
               ) : isProcessando ? (
-                <Clock size={18} color={tc('#f3c21a')} />
+                <Clock size={18} color={tc(ds.cores.destaque)} />
               ) : isRejeitada ? (
                 <AlertCircle size={18} color={tc('#ef4444')} />
               ) : (
-                <XCircle size={18} color={tc('#9ca3af')} />
+                <XCircle size={18} color={tc(ds.cores.textoSuave)} />
               )}
               <View style={{ flex: 1 }}>
                 <Text
@@ -263,7 +264,7 @@ export function DetalhesNotaModal({
             {nota.dados_split && (
               <View style={styles.splitCard}>
                 <View style={styles.splitHeader}>
-                  <Percent size={14} color={tc('#f3c21a')} />
+                  <Percent size={14} color={tc(ds.cores.destaque)} />
                   <Text style={styles.splitTitle}>Split de Pagamento (Sem Bitributação)</Text>
                 </View>
                 <View style={styles.row}>
@@ -292,7 +293,7 @@ export function DetalhesNotaModal({
               <View style={styles.row}>
                 <Text style={styles.authLabel}>Código de Autenticação Digital:</Text>
                 <Pressable style={styles.btnCopy} onPress={copiarCodigo}>
-                  {copiado ? <Check size={12} color={tc('#10b981')} /> : <Copy size={12} color={tc('#f3c21a')} />}
+                  {copiado ? <Check size={12} color={tc('#10b981')} /> : <Copy size={12} color={tc(ds.cores.destaque)} />}
                   <Text style={[styles.btnCopyText, copiado && { color: tc('#10b981') }]}>
                     {copiado ? 'Copiado' : 'Copiar'}
                   </Text>
@@ -312,7 +313,7 @@ export function DetalhesNotaModal({
                   value={motivoCancelamento}
                   onChangeText={setMotivoCancelamento}
                   placeholder="Justificativa do cancelamento"
-                  placeholderTextColor={tc('#666')}
+                  placeholderTextColor={tc(ds.cores.textoSuave)}
                   style={styles.cancelInput}
                 />
                 <View style={styles.cancelActionsRow}>
@@ -328,7 +329,7 @@ export function DetalhesNotaModal({
                     disabled={cancelando}
                   >
                     {cancelando ? (
-                      <ActivityIndicator color={tc('#fff')} size="small" />
+                      <ActivityIndicator color={tc(ds.cores.texto)} size="small" />
                     ) : (
                       <Text style={styles.btnCancelConfirmText}>Confirmar Cancelamento</Text>
                     )}
@@ -346,13 +347,13 @@ export function DetalhesNotaModal({
             </Pressable>
 
             <Pressable style={styles.btnAction} onPress={abrirPdf}>
-              <Download size={15} color={tc('#f3c21a')} />
+              <Download size={15} color={tc(ds.cores.destaque)} />
               <Text style={styles.btnActionText}>PDF</Text>
             </Pressable>
 
             {nota.url_xml && (
               <Pressable style={styles.btnAction} onPress={abrirXml}>
-                <FileCode size={15} color={tc('#f3c21a')} />
+                <FileCode size={15} color={tc(ds.cores.destaque)} />
                 <Text style={styles.btnActionText}>XML</Text>
               </Pressable>
             )}
@@ -381,11 +382,11 @@ const styles = createThemedStyles({
   },
   container: {
     maxHeight: '92%',
-    backgroundColor: '#0a0a0a',
+    backgroundColor: ds.cores.fundo,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     borderWidth: 1,
-    borderColor: '#222',
+    borderColor: ds.cores.borda,
     paddingTop: 18,
     paddingBottom: 24,
   },
@@ -396,12 +397,14 @@ const styles = createThemedStyles({
     paddingHorizontal: 20,
     paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#1a1a1a',
+    borderBottomColor: ds.cores.borda,
   },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    flexShrink: 1,
+    minWidth: 0,
   },
   iconWrap: {
     width: 38,
@@ -414,23 +417,28 @@ const styles = createThemedStyles({
     alignItems: 'center',
   },
   title: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '900',
+    color: ds.cores.texto,
+    fontSize: ds.fonte.modal,
+    fontWeight: '700',
+    lineHeight: 26,
+    flexShrink: 1,
   },
   receiptNumber: {
-    color: '#f3c21a',
-    fontSize: 11,
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.corpo,
     fontWeight: '800',
     letterSpacing: 1,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   closeBtn: {
-    width: 32,
-    height: 32,
+    width: ds.alvo.compacto,
+    height: ds.alvo.compacto,
     borderRadius: 16,
-    backgroundColor: '#161616',
+    backgroundColor: ds.cores.elevada,
     justifyContent: 'center',
     alignItems: 'center',
+    minHeight: ds.alvo.compacto,
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -459,37 +467,43 @@ const styles = createThemedStyles({
     borderColor: 'rgba(239, 68, 68, 0.35)',
   },
   statusBannerCancelada: {
-    backgroundColor: '#161616',
-    borderColor: '#262626',
+    backgroundColor: ds.cores.elevada,
+    borderColor: ds.cores.borda,
   },
   statusBannerText: {
-    fontSize: 12,
+    fontSize: ds.fonte.corpo,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   textAutorizada: { color: '#10b981' },
-  textProcessando: { color: '#f3c21a' },
+  textProcessando: { color: ds.cores.destaque },
   textRejeitada: { color: '#ef4444' },
-  textCancelada: { color: '#888' },
+  textCancelada: { color: ds.cores.textoSuave },
   statusBannerSub: {
     color: '#aaa',
-    fontSize: 10,
+    fontSize: ds.fonte.corpo,
     marginTop: 2,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   sectionCard: {
-    backgroundColor: '#121212',
-    borderRadius: 14,
+    backgroundColor: ds.cores.superficie,
+    borderRadius: ds.raio.cartao,
     borderWidth: 1,
-    borderColor: '#1d1d1d',
-    padding: 14,
+    borderColor: ds.cores.borda,
+    padding: ds.espaco.padrao,
     gap: 6,
   },
   cardHeaderTitle: {
-    color: '#9ca3af',
-    fontSize: 10,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    textTransform: 'none',
+    letterSpacing: 0,
     marginBottom: 4,
+    lineHeight: 23,
+    flexShrink: 1,
   },
   row: {
     flexDirection: 'row',
@@ -497,26 +511,30 @@ const styles = createThemedStyles({
     alignItems: 'center',
   },
   rowLabel: {
-    color: '#6b7280',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.legenda,
+    lineHeight: 17,
   },
   rowValue: {
     color: '#e5e7eb',
-    fontSize: 11,
+    fontSize: ds.fonte.corpo,
     fontWeight: '700',
     maxWidth: '65%',
     textAlign: 'right',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   descServico: {
-    color: '#fff',
-    fontSize: 12,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.corpo,
     fontWeight: '700',
-    lineHeight: 16,
+    lineHeight: 20,
     marginTop: 2,
+    flexShrink: 1,
   },
   divider: {
     height: 1,
-    backgroundColor: '#222',
+    backgroundColor: ds.cores.borda,
     marginVertical: 4,
   },
   rowTotal: {
@@ -526,21 +544,24 @@ const styles = createThemedStyles({
     marginTop: 4,
   },
   totalLabel: {
-    color: '#fff',
-    fontSize: 12,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.legenda,
     fontWeight: '800',
+    lineHeight: 17,
   },
   totalValue: {
-    color: '#f3c21a',
+    color: ds.cores.destaque,
     fontSize: 15,
-    fontWeight: '900',
+    fontWeight: '700',
+    lineHeight: 22,
+    flexShrink: 1,
   },
   splitCard: {
     backgroundColor: '#0d0d0d',
-    borderRadius: 12,
+    borderRadius: ds.raio.cartao,
     borderWidth: 1,
-    borderColor: '#222',
-    padding: 12,
+    borderColor: ds.cores.borda,
+    padding: ds.espaco.padrao,
     gap: 6,
   },
   splitHeader: {
@@ -550,39 +571,49 @@ const styles = createThemedStyles({
     marginBottom: 2,
   },
   splitTitle: {
-    color: '#f3c21a',
-    fontSize: 10,
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '800',
-    textTransform: 'uppercase',
+    textTransform: 'none',
+    lineHeight: 23,
+    flexShrink: 1,
   },
   authBox: {
     backgroundColor: '#0d0d0d',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#1f1f1f',
+    borderColor: ds.cores.borda,
     padding: 12,
     gap: 6,
   },
   authLabel: {
-    color: '#888',
-    fontSize: 10,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.legenda,
     fontWeight: '700',
+    lineHeight: 17,
   },
   authCode: {
-    color: '#f3c21a',
-    fontSize: 11,
-    fontWeight: '900',
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.corpo,
+    fontWeight: '700',
     letterSpacing: 1,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   btnCopy: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    minHeight: ds.alvo.controle,
+    justifyContent: 'center',
   },
   btnCopyText: {
-    color: '#f3c21a',
-    fontSize: 10,
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   cancelBox: {
     backgroundColor: 'rgba(239, 68, 68, 0.1)',
@@ -594,22 +625,28 @@ const styles = createThemedStyles({
   },
   cancelBoxTitle: {
     color: '#ef4444',
-    fontSize: 12,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '800',
+    lineHeight: 23,
+    flexShrink: 1,
   },
   cancelBoxSub: {
     color: '#aaa',
-    fontSize: 10,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   cancelInput: {
     minHeight: 40,
-    backgroundColor: '#161616',
+    backgroundColor: ds.cores.elevada,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#333',
+    borderColor: ds.cores.borda,
     paddingHorizontal: 10,
-    color: '#fff',
-    fontSize: 12,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   cancelActionsRow: {
     flexDirection: 'row',
@@ -617,29 +654,35 @@ const styles = createThemedStyles({
   },
   btnCancelDismiss: {
     flex: 0.8,
-    minHeight: 38,
-    borderRadius: 8,
+    minHeight: ds.alvo.controle,
+    borderRadius: ds.raio.controle,
     backgroundColor: '#1c1c1c',
     justifyContent: 'center',
     alignItems: 'center',
   },
   btnCancelDismissText: {
-    color: '#888',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   btnCancelConfirm: {
     flex: 1.2,
-    minHeight: 38,
-    borderRadius: 8,
+    minHeight: ds.alvo.controle,
+    borderRadius: ds.raio.controle,
     backgroundColor: '#ef4444',
     justifyContent: 'center',
     alignItems: 'center',
   },
   btnCancelConfirmText: {
-    color: '#fff',
-    fontSize: 11,
-    fontWeight: '900',
+    color: ds.cores.texto,
+    fontSize: ds.fonte.controle,
+    fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   footer: {
     flexDirection: 'row',
@@ -649,8 +692,8 @@ const styles = createThemedStyles({
   },
   btnZap: {
     flex: 1.2,
-    minHeight: 46,
-    borderRadius: 12,
+    minHeight: ds.alvo.controle,
+    borderRadius: ds.raio.controle,
     backgroundColor: '#10b981',
     flexDirection: 'row',
     justifyContent: 'center',
@@ -659,31 +702,37 @@ const styles = createThemedStyles({
   },
   btnZapText: {
     color: '#111',
-    fontSize: 11,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontSize: ds.fonte.controle,
+    fontWeight: '700',
+    textTransform: 'none',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   btnAction: {
     flex: 0.8,
     minHeight: 46,
     borderRadius: 12,
-    backgroundColor: '#1b1b1b',
+    backgroundColor: ds.cores.elevada,
     borderWidth: 1,
-    borderColor: '#2d2d2d',
+    borderColor: ds.cores.borda,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 4,
   },
   btnActionText: {
-    color: '#f3c21a',
-    fontSize: 11,
-    fontWeight: '900',
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.controle,
+    fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   btnCancelDoc: {
     flex: 0.9,
-    minHeight: 46,
-    borderRadius: 12,
+    minHeight: ds.alvo.controle,
+    borderRadius: ds.raio.controle,
     backgroundColor: 'rgba(239, 68, 68, 0.1)',
     borderWidth: 1,
     borderColor: 'rgba(239, 68, 68, 0.3)',
@@ -694,8 +743,11 @@ const styles = createThemedStyles({
   },
   btnCancelDocText: {
     color: '#ef4444',
-    fontSize: 10,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontSize: ds.fonte.controle,
+    fontWeight: '700',
+    textTransform: 'none',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
 });

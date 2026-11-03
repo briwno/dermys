@@ -1,4 +1,5 @@
-import { supabase } from '@/services/supabase';
+import { supabase } from '@/services/data-client';
+import { demoAtiva } from '@/services/apresentacao-store';
 import type {
   DadosCobrancaMercadoPago,
   MetodoPagamento,
@@ -138,7 +139,7 @@ export async function criarCobrancaSinal(params: {
   const chavePixFinal = params.chavePixArtista || 'pix@dermys.app';
   const cidadeFinal = params.cidade || 'SAO PAULO';
 
-  const copiaCola = gerarPixCopiaECola({
+  const copiaCola = demoAtiva() ? `DEMONSTRACAO-SEM-COBRANCA-${params.agendamentoId}` : gerarPixCopiaECola({
     chavePix: chavePixFinal,
     nomeRecebedor: params.artistaNome || 'Dermys Artista',
     cidade: cidadeFinal,
@@ -151,8 +152,8 @@ export async function criarCobrancaSinal(params: {
   const impostoEstimado = estimarTributos(params.valorSinal, 'MEI');
 
   try {
-    // Registra transação como CUSTODIA no banco de dados
-    await supabase.from('transacoes_financeiras').insert({
+    // Cobrança simulada: só será aprovada na ação explícita do apresentador.
+    const { error } = await supabase.from('transacoes_financeiras').insert({
       agendamento_id: params.agendamentoId,
       artista_id: params.artistaId,
       cliente_id: params.clienteId,
@@ -160,32 +161,35 @@ export async function criarCobrancaSinal(params: {
       valor_bruto: params.valorSinal,
       taxa_mercado_pago: taxaTotal,
       valor_liquido: valorLiquido,
-      status: 'CUSTODIA',
+      status: 'PENDENTE',
       forma_pagamento: 'pix',
       mercado_pago_payment_id: paymentId,
       descricao: `Sinal de agendamento reservado via Mercado Pago PIX`,
       imposto_estimado: impostoEstimado,
     });
 
+    if (error) throw error;
     // Atualiza agendamento com metadados de pagamento
-    await supabase
+    const { error: erroAgendamento } = await supabase
       .from('agendamentos')
       .update({
         valor_sinal: params.valorSinal,
         forma_pagamento: 'pix',
         mercado_pago_id: paymentId,
         mercado_pago_copia_cola: copiaCola,
-        sinal_pago: true,
+        sinal_pago: false,
       })
       .eq('id', params.agendamentoId);
+    if (erroAgendamento) throw erroAgendamento;
   } catch (err) {
     console.warn('[MercadoPago] Erro ao gravar transacao:', err);
+    throw new Error('Não foi possível registrar o sinal. Confira a conexão e tente novamente.');
   }
 
   return {
     paymentId,
     qrCodePayload: copiaCola,
-    qrCodeBase64: obterUrlQrCodePix(copiaCola),
+    qrCodeBase64: demoAtiva() ? undefined : obterUrlQrCodePix(copiaCola),
     valor: params.valorSinal,
     status: 'pending',
     expiraEm: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 min
@@ -193,9 +197,19 @@ export async function criarCobrancaSinal(params: {
   };
 }
 
-/**
- * Cria cobrança do saldo final ou total da sessão
- */
+export async function confirmarSinalSimulado(agendamentoId: string, dataHorario?: string) {
+  const { data: transacoes, error } = await supabase.from('transacoes_financeiras').update({ status: 'CUSTODIA' })
+    .eq('agendamento_id', agendamentoId).eq('tipo', 'SINAL').eq('status', 'PENDENTE').select('id');
+  if (error) throw new Error('Não foi possível aprovar o sinal simulado.');
+  if (!transacoes?.length) {
+    const { data, error: erroConsulta } = await supabase.from('transacoes_financeiras').select('id').eq('agendamento_id', agendamentoId).eq('tipo', 'SINAL').in('status', ['CUSTODIA', 'APROVADO', 'LIBERADO']);
+    if (erroConsulta || !data?.length) throw new Error('Gere o sinal antes de simular a aprovação.');
+  }
+  const { data: agendamento, error: erroAtualizacao } = await supabase.from('agendamentos').update({ sinal_pago: true, status: 'confirmado', ...(dataHorario ? { data_horario: dataHorario } : {}) }).eq('id', agendamentoId).select('id').single();
+  if (erroAtualizacao || !agendamento) throw new Error('O sinal foi registrado, mas a reserva não foi atualizada. Tente confirmar novamente.');
+}
+
+/** Cria uma quitação simulada do saldo final da sessão. */
 export async function criarCobrancaFinal(params: {
   agendamentoId: string;
   artistaId: string;
@@ -210,7 +224,7 @@ export async function criarCobrancaFinal(params: {
   const paymentId = `MP-FINAL-${Date.now()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
   const chavePixFinal = params.chavePixArtista || 'pix@dermys.app';
 
-  const copiaCola = gerarPixCopiaECola({
+  const copiaCola = demoAtiva() ? `DEMONSTRACAO-SEM-COBRANCA-${params.agendamentoId}` : gerarPixCopiaECola({
     chavePix: chavePixFinal,
     nomeRecebedor: params.artistaNome || 'Dermys Artista',
     cidade: 'SAO PAULO',
@@ -223,8 +237,8 @@ export async function criarCobrancaFinal(params: {
   const impostoEstimado = estimarTributos(params.valorFinal, 'MEI');
 
   try {
-    // Registra transação final como APROVADO
-    await supabase.from('transacoes_financeiras').insert({
+    // A quitação é uma simulação acionada pelo apresentador.
+    const { error } = await supabase.from('transacoes_financeiras').insert({
       agendamento_id: params.agendamentoId,
       artista_id: params.artistaId,
       cliente_id: params.clienteId,
@@ -239,20 +253,23 @@ export async function criarCobrancaFinal(params: {
       imposto_estimado: impostoEstimado,
     });
 
+    if (error) throw error;
     // Libera também o sinal anterior que estava em custódia
-    await supabase
+    const { error: erroSinal } = await supabase
       .from('transacoes_financeiras')
       .update({ status: 'LIBERADO' })
       .eq('agendamento_id', params.agendamentoId)
       .eq('tipo', 'SINAL');
+    if (erroSinal) throw erroSinal;
   } catch (err) {
     console.warn('[MercadoPago] Erro ao gravar liquidacao:', err);
+    throw new Error('Não foi possível registrar a quitação simulada.');
   }
 
   return {
     paymentId,
     qrCodePayload: copiaCola,
-    qrCodeBase64: obterUrlQrCodePix(copiaCola),
+    qrCodeBase64: demoAtiva() ? undefined : obterUrlQrCodePix(copiaCola),
     valor: saldoRestante,
     status: 'approved',
     expiraEm: new Date(Date.now() + 60 * 60 * 1000).toISOString(),

@@ -1,15 +1,16 @@
+import { ds } from '@/theme/design-system';
 import type { BottomNavTab } from '@/components/bottom-nav';
 import { AnimatedScreenTransition } from '@/components/ui/animated-screen-transition';
+import { CabecalhoTela } from '@/components/ui/cabecalho-tela';
 import { ArtistaAgendaTab } from '@/telas/artista/agenda-tab';
 import { ArtistaDashboardTab } from '@/telas/artista/dashboard-tab';
 import { ArtistaFinanceiroTab } from '@/telas/artista/financeiro-tab';
 import { ArtistaMensagensTab } from '@/telas/artista/mensagens-tab';
 import { ArtistaPerfilTab } from '@/telas/artista/perfil-tab';
 import type { PerfilUsuario } from '@/types/auth';
-import { LogOut } from 'lucide-react-native';
 import React from 'react';
-import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { createThemedStyles, tc } from '@/theme';
+import { View, ScrollView } from 'react-native';
+import { createThemedStyles } from '@/theme';
 
 interface PropsDashboardArtista {
   perfil: PerfilUsuario;
@@ -31,45 +32,35 @@ export function DashboardArtista({
   const getTabTitle = () => {
     switch (activeTab) {
       case 'schedule':
-        return 'Agenda de Atendimentos';
+        return 'Sua agenda';
       case 'financial':
         return 'Financeiro & fiscal';
       case 'chat':
         return 'Mensagens com Clientes';
       case 'profile':
-        return 'Dados do Estúdio';
+        return 'Perfil do estúdio';
       case 'dashboard':
       default:
-        return 'Dashboard do tatuador';
+        return 'Seu estúdio';
     }
   };
 
   if (activeTab === 'chat') {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <View style={styles.safeArea}>
         <AnimatedScreenTransition screenKey="chat" style={styles.chatWrapper}>
           <ArtistaMensagensTab perfil={perfil} contatoInicialId={chatContatoId} />
         </AnimatedScreenTransition>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <AnimatedScreenTransition screenKey={activeTab} style={styles.screenWrapper}>
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           {/* Header */}
-          <View style={styles.header}>
-            <View style={{ flex: 1, minWidth: 0, paddingRight: 12 }}>
-              <Text style={styles.hiText}>Studio mode</Text>
-              <Text style={styles.title}>{getTabTitle()}</Text>
-              <Text style={styles.subtitle}>{perfil.nomeExibicao || 'Tatuador'}</Text>
-            </View>
-            <Pressable style={styles.logoutButton} onPress={onLogout}>
-              <LogOut size={14} color={tc('#fff')} />
-              <Text style={styles.logoutText}>Sair</Text>
-            </Pressable>
-          </View>
+          <CabecalhoTela contexto="DERMYS / ESTÚDIO" titulo={getTabTitle()} subtitulo={perfil.nomeExibicao || 'Tatuador'} onSair={onLogout} />
 
           {/* Conteúdo Dinâmico por Aba */}
           {activeTab === 'dashboard' && <ArtistaDashboardTab perfil={perfil} />}
@@ -80,14 +71,14 @@ export function DashboardArtista({
           )}
         </ScrollView>
       </AnimatedScreenTransition>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = createThemedStyles({
   safeArea: {
     flex: 1,
-    backgroundColor: '#050505',
+    backgroundColor: ds.cores.fundo,
   },
   screenWrapper: {
     flex: 1,
@@ -96,9 +87,9 @@ const styles = createThemedStyles({
     flex: 1,
   },
   content: {
-    paddingHorizontal: 18,
-    paddingVertical: 12,
-    gap: 14,
+    paddingHorizontal: ds.espaco.padrao,
+    paddingVertical: ds.espaco.padrao,
+    gap: ds.espaco.secao,
     paddingBottom: 28,
   },
   header: {
@@ -109,39 +100,46 @@ const styles = createThemedStyles({
   },
   hiText: {
     color: '#8a8a8a',
-    fontSize: 11,
+    fontSize: ds.fonte.marca,
     textTransform: 'uppercase',
     letterSpacing: 1.2,
     fontWeight: '700',
+    lineHeight: 15,
   },
   title: {
-    color: '#f3c21a',
-    fontSize: 24,
-    fontWeight: '900',
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.modal,
+    fontWeight: '700',
     fontStyle: 'italic',
     letterSpacing: -0.7,
+    lineHeight: 26,
+    flexShrink: 1,
   },
   subtitle: {
-    color: '#d1d5db',
-    fontSize: 13,
+    color: ds.cores.textoSecundario,
+    fontSize: ds.fonte.subtitulo,
     marginTop: 2,
+    lineHeight: 23,
+    flexShrink: 1,
   },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     borderWidth: 1,
-    borderColor: '#2a2a2a',
+    borderColor: ds.cores.borda,
     borderRadius: 12,
     paddingVertical: 8,
     paddingHorizontal: 12,
-    backgroundColor: '#121212',
+    backgroundColor: ds.cores.superficie,
   },
   logoutText: {
-    color: '#fff',
-    fontSize: 10,
-    textTransform: 'uppercase',
+    color: ds.cores.texto,
+    fontSize: ds.fonte.corpo,
+    textTransform: 'none',
     fontWeight: '800',
-    letterSpacing: 1.1,
+    letterSpacing: 0,
+    lineHeight: 20,
+    flexShrink: 1,
   },
 });

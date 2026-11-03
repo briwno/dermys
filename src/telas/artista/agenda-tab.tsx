@@ -1,10 +1,14 @@
+import { demoAtiva } from '@/services/apresentacao-store';
+import { copiarTexto } from '@/services/documentos-mobile';
+import { avisar } from '@/services/feedback';
+import { ds } from '@/theme/design-system';
 import { DetalhesNotaModal } from '@/components/fiscal/detalhes-nota-modal';
 import { EmissaoNfseModal } from '@/components/fiscal/emissao-nfse-modal';
 import { ReciboFiscalModal } from '@/components/recibo-fiscal-modal';
 import { AppModal } from '@/components/ui/app-modal';
 import { FiscalService } from '@/services/fiscal/fiscal-service';
 import { criarCobrancaFinal, gerarReciboFiscal, obterUrlQrCodePix } from '@/services/mercadopago';
-import { supabase } from '@/services/supabase';
+import { supabase } from '@/services/data-client';
 import type { ReciboFiscal } from '@/types/financeiro';
 import type { NotaFiscalRegistro } from '@/types/fiscal';
 import type { PerfilUsuario } from '@/types/auth';
@@ -124,7 +128,7 @@ export function ArtistaAgendaTab({ perfil }: { perfil: PerfilUsuario }) {
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      if (!session?.user) return;
+      if (!session?.user && !demoAtiva()) return;
 
       const { data: profile } = await supabase
         .from('profiles')
@@ -150,7 +154,7 @@ export function ArtistaAgendaTab({ perfil }: { perfil: PerfilUsuario }) {
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      if (!session?.user) return;
+      if (!session?.user && !demoAtiva()) return;
 
       await supabase
         .from('profiles')
@@ -168,7 +172,7 @@ export function ArtistaAgendaTab({ perfil }: { perfil: PerfilUsuario }) {
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      if (!session?.user) return;
+      if (!session?.user && !demoAtiva()) return;
 
       // 1. Busca agendamentos do artista
       const { data, error } = await supabase
@@ -249,19 +253,21 @@ export function ArtistaAgendaTab({ perfil }: { perfil: PerfilUsuario }) {
 
   const atualizarStatus = async (id: string, novoStatus: string, extras: any = {}) => {
     try {
-      await supabase
+      const { data, error } = await supabase
         .from('agendamentos')
         .update({
           status: novoStatus,
           ...extras,
         })
-        .eq('id', id);
+        .eq('id', id).select('id').single();
+      if (error || !data) throw new Error('Não foi possível atualizar este agendamento.');
 
       setAgendamentos((prev) =>
         prev.map((item) => (item.id === id ? { ...item, status: novoStatus as any, ...extras } : item))
       );
-    } catch {
-      // silencioso
+    } catch (e) {
+      avisar(e instanceof Error ? e.message : 'Não foi possível atualizar o agendamento.');
+      throw e;
     }
   };
 
@@ -282,7 +288,7 @@ export function ArtistaAgendaTab({ perfil }: { perfil: PerfilUsuario }) {
         data: { session },
       } = await supabase.auth.getSession();
 
-      if (session?.user) {
+      if (session?.user || demoAtiva()) {
         const cobranca = await criarCobrancaFinal({
           agendamentoId: itemFinalizando.id,
           artistaId: artistaId,
@@ -423,7 +429,7 @@ export function ArtistaAgendaTab({ perfil }: { perfil: PerfilUsuario }) {
 
       {/* Lista de Cards */}
       {carregando ? (
-        <ActivityIndicator color={tc('#f3c21a')} style={{ marginTop: 24 }} />
+        <ActivityIndicator color={tc(ds.cores.destaque)} style={{ marginTop: 24 }} />
       ) : agendamentosFiltrados.length === 0 ? (
         <View style={styles.emptyWrap}>
           <Text style={styles.emptyTitle}>Agenda vazia nesta categoria</Text>
@@ -513,11 +519,11 @@ export function ArtistaAgendaTab({ perfil }: { perfil: PerfilUsuario }) {
               <View style={styles.gridInfo}>
                 <View style={styles.infoCol}>
                   <View style={styles.infoLine}>
-                    <Calendar size={13} color={tc('#f3c21a')} />
+                    <Calendar size={13} color={tc(ds.cores.destaque)} />
                     <Text style={styles.infoVal}>{item.data}</Text>
                   </View>
                   <View style={styles.infoLine}>
-                    <Clock size={13} color={tc('#f3c21a')} />
+                    <Clock size={13} color={tc(ds.cores.destaque)} />
                     <Text style={styles.infoVal}>{item.horario}</Text>
                   </View>
                 </View>
@@ -546,7 +552,7 @@ export function ArtistaAgendaTab({ perfil }: { perfil: PerfilUsuario }) {
                 ) : anamneseAssinada ? (
                   <ShieldCheck size={14} color={tc('#10b981')} />
                 ) : (
-                  <HeartPulse size={14} color={tc('#f3c21a')} />
+                  <HeartPulse size={14} color={tc(ds.cores.destaque)} />
                 )}
                 <Text
                   style={[
@@ -596,7 +602,7 @@ export function ArtistaAgendaTab({ perfil }: { perfil: PerfilUsuario }) {
                   style={[styles.btnSecondary, temAlerta && styles.btnSecondaryAlert]}
                   onPress={() => setItemAnamnese(item)}
                 >
-                  <FileHeart size={14} color={temAlerta ? tc('#ef4444') : tc('#f3c21a')} />
+                  <FileHeart size={14} color={temAlerta ? tc('#ef4444') : tc(ds.cores.destaque)} />
                   <Text style={[styles.btnSecondaryText, temAlerta && { color: tc('#ef4444') }]}>
                     {temAlerta ? 'Ver Alertas / Ficha' : 'Briefing & Saúde'}
                   </Text>
@@ -606,14 +612,14 @@ export function ArtistaAgendaTab({ perfil }: { perfil: PerfilUsuario }) {
                   <>
                     <Pressable
                       style={styles.btnSuccess}
-                      onPress={() => atualizarStatus(item.id, 'confirmado')}
+                      onPress={() => { void atualizarStatus(item.id, 'confirmado').catch(() => {}); }}
                     >
                       <CheckCircle size={14} color={tc('#111')} />
                       <Text style={styles.btnSuccessText}>Aceitar</Text>
                     </Pressable>
                     <Pressable
                       style={styles.btnDanger}
-                      onPress={() => atualizarStatus(item.id, 'cancelado')}
+                      onPress={() => { void atualizarStatus(item.id, 'cancelado').catch(() => {}); }}
                     >
                       <XCircle size={14} color={tc('#ef4444')} />
                     </Pressable>
@@ -623,7 +629,7 @@ export function ArtistaAgendaTab({ perfil }: { perfil: PerfilUsuario }) {
                 {isConfirmado && (
                   <Pressable
                     style={styles.btnPrimary}
-                    onPress={() => atualizarStatus(item.id, 'em_andamento')}
+                    onPress={() => { void atualizarStatus(item.id, 'em_andamento').catch(() => {}); }}
                   >
                     <Play size={14} color={tc('#111')} />
                     <Text style={styles.btnPrimaryText}>Iniciar Sessão</Text>
@@ -635,7 +641,7 @@ export function ArtistaAgendaTab({ perfil }: { perfil: PerfilUsuario }) {
                     style={styles.btnDangerAction}
                     onPress={() => abrirModalFinalizar(item)}
                   >
-                    <Square size={14} color={tc('#fff')} fill={tc('#fff')} />
+                    <Square size={14} color={tc(ds.cores.texto)} fill={tc(ds.cores.texto)} />
                     <Text style={styles.btnDangerActionText}>Finalizar & Cobrar</Text>
                   </Pressable>
                 )}
@@ -646,7 +652,7 @@ export function ArtistaAgendaTab({ perfil }: { perfil: PerfilUsuario }) {
                       style={[styles.btnReceipt, { flex: 1 }]}
                       onPress={() => setItemEmissaoNfse(item)}
                     >
-                      <FileCheck2 size={13} color={tc('#f3c21a')} />
+                      <FileCheck2 size={13} color={tc(ds.cores.destaque)} />
                       <Text style={styles.btnReceiptText}>Emitir NFS-e</Text>
                     </Pressable>
                     <Pressable
@@ -676,7 +682,7 @@ export function ArtistaAgendaTab({ perfil }: { perfil: PerfilUsuario }) {
             <View style={styles.modalHeader}>
               <View style={styles.modalHeaderLeft}>
                 <View style={styles.finishIconWrap}>
-                  <Timer size={20} color={tc('#f3c21a')} />
+                  <Timer size={20} color={tc(ds.cores.destaque)} />
                 </View>
                 <View>
                   <Text style={styles.modalTitle}>Finalizar & Liquidar</Text>
@@ -684,7 +690,7 @@ export function ArtistaAgendaTab({ perfil }: { perfil: PerfilUsuario }) {
                 </View>
               </View>
               <Pressable style={styles.closeBtn} onPress={() => setItemFinalizando(null)}>
-                <X size={18} color={tc('#888')} />
+                <X size={18} color={tc(ds.cores.textoSuave)} />
               </Pressable>
             </View>
 
@@ -748,9 +754,9 @@ export function ArtistaAgendaTab({ perfil }: { perfil: PerfilUsuario }) {
 
                   <Pressable
                     style={styles.copyPixBtn}
-                    onPress={() => {
-                      setCopiadoPix(true);
-                      setTimeout(() => setCopiadoPix(false), 2000);
+                    onPress={async () => {
+                      try { await copiarTexto(pixCopiaColaFinal || ''); setCopiadoPix(true); setTimeout(() => setCopiadoPix(false), 2000); }
+                      catch { avisar('Não foi possível copiar o código.'); }
                     }}
                   >
                     <Copy size={14} color={tc('#111')} />
@@ -795,14 +801,14 @@ export function ArtistaAgendaTab({ perfil }: { perfil: PerfilUsuario }) {
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
               <View style={styles.modalHeaderLeft}>
-                <FileHeart size={20} color={tc('#f3c21a')} />
+                <FileHeart size={20} color={tc(ds.cores.destaque)} />
                 <View>
                   <Text style={styles.modalTitle}>Briefing & Ficha de Saúde</Text>
                   <Text style={styles.modalSub}>Cliente: {itemAnamnese?.clienteNome}</Text>
                 </View>
               </View>
               <Pressable style={styles.closeBtn} onPress={() => setItemAnamnese(null)}>
-                <X size={18} color={tc('#888')} />
+                <X size={18} color={tc(ds.cores.textoSuave)} />
               </Pressable>
             </View>
 
@@ -917,7 +923,7 @@ export function ArtistaAgendaTab({ perfil }: { perfil: PerfilUsuario }) {
                   </View>
                 ) : (
                   <View style={styles.pendingAnamneseWrap}>
-                    <Clock size={16} color={tc('#f3c21a')} />
+                    <Clock size={16} color={tc(ds.cores.destaque)} />
                     <Text style={styles.pendingAnamneseText}>
                       O cliente ainda não preencheu a ficha digital. Ele receberá o lembrete antes da sessão.
                     </Text>
@@ -979,14 +985,14 @@ export function ArtistaAgendaTab({ perfil }: { perfil: PerfilUsuario }) {
 const styles = createThemedStyles({
   container: {
     flex: 1,
-    gap: 12,
+    gap: ds.espaco.padrao,
   },
   agendaControlCard: {
-    backgroundColor: '#121217',
-    borderRadius: 14,
+    backgroundColor: ds.cores.superficie,
+    borderRadius: ds.raio.cartao,
     borderWidth: 1,
-    borderColor: '#242430',
-    padding: 12,
+    borderColor: ds.cores.borda,
+    padding: ds.espaco.padrao,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -1010,20 +1016,27 @@ const styles = createThemedStyles({
     backgroundColor: '#f59e0b',
   },
   agendaControlTitle: {
-    color: '#fff',
-    fontSize: 12,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '800',
+    lineHeight: 23,
+    flexShrink: 1,
   },
   agendaControlSub: {
-    color: '#888',
-    fontSize: 10,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
     marginTop: 1,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   agendaToggleBtn: {
     paddingHorizontal: 12,
     paddingVertical: 7,
-    borderRadius: 8,
+    borderRadius: ds.raio.controle,
     borderWidth: 1,
+    minHeight: ds.alvo.controle,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   btnFechada: {
     backgroundColor: 'rgba(239, 68, 68, 0.1)',
@@ -1034,8 +1047,11 @@ const styles = createThemedStyles({
     borderColor: '#10b981',
   },
   agendaToggleBtnText: {
-    fontSize: 11,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   textFechada: {
     color: '#ef4444',
@@ -1050,54 +1066,61 @@ const styles = createThemedStyles({
   filterBtn: {
     flex: 1,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: ds.raio.controle,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    minHeight: ds.alvo.compacto,
   },
   filterBtnActive: {
-    backgroundColor: '#f3c21a',
-    borderColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
+    borderColor: ds.cores.destaque,
   },
   filterBtnIdle: {
-    backgroundColor: '#111',
-    borderColor: '#222',
+    backgroundColor: ds.cores.superficie,
+    borderColor: ds.cores.borda,
   },
   filterBtnText: {
-    fontSize: 10,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
-    color: '#888',
-    textTransform: 'uppercase',
+    color: ds.cores.textoSuave,
+    textTransform: 'none',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   filterBtnTextActive: {
     color: '#111',
   },
   emptyWrap: {
-    backgroundColor: '#101010',
-    borderRadius: 16,
+    backgroundColor: ds.cores.superficie,
+    borderRadius: ds.raio.cartao,
     borderWidth: 1,
-    borderColor: '#1d1d1d',
+    borderColor: ds.cores.borda,
     padding: 30,
     alignItems: 'center',
     gap: 6,
   },
   emptyTitle: {
-    color: '#fff',
-    fontSize: 14,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '800',
+    lineHeight: 23,
+    flexShrink: 1,
   },
   emptySub: {
-    color: '#6b7280',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
     textAlign: 'center',
-    lineHeight: 16,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   card: {
-    backgroundColor: '#101010',
-    borderRadius: 16,
+    backgroundColor: ds.cores.superficie,
+    borderRadius: ds.raio.cartao,
     borderWidth: 1,
-    borderColor: '#1e1e1e',
-    padding: 14,
+    borderColor: ds.cores.borda,
+    padding: ds.espaco.padrao,
     gap: 10,
   },
   cardHeader: {
@@ -1114,25 +1137,29 @@ const styles = createThemedStyles({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#1b1b1b',
+    backgroundColor: ds.cores.elevada,
     borderWidth: 1,
     borderColor: '#2c2c2c',
     justifyContent: 'center',
     alignItems: 'center',
   },
   avatarMiniText: {
-    color: '#f3c21a',
+    color: ds.cores.destaque,
     fontSize: 14,
-    fontWeight: '900',
+    fontWeight: '700',
   },
   clientName: {
-    color: '#fff',
+    color: ds.cores.texto,
     fontSize: 15,
     fontWeight: '800',
+    lineHeight: 22,
+    flexShrink: 1,
   },
   estiloText: {
-    color: '#9ca3af',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   badge: {
     paddingHorizontal: 8,
@@ -1161,13 +1188,14 @@ const styles = createThemedStyles({
     backgroundColor: 'rgba(239, 68, 68, 0.15)',
   },
   badgeText: {
-    fontSize: 9,
-    fontWeight: '900',
+    fontSize: ds.fonte.etiqueta,
+    fontWeight: '700',
+    lineHeight: 16,
   },
   badgeTextConfirmado: { color: '#10b981' },
-  badgeTextPendente: { color: '#f3c21a' },
+  badgeTextPendente: { color: ds.cores.destaque },
   badgeTextAndamento: { color: '#60a5fa' },
-  badgeTextConcluido: { color: '#9ca3af' },
+  badgeTextConcluido: { color: ds.cores.textoSuave },
   badgeTextCancelado: { color: '#ef4444' },
   pillsRow: {
     flexDirection: 'row',
@@ -1182,9 +1210,10 @@ const styles = createThemedStyles({
     borderRadius: 6,
   },
   turnoBadgeText: {
-    color: '#f3c21a',
-    fontSize: 10,
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.etiqueta,
     fontWeight: '800',
+    lineHeight: 16,
   },
   typeBadge: {
     backgroundColor: '#15151a',
@@ -1195,13 +1224,14 @@ const styles = createThemedStyles({
     borderRadius: 6,
   },
   typeBadgeText: {
-    color: '#888',
-    fontSize: 10,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.etiqueta,
     fontWeight: '700',
+    lineHeight: 16,
   },
   gridInfo: {
     flexDirection: 'row',
-    backgroundColor: '#141414',
+    backgroundColor: ds.cores.elevada,
     borderRadius: 10,
     padding: 10,
     gap: 14,
@@ -1216,20 +1246,25 @@ const styles = createThemedStyles({
     gap: 6,
   },
   infoVal: {
-    color: '#d1d5db',
-    fontSize: 11,
+    color: ds.cores.textoSecundario,
+    fontSize: ds.fonte.corpo,
     fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   briefingLabel: {
-    color: '#6b7280',
-    fontSize: 9,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.legenda,
     fontWeight: '700',
-    textTransform: 'uppercase',
+    textTransform: 'none',
+    lineHeight: 17,
   },
   briefingVal: {
-    color: '#fff',
-    fontSize: 11,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.corpo,
     fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   anamneseCheckRow: {
     borderRadius: 8,
@@ -1253,30 +1288,35 @@ const styles = createThemedStyles({
     borderColor: 'rgba(243, 194, 26, 0.2)',
   },
   anamneseCheckText: {
-    fontSize: 10,
+    fontSize: ds.fonte.corpo,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   anamneseCheckTextAlert: { color: '#ef4444' },
   anamneseCheckTextOk: { color: '#10b981' },
-  anamneseCheckTextPending: { color: '#f3c21a' },
+  anamneseCheckTextPending: { color: ds.cores.destaque },
   financialRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     borderTopWidth: 1,
-    borderTopColor: '#1a1a1a',
+    borderTopColor: ds.cores.borda,
     paddingTop: 8,
   },
   finLabel: {
-    color: '#6b7280',
-    fontSize: 9,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.legenda,
     fontWeight: '700',
-    textTransform: 'uppercase',
+    textTransform: 'none',
+    lineHeight: 17,
   },
   finVal: {
-    color: '#fff',
+    color: ds.cores.texto,
     fontSize: 15,
-    fontWeight: '900',
+    fontWeight: '700',
+    lineHeight: 22,
+    flexShrink: 1,
   },
   sinalStatusWrap: {
     alignItems: 'flex-end',
@@ -1289,25 +1329,29 @@ const styles = createThemedStyles({
   },
   sinalStatusText: {
     color: '#10b981',
-    fontSize: 11,
+    fontSize: ds.fonte.etiqueta,
     fontWeight: '800',
+    lineHeight: 16,
   },
   saldoRestanteText: {
-    color: '#f3c21a',
-    fontSize: 10,
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.corpo,
     fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   actionsRow: {
     flexDirection: 'row',
     gap: 8,
+    flexWrap: 'wrap',
   },
   btnSecondary: {
     flex: 1,
-    minHeight: 40,
-    borderRadius: 10,
-    backgroundColor: '#171717',
+    minHeight: ds.alvo.controle,
+    borderRadius: ds.raio.controle,
+    backgroundColor: ds.cores.elevada,
     borderWidth: 1,
-    borderColor: '#262626',
+    borderColor: ds.cores.borda,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
@@ -1318,14 +1362,17 @@ const styles = createThemedStyles({
     backgroundColor: 'rgba(239, 68, 68, 0.1)',
   },
   btnSecondaryText: {
-    color: '#d1d5db',
-    fontSize: 10,
+    color: ds.cores.textoSecundario,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   btnSuccess: {
     flex: 1,
-    minHeight: 40,
-    borderRadius: 10,
+    minHeight: ds.alvo.controle,
+    borderRadius: ds.raio.controle,
     backgroundColor: '#10b981',
     flexDirection: 'row',
     justifyContent: 'center',
@@ -1334,23 +1381,27 @@ const styles = createThemedStyles({
   },
   btnSuccessText: {
     color: '#111',
-    fontSize: 11,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontSize: ds.fonte.controle,
+    fontWeight: '700',
+    textTransform: 'none',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   btnDanger: {
-    width: 40,
-    height: 40,
+    width: ds.alvo.compacto,
+    height: ds.alvo.compacto,
     borderRadius: 10,
     backgroundColor: 'rgba(239, 68, 68, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
+    minHeight: ds.alvo.compacto,
   },
   btnPrimary: {
     flex: 1.2,
-    minHeight: 40,
-    borderRadius: 10,
-    backgroundColor: '#f3c21a',
+    minHeight: ds.alvo.controle,
+    borderRadius: ds.raio.controle,
+    backgroundColor: ds.cores.destaque,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
@@ -1358,9 +1409,12 @@ const styles = createThemedStyles({
   },
   btnPrimaryText: {
     color: '#111',
-    fontSize: 11,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontSize: ds.fonte.controle,
+    fontWeight: '700',
+    textTransform: 'none',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   btnDangerAction: {
     flex: 1.2,
@@ -1373,15 +1427,18 @@ const styles = createThemedStyles({
     gap: 6,
   },
   btnDangerActionText: {
-    color: '#fff',
-    fontSize: 11,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    color: ds.cores.texto,
+    fontSize: ds.fonte.controle,
+    fontWeight: '700',
+    textTransform: 'none',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   btnReceipt: {
     flex: 1,
-    minHeight: 40,
-    borderRadius: 10,
+    minHeight: ds.alvo.controle,
+    borderRadius: ds.raio.controle,
     backgroundColor: 'rgba(243, 194, 26, 0.1)',
     borderWidth: 1,
     borderColor: 'rgba(243, 194, 26, 0.3)',
@@ -1391,10 +1448,13 @@ const styles = createThemedStyles({
     gap: 6,
   },
   btnReceiptText: {
-    color: '#f3c21a',
-    fontSize: 10,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.controle,
+    fontWeight: '700',
+    textTransform: 'none',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   modalOverlay: {
     flex: 1,
@@ -1407,7 +1467,7 @@ const styles = createThemedStyles({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     borderWidth: 1,
-    borderColor: '#222',
+    borderColor: ds.cores.borda,
     paddingTop: 18,
     paddingBottom: 24,
   },
@@ -1418,12 +1478,14 @@ const styles = createThemedStyles({
     paddingHorizontal: 20,
     paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#1a1a1a',
+    borderBottomColor: ds.cores.borda,
   },
   modalHeaderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
+    flexShrink: 1,
+    minWidth: 0,
   },
   finishIconWrap: {
     width: 36,
@@ -1434,21 +1496,26 @@ const styles = createThemedStyles({
     alignItems: 'center',
   },
   modalTitle: {
-    color: '#fff',
-    fontSize: 16,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.modal,
     fontWeight: '800',
+    lineHeight: 26,
+    flexShrink: 1,
   },
   modalSub: {
-    color: '#888',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   closeBtn: {
-    width: 32,
-    height: 32,
+    width: ds.alvo.compacto,
+    height: ds.alvo.compacto,
     borderRadius: 8,
-    backgroundColor: '#181818',
+    backgroundColor: ds.cores.elevada,
     justifyContent: 'center',
     alignItems: 'center',
+    minHeight: ds.alvo.compacto,
   },
   modalScroll: {
     paddingHorizontal: 20,
@@ -1456,11 +1523,11 @@ const styles = createThemedStyles({
     gap: 12,
   },
   calcCard: {
-    backgroundColor: '#141414',
-    borderRadius: 14,
+    backgroundColor: ds.cores.elevada,
+    borderRadius: ds.raio.cartao,
     borderWidth: 1,
-    borderColor: '#242424',
-    padding: 14,
+    borderColor: ds.cores.borda,
+    padding: ds.espaco.padrao,
     gap: 10,
   },
   calcRow: {
@@ -1470,29 +1537,33 @@ const styles = createThemedStyles({
   },
   calcLabel: {
     color: '#aaa',
-    fontSize: 12,
+    fontSize: ds.fonte.legenda,
+    lineHeight: 17,
   },
   calcInput: {
     backgroundColor: '#1c1c1c',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#333',
+    borderColor: ds.cores.borda,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    color: '#fff',
+    color: ds.cores.texto,
     fontSize: 14,
     fontWeight: '700',
     width: 100,
     textAlign: 'right',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   calcDiscount: {
     color: '#10b981',
-    fontSize: 13,
+    fontSize: ds.fonte.legenda,
     fontWeight: '700',
+    lineHeight: 17,
   },
   divider: {
     height: 1,
-    backgroundColor: '#222',
+    backgroundColor: ds.cores.borda,
   },
   calcRowTotal: {
     flexDirection: 'row',
@@ -1500,20 +1571,25 @@ const styles = createThemedStyles({
     alignItems: 'center',
   },
   calcTotalLabel: {
-    color: '#f3c21a',
-    fontSize: 13,
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.legenda,
     fontWeight: '800',
+    lineHeight: 17,
   },
   calcTotalVal: {
-    color: '#f3c21a',
+    color: ds.cores.destaque,
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: '700',
+    lineHeight: 26,
+    flexShrink: 1,
   },
   methodTitle: {
-    color: '#888',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '800',
-    textTransform: 'uppercase',
+    textTransform: 'none',
+    lineHeight: 23,
+    flexShrink: 1,
   },
   methodRow: {
     flexDirection: 'row',
@@ -1523,81 +1599,97 @@ const styles = createThemedStyles({
     flex: 1,
     paddingVertical: 10,
     paddingHorizontal: 6,
-    borderRadius: 10,
+    borderRadius: ds.raio.controle,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    minHeight: ds.alvo.controle,
   },
   methodBtnActive: {
-    backgroundColor: '#f3c21a',
-    borderColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
+    borderColor: ds.cores.destaque,
   },
   methodBtnIdle: {
-    backgroundColor: '#141414',
-    borderColor: '#242424',
+    backgroundColor: ds.cores.elevada,
+    borderColor: ds.cores.borda,
   },
   methodBtnText: {
-    fontSize: 10,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
-    color: '#888',
+    color: ds.cores.textoSuave,
     textAlign: 'center',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   methodBtnTextActive: {
     color: '#111',
   },
   pixResultBox: {
-    backgroundColor: '#121212',
+    backgroundColor: ds.cores.superficie,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#262626',
+    borderColor: ds.cores.borda,
     padding: 14,
     alignItems: 'center',
     gap: 8,
   },
   pixResultTitle: {
     color: '#10b981',
-    fontSize: 13,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '800',
+    lineHeight: 23,
+    flexShrink: 1,
   },
   pixResultSub: {
-    color: '#888',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   copyPixBtn: {
-    backgroundColor: '#f3c21a',
-    borderRadius: 10,
+    backgroundColor: ds.cores.destaque,
+    borderRadius: ds.raio.controle,
     paddingVertical: 10,
     paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     marginTop: 6,
+    minHeight: ds.alvo.controle,
+    justifyContent: 'center',
   },
   copyPixBtnText: {
     color: '#111',
-    fontSize: 11,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   modalFooter: {
     paddingHorizontal: 20,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#1a1a1a',
+    borderTopColor: ds.cores.borda,
   },
   btnConfirmFinish: {
-    backgroundColor: '#f3c21a',
-    borderRadius: 12,
+    backgroundColor: ds.cores.destaque,
+    borderRadius: ds.raio.controle,
     paddingVertical: 14,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
+    minHeight: ds.alvo.controle,
   },
   btnConfirmFinishText: {
     color: '#111',
-    fontSize: 13,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontSize: ds.fonte.controle,
+    fontWeight: '700',
+    textTransform: 'none',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   redAlertBanner: {
     backgroundColor: 'rgba(239, 68, 68, 0.15)',
@@ -1611,35 +1703,41 @@ const styles = createThemedStyles({
   },
   redAlertTitle: {
     color: '#ef4444',
-    fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0.5,
+    fontSize: ds.fonte.subtitulo,
+    fontWeight: '700',
+    letterSpacing: 0,
+    lineHeight: 23,
+    flexShrink: 1,
   },
   redAlertSub: {
     color: '#ffcaca',
-    fontSize: 11,
-    lineHeight: 15,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
     marginTop: 2,
+    flexShrink: 1,
   },
   briefingCard: {
     backgroundColor: '#131318',
-    borderRadius: 14,
+    borderRadius: ds.raio.cartao,
     borderWidth: 1,
     borderColor: '#22222c',
-    padding: 14,
+    padding: ds.espaco.padrao,
     gap: 8,
   },
   briefingCardHeader: {
-    color: '#f3c21a',
-    fontSize: 12,
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.corpo,
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   briefingCardBody: {
-    color: '#fff',
-    fontSize: 12,
-    lineHeight: 17,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   briefingMetaRow: {
     flexDirection: 'row',
@@ -1650,16 +1748,19 @@ const styles = createThemedStyles({
     marginTop: 4,
   },
   metaLabel: {
-    color: '#888',
-    fontSize: 9,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.legenda,
     fontWeight: '700',
-    textTransform: 'uppercase',
+    textTransform: 'none',
+    lineHeight: 17,
   },
   metaVal: {
-    color: '#fff',
-    fontSize: 11,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.corpo,
     fontWeight: '700',
     marginTop: 2,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   refThumbModal: {
     width: 64,
@@ -1677,13 +1778,17 @@ const styles = createThemedStyles({
     gap: 2,
   },
   healthKey: {
-    color: '#888',
-    fontSize: 10,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
     fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   healthVal: {
-    color: '#ddd',
-    fontSize: 12,
+    color: ds.cores.textoSecundario,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   signedStamp: {
     flexDirection: 'row',
@@ -1696,9 +1801,11 @@ const styles = createThemedStyles({
   },
   signedStampText: {
     color: '#10b981',
-    fontSize: 10,
+    fontSize: ds.fonte.corpo,
     fontWeight: '700',
     flex: 1,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   pendingAnamneseWrap: {
     flexDirection: 'row',
@@ -1710,20 +1817,27 @@ const styles = createThemedStyles({
     marginTop: 4,
   },
   pendingAnamneseText: {
-    color: '#ccc',
-    fontSize: 11,
-    lineHeight: 16,
+    color: ds.cores.textoSecundario,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
     flex: 1,
+    flexShrink: 1,
   },
   btnCloseAnamnese: {
     backgroundColor: '#1e1e24',
-    borderRadius: 12,
+    borderRadius: ds.raio.controle,
     paddingVertical: 12,
     alignItems: 'center',
+    minHeight: ds.alvo.compacto,
+    justifyContent: 'center',
+    width: ds.alvo.compacto,
   },
   btnCloseAnamneseText: {
-    color: '#fff',
-    fontSize: 12,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
 });

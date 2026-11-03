@@ -1,6 +1,7 @@
 import { PORTFOLIOS_DEMONSTRACAO, filtrarObrasDemonstracao } from '@/dados/portfolio-demonstracao';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { supabase } from './supabase';
+import { supabase } from './data-client';
+import { demoAtiva, snapshotDemo } from './apresentacao-store';
 import type { ItemPortfolio } from '@/types/artista-detalhado';
 
 const STORAGE_KEY_PORTFOLIO = '@dermys_portfolio_obras';
@@ -11,6 +12,7 @@ export class PortfolioService {
    * Obtém todas as obras salvas localmente no dispositivo.
    */
   static async obterObrasSalvasLocalmente(): Promise<ItemPortfolio[]> {
+    if (demoAtiva()) return (snapshotDemo().tabelas.flashes_portfolio || []).map(f => ({ id: f.id, artistaId: f.artista_id, titulo: f.titulo, imagemUrl: f.imagem_url, estilo: f.estilo, preco: f.preco, disponivel: f.disponivel, descricao: f.descricao }));
     try {
       const data = await AsyncStorage.getItem(STORAGE_KEY_PORTFOLIO);
       if (data) {
@@ -98,7 +100,7 @@ export class PortfolioService {
     };
 
     // Salva localmente
-    try {
+    if (!demoAtiva()) try {
       const existentes = await this.obterObrasSalvasLocalmente();
       const atualizados = [novaObra, ...existentes];
       await AsyncStorage.setItem(STORAGE_KEY_PORTFOLIO, JSON.stringify(atualizados));
@@ -108,7 +110,7 @@ export class PortfolioService {
 
     // Tenta persistir no Supabase
     try {
-      await supabase.from('flashes_portfolio').insert({
+      const { error } = await supabase.from('flashes_portfolio').insert({
         id: novaObra.id,
         artista_id: novaObra.artistaId,
         titulo: novaObra.titulo,
@@ -117,7 +119,9 @@ export class PortfolioService {
         preco: novaObra.preco,
         disponivel: novaObra.disponivel,
       });
-    } catch {
+      if (error && demoAtiva()) throw new Error('Não foi possível salvar a obra da apresentação.');
+    } catch (e) {
+      if (demoAtiva()) throw e;
       // falha silenciosa se offline
     }
 
@@ -128,7 +132,7 @@ export class PortfolioService {
    * Remove uma obra do portfólio.
    */
   static async removerObra(obraId: string, artistaId: string): Promise<boolean> {
-    try {
+    if (!demoAtiva()) try {
       const existentes = await this.obterObrasSalvasLocalmente();
       const filtrados = existentes.filter((o) => !(o.id === obraId && o.artistaId === artistaId));
       await AsyncStorage.setItem(STORAGE_KEY_PORTFOLIO, JSON.stringify(filtrados));
@@ -137,11 +141,13 @@ export class PortfolioService {
     }
 
     try {
-      await supabase
+      const { error } = await supabase
         .from('flashes_portfolio')
         .delete()
         .eq('id', obraId);
-    } catch {
+      if (error && demoAtiva()) throw new Error('Não foi possível remover a obra da apresentação.');
+    } catch (e) {
+      if (demoAtiva()) throw e;
       // silencioso
     }
 

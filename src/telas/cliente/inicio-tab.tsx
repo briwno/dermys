@@ -1,3 +1,4 @@
+import { ds } from '@/theme/design-system';
 import { PORTFOLIOS_DEMONSTRACAO, filtrarObrasDemonstracao } from '@/dados/portfolio-demonstracao';
 import {
   CartaoArtistaFeed,
@@ -5,12 +6,14 @@ import {
 } from '@/components/cliente/cartao-artista-feed';
 import { ModalFiltroLocalidade } from '@/components/cliente/modal-filtro-localidade';
 import { FeedMosaico } from '@/components/cliente/feed-mosaico';
+import { useArtistasSalvos } from '@/components/cliente/use-artistas-salvos';
+import { useCabecalhoFeed } from '@/components/cliente/use-cabecalho-feed';
 import { montarPostsObras } from '@/components/cliente/obras-feed';
 import { IDS_ARTISTAS_VITRINE } from '@/dados/artistas-vitrine';
 import { ModalPerfilArtista } from '@/components/cliente/modal-perfil-artista';
 import { ArtistaDetalhadoService } from '@/services/artista-detalhado-service';
 import { LocalidadeService } from '@/services/localidade-service';
-import { supabase } from '@/services/supabase';
+import { supabase } from '@/services/data-client';
 import { ModalReservaCliente } from '@/telas/cliente/modal-reserva';
 import { PortfolioService } from '@/services/portfolio-service';
 import type { ItemPortfolio, PerfilArtistaCompleto } from '@/types/artista-detalhado';
@@ -31,10 +34,12 @@ import {
   ShieldCheck,
   Sparkles,
   Star,
+  X,
 } from 'lucide-react-native';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useDeferredValue, useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   ActivityIndicator,
+  Animated,
   FlatList,
   Image,
   type LayoutChangeEvent,
@@ -50,6 +55,7 @@ import { createThemedStyles, tc } from '@/theme';
 
 /** Espaço vertical entre um post e outro dentro de cada página do feed */
 const ESPACO_ENTRE_POSTS = 10;
+const normalizarBusca = (texto: string) => texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
 export interface CartaoArtista {
   id: string;
@@ -82,18 +88,25 @@ const TAGS = [
 import type { PerfilUsuario } from '@/types/auth';
 
 interface PropsClienteInicioTab {
+  cabecalho?: ReactNode;
   onNavegarAba?: (aba: BottomNavTab, contatoId?: string) => void;
   perfil?: PerfilUsuario | null;
 }
 
-export function ClienteInicioTab({ onNavegarAba, perfil }: PropsClienteInicioTab) {
+export function ClienteInicioTab({ onNavegarAba, perfil, cabecalho }: PropsClienteInicioTab) {
   const [consulta, setConsulta] = useState('');
+  const consultaFiltrada = useDeferredValue(consulta);
+  const [buscaEmFoco, setBuscaEmFoco] = useState(false);
+  const [somenteSalvos, setSomenteSalvos] = useState(false);
+  const [alturaCabecalho, setAlturaCabecalho] = useState(0);
   const [tagSelecionada, setTagSelecionada] = useState<string>('Todos');
   const [artistasFeed, setArtistasFeed] = useState<ItemArtistaFeedData[]>([]);
-  const [curtidos, setCurtidos] = useState<Record<string, boolean>>({});
+  const { salvos: curtidos, alternar: alternarCurtida, erro: erroSalvos } = useArtistasSalvos(perfil?.id || perfil?.uid || 'visitante');
   const [carregando, setCarregando] = useState(true);
   const [alturaFeed, setAlturaFeed] = useState(0);
   const [modoFeed, setModoFeed] = useState<'mosaico' | 'deslizar'>('mosaico');
+  const chaveFiltros = `${consultaFiltrada}:${tagSelecionada}:${somenteSalvos}:${modoFeed}`;
+  const cabecalhoRolagem = useCabecalhoFeed(alturaCabecalho, buscaEmFoco || carregando, chaveFiltros);
 
   const onLayoutFeed = useCallback((e: LayoutChangeEvent) => {
     const h = Math.floor(e.nativeEvent.layout.height);
@@ -259,9 +272,6 @@ export function ClienteInicioTab({ onNavegarAba, perfil }: PropsClienteInicioTab
     }
   };
 
-  const alternarCurtida = (id: string) => {
-    setCurtidos((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
 
   /**
    * Abre o resumo do tatuador ao tocar em qualquer obra do feed
@@ -342,20 +352,21 @@ export function ClienteInicioTab({ onNavegarAba, perfil }: PropsClienteInicioTab
     // Filtro por tag de estilo
     if (tagSelecionada !== 'Todos') {
       resultado = resultado.filter(
-        (item) => item.estilo.toLowerCase() === tagSelecionada.toLowerCase()
+        (item) => normalizarBusca(item.estilo).includes(normalizarBusca(tagSelecionada))
       );
     }
+    if (somenteSalvos) resultado = resultado.filter(item => curtidos[item.id]);
 
     // Filtro por busca textual
-    if (consulta.trim()) {
-      const busca = consulta.trim().toLowerCase();
+    if (consultaFiltrada.trim()) {
+      const busca = normalizarBusca(consultaFiltrada.trim());
       resultado = resultado.filter(
         (item) =>
-          item.artistaNome.toLowerCase().includes(busca) ||
-          item.estudioNome.toLowerCase().includes(busca) ||
-          item.estilo.toLowerCase().includes(busca) ||
-          item.cidade.toLowerCase().includes(busca) ||
-          item.obras.some((o) => o.titulo.toLowerCase().includes(busca))
+          normalizarBusca(item.artistaNome).includes(busca) ||
+          normalizarBusca(item.estudioNome).includes(busca) ||
+          normalizarBusca(item.estilo).includes(busca) ||
+          normalizarBusca(item.cidade).includes(busca) ||
+          item.obras.some((o) => normalizarBusca(o.titulo).includes(busca))
       );
     }
 
@@ -378,19 +389,20 @@ export function ClienteInicioTab({ onNavegarAba, perfil }: PropsClienteInicioTab
       }
       return 0;
     });
-  }, [artistasComDistancia, localidade.raioKm, localidade.ordenacao, tagSelecionada, consulta]);
+  }, [artistasComDistancia, localidade.raioKm, localidade.ordenacao, tagSelecionada, consultaFiltrada, somenteSalvos, curtidos]);
 
   const postsObras = useMemo(() => montarPostsObras(artistasFiltrados), [artistasFiltrados]);
 
-  return (
-    <View style={styles.container}>
+  const cabecalhoFeed = (
+    <View style={styles.cabecalhoFeed} onLayout={e => setAlturaCabecalho(Math.ceil(e.nativeEvent.layout.height))}>
+      {cabecalho}
       {/* Barra de Localização Minimalista & Contagem */}
       <View style={styles.topLocationRow}>
         <Pressable
           style={styles.locationChip}
           onPress={() => setModalLocalidadeAberto(true)}
         >
-          <MapPin size={14} color={tc('#f3c21a')} />
+          <MapPin size={14} color={tc(ds.cores.destaque)} />
           <Text style={styles.locationChipText} numberOfLines={1}>
             {localidade.cidade}, {localidade.estado}
             {localidade.raioKm ? ` • ${localidade.raioKm} km` : ' • Brasil'}
@@ -414,15 +426,21 @@ export function ClienteInicioTab({ onNavegarAba, perfil }: PropsClienteInicioTab
       </View>
 
       {/* Barra de Busca Minimalista */}
-      <View style={styles.searchWrap}>
-        <Search size={15} color={tc('#71717a')} style={styles.searchIcon} />
+      <View style={[styles.searchWrap, buscaEmFoco && styles.searchFocused]}>
+        <Search size={15} color={tc(ds.cores.textoSuave)} style={styles.searchIcon} />
         <TextInput
           value={consulta}
           onChangeText={setConsulta}
-          placeholder="Qual é a sua próxima tattoo?"
-          placeholderTextColor={tc('#71717a')}
+          placeholder="Arte, artista ou estilo"
+          accessibilityLabel="Buscar arte, artista ou estilo"
+          returnKeyType="search"
+          autoCorrect={false}
+          onFocus={() => setBuscaEmFoco(true)}
+          onBlur={() => setBuscaEmFoco(false)}
+          placeholderTextColor={tc(ds.cores.textoSuave)}
           style={styles.searchInput}
         />
+        {!!consulta && <Pressable accessibilityLabel="Limpar pesquisa" onPress={() => setConsulta('')} style={styles.clearSearch}><X size={15} color={tc(ds.cores.textoSuave)} /></Pressable>}
       </View>
 
       {/* Pílulas de Estilos */}
@@ -432,12 +450,16 @@ export function ClienteInicioTab({ onNavegarAba, perfil }: PropsClienteInicioTab
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.tagsRow}
       >
+        <Pressable accessibilityRole="button" accessibilityLabel="Mostrar somente artistas salvos" accessibilityState={{ selected: somenteSalvos }} onPress={() => setSomenteSalvos(valor => !valor)} hitSlop={{ top: 5, bottom: 5 }} style={[styles.tag, somenteSalvos ? styles.savedActive : styles.tagIdle]}><Heart size={13} color={tc(somenteSalvos ? '#f3c21a' : '#b4b4bc')} fill={somenteSalvos ? tc('#f3c21a') : 'transparent'} /></Pressable>
         {TAGS.map((tag) => {
           const ativo = tagSelecionada === tag;
           return (
             <Pressable
               key={tag}
               onPress={() => setTagSelecionada(tag)}
+              accessibilityRole="button"
+              accessibilityState={{ selected: ativo }}
+              hitSlop={{ top: 5, bottom: 5 }}
               style={[styles.tag, ativo ? styles.tagActive : styles.tagIdle]}
             >
               <Text style={[styles.tagText, ativo ? styles.tagTextActive : styles.tagTextIdle]}>
@@ -450,50 +472,66 @@ export function ClienteInicioTab({ onNavegarAba, perfil }: PropsClienteInicioTab
 
       <View style={styles.feedHeaderRow}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
-          <Sparkles size={14} color={tc('#f3c21a')} />
-          <Text style={styles.feedTitle}>{tagSelecionada === 'Todos' ? 'Encontre seu traço' : tagSelecionada}</Text>
+          <Sparkles size={14} color={tc(ds.cores.destaque)} />
+          <Text style={styles.feedTitle}>{somenteSalvos ? 'Seus artistas salvos' : tagSelecionada === 'Todos' ? 'Encontre seu traço' : tagSelecionada}</Text>
         </View>
         <Text style={styles.feedCountText}>{carregando ? 'Explorando…' : `${postsObras.length} obras`}</Text>
       </View>
+      {erroSalvos && <Text accessibilityRole="alert" style={styles.savedError}>Não foi possível guardar os salvos neste aparelho.</Text>}
+    </View>
+  );
+
+  const abrirObra = useCallback((artista: ItemArtistaFeedData, obra: ItemPortfolio) => abrirResumoArtista(artista.rawArtista, artista.rawFlashes, artista.rawReviews, obra), [localidade.latitude, localidade.longitude]);
+  const alturaPrimeiraObra = Math.max(220, alturaFeed - alturaCabecalho);
+
+  return (
+    <View style={styles.container}>
+      <Animated.View pointerEvents={cabecalhoRolagem.oculto ? 'none' : 'auto'} accessibilityElementsHidden={cabecalhoRolagem.oculto} importantForAccessibility={cabecalhoRolagem.oculto ? 'no-hide-descendants' : 'auto'} style={[styles.cabecalhoFlutuante, cabecalhoRolagem.estilo]}>{cabecalhoFeed}</Animated.View>
 
       {/* Os dois modos compartilham filtros, curtidas e abertura da obra. */}
       <View style={styles.feedSection} onLayout={onLayoutFeed}>
         {carregando || alturaFeed === 0 ? (
-          <ActivityIndicator color={tc('#f3c21a')} style={{ marginVertical: 40 }} />
+          <View style={{ paddingTop: alturaCabecalho }}><ActivityIndicator color={tc(ds.cores.destaque)} style={{ marginVertical: 40 }} /></View>
         ) : modoFeed === 'mosaico' && postsObras.length > 0 ? (
           <FeedMosaico
+            cabecalho={<View style={{ height: alturaCabecalho }} />}
+            onScroll={cabecalhoRolagem.onScroll}
             artistas={artistasFiltrados}
             curtidos={curtidos}
             onCurtir={alternarCurtida}
-            onAbrirPerfil={(artista, obra) => abrirResumoArtista(
-              artista.rawArtista, artista.rawFlashes, artista.rawReviews, obra
-            )}
+            onAbrirPerfil={abrirObra}
           />
         ) : (
           <FlatList
-            key={`${modoFeed}:${alturaFeed}:${tagSelecionada}:${consulta}:${localidade.raioKm}:${localidade.ordenacao}`}
+            key={modoFeed}
+            ListHeaderComponent={<View style={{ height: alturaCabecalho }} />}
+            onScroll={cabecalhoRolagem.onScroll}
+            scrollEventThrottle={16}
+            keyboardDismissMode="on-drag"
+            keyboardShouldPersistTaps="handled"
+            contentInsetAdjustmentBehavior="never"
             data={postsObras}
             extraData={curtidos}
             keyExtractor={(item) => item.id}
             pagingEnabled={Platform.OS === 'web'}
-            snapToInterval={alturaFeed}
+            snapToOffsets={postsObras.map((_, index) => index === 0 ? 0 : alturaCabecalho + alturaPrimeiraObra + alturaFeed * (index - 1))}
             snapToAlignment="start"
             decelerationRate="fast"
             disableIntervalMomentum
             showsVerticalScrollIndicator={false}
             getItemLayout={(_, index) => ({
-              length: alturaFeed,
-              offset: alturaFeed * index,
+              length: index === 0 ? alturaPrimeiraObra : alturaFeed,
+              offset: index === 0 ? alturaCabecalho : alturaCabecalho + alturaPrimeiraObra + alturaFeed * (index - 1),
               index,
             })}
             windowSize={3}
             initialNumToRender={2}
             maxToRenderPerBatch={2}
             renderItem={({ item: post, index }) => (
-              <View style={{ height: alturaFeed, paddingBottom: ESPACO_ENTRE_POSTS }}>
+              <View style={{ height: index === 0 ? alturaPrimeiraObra : alturaFeed, paddingBottom: ESPACO_ENTRE_POSTS }}>
                 <CartaoArtistaFeed
                   item={{ ...post.artista, obras: [post.obra] }}
-                  altura={alturaFeed - ESPACO_ENTRE_POSTS}
+                  altura={(index === 0 ? alturaPrimeiraObra : alturaFeed) - ESPACO_ENTRE_POSTS}
                   isCurtido={curtidos[post.artista.id]}
                   mostrarDicaDeslize={index === 0 && postsObras.length > 1}
                   onCurtir={alternarCurtida}
@@ -512,16 +550,17 @@ export function ClienteInicioTab({ onNavegarAba, perfil }: PropsClienteInicioTab
               <Text style={styles.feedEnd}>
                 Você viu todas as {postsObras.length} obras. Explore outros estilos ou amplie a região.
               </Text>
-            ) : null}
+            ) : undefined}
             ListEmptyComponent={
               <View style={styles.emptyWrap}>
-                <Compass size={32} color={tc('#71717a')} style={{ marginBottom: 8 }} />
-                <Text style={styles.emptyTitle}>Nenhum tatuador encontrado neste raio</Text>
+                <Compass size={32} color={tc(ds.cores.textoSuave)} style={{ marginBottom: 8 }} />
+                <Text style={styles.emptyTitle}>{somenteSalvos ? 'Sua coleção começa aqui' : 'Vamos encontrar outro traço?'}</Text>
                 <Text style={styles.emptyText}>
-                  {localidade.raioKm
+                  {somenteSalvos ? 'Toque no coração de um artista para guardá-lo aqui. Seus filtros também continuam ativos.' : consulta || tagSelecionada !== 'Todos' ? 'Tente outro nome, estilo ou limpe os filtros para ver mais obras.' : localidade.raioKm
                     ? `Não encontramos artistas cadastrados a menos de ${localidade.raioKm} km de ${localidade.cidade}.`
                     : 'Não encontramos tatuadores para os filtros selecionados.'}
                 </Text>
+                {(consulta || tagSelecionada !== 'Todos' || somenteSalvos) && <Pressable style={styles.btnExpandirRaio} onPress={() => { setConsulta(''); setTagSelecionada('Todos'); setSomenteSalvos(false); }}><Text style={styles.btnExpandirRaioText}>Explorar todas as obras</Text></Pressable>}
 
                 {localidade.raioKm !== null && (
                   <Pressable
@@ -597,21 +636,31 @@ export function ClienteInicioTab({ onNavegarAba, perfil }: PropsClienteInicioTab
 }
 
 const styles = createThemedStyles({
-  feedEnd: { color: '#8e8e93', fontSize: 12, textAlign: 'center', padding: 20 },
+  cabecalhoFlutuante: { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 20 },
+  cabecalhoFeed: { backgroundColor: ds.cores.fundo, gap: 6, paddingTop: 2, paddingBottom: 10 },
+  searchFocused: { borderColor: ds.cores.destaque },
+  clearSearch: { position: 'absolute', right: 0, width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
+  savedActive: { backgroundColor: '#242116', borderColor: '#76601e' },
+  savedError: { color: ds.cores.textoSuave, fontSize: 11, lineHeight: 16 },
+  feedEnd: { color: ds.cores.textoSuave, fontSize: ds.fonte.corpo, textAlign: 'center', padding: 20,
+    lineHeight: 20,
+    flexShrink: 1, },
   modeSelector: {
     flexDirection: 'row', backgroundColor: '#0f0f12', borderRadius: 12,
     padding: 2, gap: 2,
   },
   modeButton: {
     alignItems: 'center', justifyContent: 'center',
-    width: 44, height: 44, borderRadius: 10,
+    width: 36, height: 36, borderRadius: 10,
   },
   modeButtonActive: { backgroundColor: '#242426' },
-  modeText: { color: '#a1a1aa', fontSize: 12, fontWeight: '800' },
+  modeText: { color: ds.cores.textoSuave, fontSize: ds.fonte.corpo, fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1, },
   modeTextActive: { color: '#000000' },
   container: {
     flex: 1,
-    gap: 8,
+    minHeight: 0,
   },
   topLocationRow: {
     flexDirection: 'row',
@@ -627,7 +676,7 @@ const styles = createThemedStyles({
     flexShrink: 1,
     minWidth: 0,
     paddingRight: 8,
-    minHeight: 44,
+    minHeight: 36,
   },
   locationChipText: {
     color: '#c4c4cc',
@@ -635,54 +684,64 @@ const styles = createThemedStyles({
     fontWeight: '500',
     flexShrink: 1,
     letterSpacing: -0.2,
+    lineHeight: 20,
   },
   feedCountPill: {
-    color: '#71717a',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.legenda,
     fontWeight: '600',
+    lineHeight: 17,
   },
   searchWrap: {
     position: 'relative',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: ds.cores.borda,
+    borderRadius: 12,
+    backgroundColor: ds.cores.superficie,
   },
   searchIcon: {
     position: 'absolute',
-    left: 14,
+    left: 12,
     zIndex: 2,
   },
   searchInput: {
-    backgroundColor: '#0f0f12',
-    borderWidth: 1,
-    borderColor: '#35352c',
-    borderRadius: 10,
-    color: '#ffffff',
-    fontSize: 14,
-    paddingLeft: 38,
-    paddingRight: 14,
-    height: 48,
+    backgroundColor: 'transparent',
+    borderRadius: 12,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.campo,
+    paddingLeft: 34,
+    paddingRight: 40,
+    height: 40,
+    paddingVertical: 0,
+    lineHeight: 20,
+    flexShrink: 1,
+    minHeight: 40,
   },
   tagsRow: {
     gap: 6,
-    paddingVertical: 2,
+    paddingVertical: 5,
   },
   tag: {
-    paddingHorizontal: 12,
-    minHeight: 40,
+    paddingHorizontal: 10,
+    minHeight: 30,
     justifyContent: 'center',
-    borderRadius: 8,
+    borderRadius: 15,
     borderWidth: 1,
     borderColor: '#303034',
   },
   tagActive: {
-    backgroundColor: '#f3c21a',
-    borderColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
+    borderColor: ds.cores.destaque,
   },
   tagIdle: {
     backgroundColor: '#141417',
   },
   tagText: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '600',
+    lineHeight: 16,
+    flexShrink: 1,
   },
   tagTextActive: {
     color: '#000000',
@@ -699,18 +758,21 @@ const styles = createThemedStyles({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 2,
-    marginBottom: 4,
+    marginBottom: 0,
   },
   feedTitle: {
-    color: '#e4e4e7',
-    fontSize: 14,
+    color: ds.cores.textoSecundario,
+    fontSize: 13,
     fontWeight: '800',
     letterSpacing: -0.2,
+    lineHeight: 23,
+    flexShrink: 1,
   },
   feedCountText: {
-    color: '#71717a',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.legenda,
     fontWeight: '600',
+    lineHeight: 17,
   },
   gridContent: {
     gap: 20,
@@ -722,37 +784,45 @@ const styles = createThemedStyles({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#0f0f13',
-    borderRadius: 16,
+    borderRadius: ds.raio.cartao,
     borderWidth: 1,
     borderColor: '#1e1e26',
     marginVertical: 12,
   },
   emptyTitle: {
-    color: '#ffffff',
-    fontSize: 14,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '800',
     marginBottom: 4,
     textAlign: 'center',
+    lineHeight: 23,
+    flexShrink: 1,
   },
   emptyText: {
-    color: '#71717a',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
     textAlign: 'center',
-    lineHeight: 16,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   btnExpandirRaio: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 10,
+    borderRadius: ds.raio.controle,
     marginTop: 16,
+    minHeight: ds.alvo.controle,
+    justifyContent: 'center',
   },
   btnExpandirRaioText: {
     color: '#000000',
-    fontSize: 12,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
 });

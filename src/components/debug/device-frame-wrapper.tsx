@@ -15,12 +15,15 @@ import { useDebug } from './debug-context';
 import { DevTopBar } from './dev-top-bar';
 import { MODELOS_DISPOSITIVOS } from './types';
 import { ModalHostProvider } from '@/components/ui/app-modal-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { tc } from '@/theme';
 
 interface DeviceFrameWrapperProps {
   children: ReactNode;
 }
 
 export function DeviceFrameWrapper({ children }: DeviceFrameWrapperProps) {
+  const insets = useSafeAreaInsets();
   const {
     modoMoldura,
     modelo,
@@ -47,7 +50,7 @@ export function DeviceFrameWrapper({ children }: DeviceFrameWrapperProps) {
 
   // Monitora redimensionamento da janela do navegador
   useEffect(() => {
-    const sub = Dimensions.addEventListener('change', ({ window }) => {
+    const sub = Dimensions.addEventListener('change', ({ window }: { window: { width: number } }) => {
       setLarguraJanela(window.width);
     });
     return () => sub?.remove();
@@ -59,8 +62,8 @@ export function DeviceFrameWrapper({ children }: DeviceFrameWrapperProps) {
   // VISUALIZAÇÃO NÃO-MOBILE (TELA CHEIA / DESKTOP NORMAL) COM BARRA SUPERIOR
   if (!modoMoldura || modelo === 'full' || isMobileReal) {
     return (
-      <View style={styles.fullscreenContainer}>
-        {Platform.OS === 'web' && <DevTopBar />}
+      <View style={[styles.fullscreenContainer, { backgroundColor: tc('#08080a'), paddingTop: Platform.OS !== 'web' ? insets.top : 0, paddingBottom: Platform.OS !== 'web' ? insets.bottom : 0, paddingLeft: insets.left, paddingRight: insets.right }]}>
+        {Platform.OS === 'web' && !isMobileReal && <DevTopBar />}
         <View style={styles.fullscreenBody}>
           <ModalHostProvider>{children}</ModalHostProvider>
         </View>

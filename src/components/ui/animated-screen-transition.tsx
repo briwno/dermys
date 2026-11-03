@@ -7,6 +7,7 @@ import {
   StyleSheet,
   ViewStyle,
 } from 'react-native';
+import { useReducedMotion } from './use-reduced-motion';
 
 export type ScreenTransitionType = 'fade-slide' | 'fade-scale' | 'fade';
 
@@ -27,32 +28,24 @@ export function AnimatedScreenTransition({
   children,
   style,
   type = 'fade-slide',
-  duration = 220,
+  duration = 180,
 }: AnimatedScreenTransitionProps) {
   const animValue = useRef(new Animated.Value(0)).current;
-  const lastKeyRef = useRef(screenKey);
+  const reduzirMovimento = useReducedMotion();
 
-  const executarAnimacao = () => {
+  useEffect(() => {
+    if (reduzirMovimento) { animValue.setValue(1); return; }
     animValue.setValue(0);
-    Animated.timing(animValue, {
+    const animacao = Animated.timing(animValue, {
       toValue: 1,
       duration,
       easing: Easing.bezier(0.16, 1, 0.3, 1),
       useNativeDriver: Platform.OS !== 'web',
-    }).start();
-  };
-
-  useEffect(() => {
-    if (lastKeyRef.current !== screenKey) {
-      lastKeyRef.current = screenKey;
-      executarAnimacao();
-    }
-  }, [screenKey, duration]);
-
-  // Animação na primeira montagem
-  useEffect(() => {
-    executarAnimacao();
-  }, []);
+      isInteraction: false,
+    });
+    animacao.start();
+    return () => animacao.stop();
+  }, [screenKey, duration, reduzirMovimento, animValue]);
 
   const opacity = animValue.interpolate({
     inputRange: [0, 1],
@@ -61,12 +54,12 @@ export function AnimatedScreenTransition({
 
   const translateY = animValue.interpolate({
     inputRange: [0, 1],
-    outputRange: [type === 'fade-slide' ? 9 : 0, 0],
+    outputRange: [type === 'fade-slide' ? 6 : 0, 0],
   });
 
   const scale = animValue.interpolate({
     inputRange: [0, 1],
-    outputRange: [type === 'fade-scale' ? 0.98 : 0.995, 1],
+    outputRange: [type === 'fade-scale' ? 0.98 : 1, 1],
   });
 
   return (

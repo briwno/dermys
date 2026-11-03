@@ -1,3 +1,4 @@
+import { ds } from '@/theme/design-system';
 import React, { useEffect, useState } from 'react';
 import {
   Image,
@@ -79,7 +80,7 @@ export function ModalPerfilArtista({
         <View style={styles.container}>
             <View style={styles.topActionsBar}>
               <Pressable style={styles.circleBtn} onPress={onClose} accessibilityRole="button" accessibilityLabel="Fechar perfil">
-                <X size={18} color={tc('#fff')} />
+                <X size={18} color={tc(ds.cores.texto)} />
               </Pressable>
 
               <View style={styles.topActionsRight}>
@@ -89,7 +90,7 @@ export function ModalPerfilArtista({
                 >
                   <Heart
                     size={16}
-                    color={curtido ? tc('#f43f5e') : tc('#fff')}
+                    color={curtido ? tc('#f43f5e') : tc(ds.cores.texto)}
                     fill={curtido ? tc('#f43f5e') : 'transparent'}
                   />
                 </Pressable>
@@ -146,12 +147,12 @@ export function ModalPerfilArtista({
                   ) : null}
 
                   <View style={styles.locationPill}>
-                    <MapPin size={11} color={tc('#9ca3af')} />
+                    <MapPin size={11} color={tc(ds.cores.textoSuave)} />
                     <Text style={styles.locationText}>{perfil.cidade}</Text>
                   </View>
 
                   <View style={styles.ratingPill}>
-                    <Star size={11} color={tc('#f3c21a')} fill={tc('#f3c21a')} />
+                    <Star size={11} color={tc(ds.cores.destaque)} fill={tc(ds.cores.destaque)} />
                     <Text style={styles.ratingText}>
                       {perfil.notaMedia.toFixed(1)} ({perfil.totalAvaliacoes})
                     </Text>
@@ -230,7 +231,7 @@ export function ModalPerfilArtista({
               {/* Tags de Estilos de Atuação */}
               <View style={styles.stylesTagsRow}>
                 <View style={[styles.stylePill, styles.stylePillPrimary]}>
-                  <Sparkles size={12} color={tc('#f3c21a')} />
+                  <Sparkles size={12} color={tc(ds.cores.destaque)} />
                   <Text style={styles.stylePillPrimaryText}>{perfil.estilo}</Text>
                 </View>
                 {perfil.estilosSecundarios?.map((st, idx) => (
@@ -296,7 +297,7 @@ export function ModalPerfilArtista({
                         <Text style={styles.portfolioTagText}>{item.estilo}</Text>
                       </View>
                       <View style={styles.zoomIconWrap}>
-                        <Maximize2 size={12} color={tc('#fff')} />
+                        <Maximize2 size={12} color={tc(ds.cores.texto)} />
                       </View>
                     </Pressable>
                   ))}
@@ -350,7 +351,7 @@ export function ModalPerfilArtista({
                     <Text style={styles.scoreLargeNumber}>{perfil.notaMedia.toFixed(1)}</Text>
                     <View style={styles.starsRow}>
                       {[1, 2, 3, 4, 5].map((s) => (
-                        <Star key={s} size={14} color={tc('#f3c21a')} fill={tc('#f3c21a')} />
+                        <Star key={s} size={14} color={tc(ds.cores.destaque)} fill={tc(ds.cores.destaque)} />
                       ))}
                     </View>
                     <Text style={styles.scoreSubText}>Baseado em {perfil.totalAvaliacoes} sessões</Text>
@@ -362,7 +363,7 @@ export function ModalPerfilArtista({
                       <Text style={styles.badgeHighlightText}>100% Clientes Verificados</Text>
                     </View>
                     <View style={styles.badgeHighlight}>
-                      <Sparkles size={14} color={tc('#f3c21a')} />
+                      <Sparkles size={14} color={tc(ds.cores.destaque)} />
                       <Text style={styles.badgeHighlightText}>Alta taxa de retorno</Text>
                     </View>
                   </View>
@@ -372,7 +373,7 @@ export function ModalPerfilArtista({
                 <View style={styles.reviewsList}>
                   {perfil.reviews.length === 0 ? (
                     <View style={styles.emptyReviewsCard}>
-                      <Sparkles size={20} color={tc('#f3c21a')} />
+                      <Sparkles size={20} color={tc(ds.cores.destaque)} />
                       <Text style={styles.emptyReviewsTitle}>Ainda sem avaliações registradas</Text>
                       <Text style={styles.emptyReviewsSub}>
                         Seja o primeiro cliente a agendar e deixar seu depoimento!
@@ -402,7 +403,7 @@ export function ModalPerfilArtista({
                           </View>
 
                           <View style={styles.reviewRatingBadge}>
-                            <Star size={11} color={tc('#f3c21a')} fill={tc('#f3c21a')} />
+                            <Star size={11} color={tc(ds.cores.destaque)} fill={tc(ds.cores.destaque)} />
                             <Text style={styles.reviewRatingNum}>{rev.nota}.0</Text>
                           </View>
                         </View>
@@ -423,7 +424,7 @@ export function ModalPerfilArtista({
                   <Text style={styles.sectionHeading}>Localização & Funcionamento</Text>
 
                   <View style={styles.infoRow}>
-                    <MapPin size={16} color={tc('#f3c21a')} />
+                    <MapPin size={16} color={tc(ds.cores.destaque)} />
                     <View style={{ flex: 1 }}>
                       <Text style={styles.infoTitle}>{perfil.estudioInfo.nome}</Text>
                       <Text style={styles.infoSubtitle}>
@@ -452,7 +453,7 @@ export function ModalPerfilArtista({
                   </Pressable>
 
                   <View style={[styles.infoRow, { marginTop: 4 }]}>
-                    <Clock size={16} color={tc('#f3c21a')} />
+                    <Clock size={16} color={tc(ds.cores.destaque)} />
                     <View style={{ flex: 1 }}>
                       <Text style={styles.infoTitle}>Horário de Atendimento</Text>
                       <Text style={styles.infoSubtitle}>
@@ -505,7 +506,7 @@ export function ModalPerfilArtista({
                   onAbrirChat(perfil);
                 }}
               >
-                <MessageSquare size={18} color={tc('#fff')} />
+                <MessageSquare size={18} color={tc(ds.cores.texto)} />
                 <Text style={styles.btnChatActionText}>Chat</Text>
               </Pressable>
             )}
@@ -538,7 +539,7 @@ export function ModalPerfilArtista({
         {fotoZoom && (
           <View style={styles.zoomOverlay}>
             <Pressable style={styles.zoomCloseBtn} onPress={() => setFotoZoom(null)}>
-              <X size={20} color={tc('#fff')} />
+              <X size={20} color={tc(ds.cores.texto)} />
             </Pressable>
             <Image source={{ uri: fotoZoom.imagemUrl }} style={styles.zoomFullImage} resizeMode="contain" />
             <View style={styles.zoomDetailsCard}>
@@ -573,7 +574,7 @@ const styles = createThemedStyles({
     height: 220,
     marginHorizontal: -16,
     position: 'relative',
-    backgroundColor: '#121214',
+    backgroundColor: ds.cores.superficie,
   },
   heroCoverImage: {
     width: '100%',
@@ -604,14 +605,15 @@ const styles = createThemedStyles({
     gap: 8,
   },
   circleBtn: {
-    width: 36,
-    height: 36,
+    width: ds.alvo.compacto,
+    height: ds.alvo.compacto,
     borderRadius: 18,
     backgroundColor: 'rgba(0,0,0,0.65)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.15)',
     justifyContent: 'center',
     alignItems: 'center',
+    minHeight: ds.alvo.compacto,
   },
   circleBtnActive: {
     backgroundColor: 'rgba(244, 63, 94, 0.2)',
@@ -661,30 +663,35 @@ const styles = createThemedStyles({
     gap: 8,
   },
   artistNameText: {
-    color: '#ffffff',
+    color: ds.cores.texto,
     fontSize: 22,
     fontWeight: '700',
     letterSpacing: -0.6,
     flexShrink: 1,
+    lineHeight: 26,
   },
   proTag: {
     backgroundColor: 'rgba(243, 194, 26, 0.15)',
     borderWidth: 1,
-    borderColor: '#f3c21a',
+    borderColor: ds.cores.destaque,
     borderRadius: 6,
     paddingHorizontal: 6,
     paddingVertical: 2,
   },
   proTagText: {
-    color: '#f3c21a',
-    fontSize: 9,
-    fontWeight: '900',
-    letterSpacing: 0.5,
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.corpo,
+    fontWeight: '700',
+    letterSpacing: 0,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   studioNameText: {
-    color: '#d1d5db',
-    fontSize: 12,
+    color: ds.cores.textoSecundario,
+    fontSize: ds.fonte.corpo,
     fontWeight: '600',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   metaPillsRow: {
     flexDirection: 'row',
@@ -703,9 +710,10 @@ const styles = createThemedStyles({
     borderRadius: 6,
   },
   distanceBadgeText: {
-    color: '#d4d4d8',
-    fontSize: 10,
-    fontWeight: '900',
+    color: ds.cores.textoSecundario,
+    fontSize: ds.fonte.etiqueta,
+    fontWeight: '700',
+    lineHeight: 16,
   },
   locationPill: {
     flexDirection: 'row',
@@ -713,8 +721,10 @@ const styles = createThemedStyles({
     gap: 4,
   },
   locationText: {
-    color: '#9ca3af',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   ratingPill: {
     flexDirection: 'row',
@@ -725,12 +735,14 @@ const styles = createThemedStyles({
     paddingVertical: 2,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#26262a',
+    borderColor: ds.cores.borda,
   },
   ratingText: {
-    color: '#fff',
-    fontSize: 10,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.corpo,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   agendaBadgePill: {
     flexDirection: 'row',
@@ -761,9 +773,10 @@ const styles = createThemedStyles({
     backgroundColor: '#f59e0b',
   },
   agendaBadgeText: {
-    fontSize: 9,
+    fontSize: ds.fonte.etiqueta,
     fontWeight: '800',
     textTransform: 'uppercase',
+    lineHeight: 16,
   },
   agendaTextAberta: {
     color: '#10b981',
@@ -784,14 +797,17 @@ const styles = createThemedStyles({
   },
   agendaFechadaCalloutTitle: {
     color: '#f59e0b',
-    fontSize: 12,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '800',
+    lineHeight: 23,
+    flexShrink: 1,
   },
   agendaFechadaCalloutSub: {
     color: '#bbb',
-    fontSize: 10,
+    fontSize: ds.fonte.corpo,
     marginTop: 1,
-    lineHeight: 15,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   btnBookActionWaitlist: {
     backgroundColor: '#1c170a',
@@ -818,42 +834,50 @@ const styles = createThemedStyles({
     flex: 1,
     backgroundColor: '#101012',
     borderWidth: 0,
-    borderRadius: 12,
+    borderRadius: ds.raio.cartao,
     paddingVertical: 10,
     paddingHorizontal: 8,
     alignItems: 'center',
   },
   priceCardLabel: {
-    color: '#71717a',
-    fontSize: 9,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.legenda,
     fontWeight: '800',
-    letterSpacing: 0.8,
+    letterSpacing: 0,
+    lineHeight: 17,
   },
   priceCardValue: {
-    color: '#ffffff',
+    color: ds.cores.texto,
     fontSize: 18,
     fontWeight: '600',
     marginVertical: 2,
+    lineHeight: 26,
+    flexShrink: 1,
   },
   priceCardSub: {
-    color: '#a1a1aa',
-    fontSize: 10,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   bioCard: {
-    borderRadius: 14,
+    borderRadius: ds.raio.cartao,
     paddingVertical: 8,
     gap: 8,
   },
   sectionHeading: {
-    color: '#ffffff',
-    fontSize: 13,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.secao,
     fontWeight: '800',
     letterSpacing: -0.2,
+    lineHeight: 26,
+    flexShrink: 1,
   },
   bioText: {
-    color: '#d4d4d8',
-    fontSize: 12,
-    lineHeight: 21,
+    color: ds.cores.textoSecundario,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   stylesTagsRow: {
     flexDirection: 'row',
@@ -877,18 +901,21 @@ const styles = createThemedStyles({
     borderColor: 'rgba(243, 194, 26, 0.4)',
   },
   stylePillPrimaryText: {
-    color: '#f3c21a',
-    fontSize: 11,
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.corpo,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   stylePillText: {
-    color: '#a1a1aa',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.etiqueta,
     fontWeight: '600',
+    lineHeight: 16,
   },
   tabsNavContainer: {
     flexDirection: 'row',
-    backgroundColor: '#121216',
+    backgroundColor: ds.cores.superficie,
     borderRadius: 12,
     padding: 4,
     borderWidth: 1,
@@ -908,12 +935,14 @@ const styles = createThemedStyles({
     backgroundColor: '#202028',
   },
   tabNavText: {
-    color: '#71717a',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
     fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   tabNavTextActive: {
-    color: '#ffffff',
+    color: ds.cores.texto,
   },
   tabContentArea: {
     marginTop: 4,
@@ -926,7 +955,7 @@ const styles = createThemedStyles({
   portfolioCard: {
     width: '48%',
     aspectRatio: 0.75,
-    borderRadius: 16,
+    borderRadius: ds.raio.cartao,
     overflow: 'hidden',
     position: 'relative',
     backgroundColor: '#1a1a20',
@@ -945,9 +974,11 @@ const styles = createThemedStyles({
     paddingVertical: 2,
   },
   portfolioTagText: {
-    color: '#fff',
-    fontSize: 10,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.corpo,
     fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   zoomIconWrap: {
     position: 'absolute',
@@ -965,7 +996,7 @@ const styles = createThemedStyles({
   },
   flashCardItem: {
     flexDirection: 'row',
-    backgroundColor: '#121216',
+    backgroundColor: ds.cores.superficie,
     borderWidth: 1,
     borderColor: '#222228',
     borderRadius: 14,
@@ -989,44 +1020,53 @@ const styles = createThemedStyles({
     alignItems: 'center',
   },
   flashTitleText: {
-    color: '#ffffff',
-    fontSize: 13,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '800',
     flex: 1,
     marginRight: 6,
+    lineHeight: 23,
+    flexShrink: 1,
   },
   flashPriceText: {
-    color: '#f3c21a',
-    fontSize: 13,
-    fontWeight: '900',
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.corpo,
+    fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   flashStyleText: {
-    color: '#9ca3af',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.etiqueta,
+    lineHeight: 16,
   },
   btnSelectFlash: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
     paddingVertical: 6,
     paddingHorizontal: 10,
-    borderRadius: 8,
+    borderRadius: ds.raio.controle,
     marginTop: 6,
+    minHeight: ds.alvo.controle,
   },
   btnSelectFlashText: {
     color: '#111',
-    fontSize: 11,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   reviewsScoreCard: {
     flexDirection: 'row',
-    backgroundColor: '#121216',
-    borderRadius: 14,
+    backgroundColor: ds.cores.superficie,
+    borderRadius: ds.raio.cartao,
     borderWidth: 1,
     borderColor: '#222228',
-    padding: 14,
+    padding: ds.espaco.padrao,
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 12,
@@ -1036,7 +1076,7 @@ const styles = createThemedStyles({
     gap: 2,
   },
   scoreLargeNumber: {
-    color: '#ffffff',
+    color: ds.cores.texto,
     fontSize: 28,
     fontWeight: '900',
   },
@@ -1045,9 +1085,11 @@ const styles = createThemedStyles({
     gap: 2,
   },
   scoreSubText: {
-    color: '#71717a',
-    fontSize: 10,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
     marginTop: 2,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   scoreRight: {
     gap: 6,
@@ -1062,19 +1104,20 @@ const styles = createThemedStyles({
     borderRadius: 8,
   },
   badgeHighlightText: {
-    color: '#e4e4e7',
-    fontSize: 10,
+    color: ds.cores.textoSecundario,
+    fontSize: ds.fonte.etiqueta,
     fontWeight: '700',
+    lineHeight: 16,
   },
   reviewsList: {
     gap: 10,
   },
   reviewCard: {
-    backgroundColor: '#121216',
+    backgroundColor: ds.cores.superficie,
     borderWidth: 1,
     borderColor: '#222228',
-    borderRadius: 12,
-    padding: 12,
+    borderRadius: ds.raio.cartao,
+    padding: ds.espaco.padrao,
     gap: 8,
   },
   reviewHeader: {
@@ -1101,8 +1144,8 @@ const styles = createThemedStyles({
     alignItems: 'center',
   },
   avatarInitial: {
-    color: '#fff',
-    fontSize: 12,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.corpo,
     fontWeight: '800',
   },
   authorVerifiedRow: {
@@ -1111,13 +1154,17 @@ const styles = createThemedStyles({
     gap: 4,
   },
   authorName: {
-    color: '#ffffff',
-    fontSize: 12,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.corpo,
     fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   reviewMetaDate: {
-    color: '#71717a',
-    fontSize: 10,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   reviewRatingBadge: {
     flexDirection: 'row',
@@ -1129,41 +1176,48 @@ const styles = createThemedStyles({
     borderRadius: 6,
   },
   reviewRatingNum: {
-    color: '#fff',
-    fontSize: 10,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.corpo,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   reviewComment: {
-    color: '#d4d4d8',
-    fontSize: 11,
-    lineHeight: 16,
+    color: ds.cores.textoSecundario,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   emptyReviewsCard: {
-    backgroundColor: '#121216',
+    backgroundColor: ds.cores.superficie,
     borderWidth: 1,
     borderColor: '#222228',
-    borderRadius: 14,
+    borderRadius: ds.raio.cartao,
     padding: 24,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
   },
   emptyReviewsTitle: {
-    color: '#ffffff',
-    fontSize: 13,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '800',
+    lineHeight: 23,
+    flexShrink: 1,
   },
   emptyReviewsSub: {
-    color: '#888892',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
     textAlign: 'center',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   studioInfoCard: {
-    backgroundColor: '#121216',
+    backgroundColor: ds.cores.superficie,
     borderWidth: 1,
     borderColor: '#222228',
-    borderRadius: 14,
-    padding: 14,
+    borderRadius: ds.raio.cartao,
+    padding: ds.espaco.padrao,
     gap: 10,
     marginBottom: 10,
   },
@@ -1173,37 +1227,46 @@ const styles = createThemedStyles({
     gap: 10,
   },
   infoTitle: {
-    color: '#ffffff',
-    fontSize: 12,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '800',
+    lineHeight: 23,
+    flexShrink: 1,
   },
   infoSubtitle: {
-    color: '#9ca3af',
-    fontSize: 11,
-    lineHeight: 16,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.subtitulo,
+    lineHeight: 23,
     marginTop: 2,
+    flexShrink: 1,
   },
   infoDistanceSub: {
-    color: '#f3c21a',
-    fontSize: 11,
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.corpo,
     fontWeight: '700',
     marginTop: 3,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   mapRouteBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
     paddingVertical: 8,
     paddingHorizontal: 14,
-    borderRadius: 8,
+    borderRadius: ds.raio.controle,
     marginVertical: 4,
+    minHeight: ds.alvo.controle,
   },
   mapRouteBtnText: {
     color: '#000000',
-    fontSize: 11,
-    fontWeight: '900',
+    fontSize: ds.fonte.controle,
+    fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   amenitiesGrid: {
     gap: 6,
@@ -1214,9 +1277,11 @@ const styles = createThemedStyles({
     gap: 8,
   },
   amenityText: {
-    color: '#e4e4e7',
-    fontSize: 11,
+    color: ds.cores.textoSecundario,
+    fontSize: ds.fonte.corpo,
     fontWeight: '600',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   bioSafeCard: {
     borderColor: 'rgba(16, 185, 129, 0.25)',
@@ -1229,12 +1294,16 @@ const styles = createThemedStyles({
   },
   bioSafeTitle: {
     color: '#10b981',
-    fontSize: 12,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '800',
+    lineHeight: 23,
+    flexShrink: 1,
   },
   bioSafeText: {
-    color: '#d1d5db',
-    fontSize: 11,
+    color: ds.cores.textoSecundario,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   footerActionsBar: {
     flexDirection: 'row',
@@ -1245,6 +1314,7 @@ const styles = createThemedStyles({
     borderTopColor: '#1c1c22',
     gap: 10,
     alignItems: 'center',
+    flexWrap: 'wrap',
   },
   btnChatAction: {
     flexDirection: 'row',
@@ -1259,9 +1329,12 @@ const styles = createThemedStyles({
     borderRadius: 12,
   },
   btnChatActionText: {
-    color: '#ffffff',
-    fontSize: 12,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   btnBookAction: {
     flex: 1,
@@ -1269,15 +1342,18 @@ const styles = createThemedStyles({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
     paddingVertical: 12,
     borderRadius: 12,
   },
   btnBookActionText: {
     color: '#111111',
-    fontSize: 12,
-    fontWeight: '900',
+    fontSize: ds.fonte.controle,
+    fontWeight: '700',
     letterSpacing: 0.2,
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   zoomOverlay: {
     position: 'absolute',
@@ -1310,28 +1386,34 @@ const styles = createThemedStyles({
   },
   zoomDetailsCard: {
     width: '100%',
-    backgroundColor: '#121216',
+    backgroundColor: ds.cores.superficie,
     borderWidth: 1,
     borderColor: '#222228',
-    borderRadius: 12,
-    padding: 14,
+    borderRadius: ds.raio.cartao,
+    padding: ds.espaco.padrao,
     marginTop: 14,
     alignItems: 'center',
     gap: 4,
   },
   zoomTitle: {
-    color: '#fff',
-    fontSize: 14,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '800',
+    lineHeight: 23,
+    flexShrink: 1,
   },
   zoomStyle: {
-    color: '#9ca3af',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   zoomPrice: {
-    color: '#f3c21a',
-    fontSize: 13,
-    fontWeight: '900',
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.corpo,
+    fontWeight: '700',
     marginTop: 2,
+    lineHeight: 20,
+    flexShrink: 1,
   },
 });

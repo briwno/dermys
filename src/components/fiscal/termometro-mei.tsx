@@ -1,3 +1,4 @@
+import { ds } from '@/theme/design-system';
 import type { MetricasFiscaisArtista } from '@/types/fiscal';
 import {
   AlertTriangle,
@@ -28,7 +29,7 @@ export function TermometroMei({ metricas, onAbrirDasn }: PropsTermometroMei) {
   const getCorBarra = () => {
     if (faixaAlerta === 'CRITICO_100') return tc('#ef4444'); // Vermelho
     if (faixaAlerta === 'ALERTA_85') return tc('#f97316'); // Laranja
-    if (faixaAlerta === 'ALERTA_70') return tc('#f3c21a'); // Amarelo
+    if (faixaAlerta === 'ALERTA_70') return tc(ds.cores.destaque); // Amarelo
     return tc('#10b981'); // Verde seguro
   };
 
@@ -61,7 +62,7 @@ export function TermometroMei({ metricas, onAbrirDasn }: PropsTermometroMei) {
             'Seu faturamento acumulado já consumiu mais de 70% do limite de R$ 81.000,00 neste ano-calendário.',
           corFundo: tc('rgba(243, 194, 26, 0.12)'),
           corBorda: tc('rgba(243, 194, 26, 0.35)'),
-          corTexto: tc('#f3c21a'),
+          corTexto: tc(ds.cores.destaque),
           icone: Info,
         };
       case 'NORMAL':
@@ -86,7 +87,7 @@ export function TermometroMei({ metricas, onAbrirDasn }: PropsTermometroMei) {
       {/* Header com Botão DASN */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <TrendingUp size={18} color={tc('#f3c21a')} />
+          <TrendingUp size={18} color={tc(ds.cores.destaque)} />
           <Text style={styles.title}>Seu limite MEI</Text>
         </View>
 
@@ -162,10 +163,10 @@ export function TermometroMei({ metricas, onAbrirDasn }: PropsTermometroMei) {
 
 const styles = createThemedStyles({
   container: {
-    backgroundColor: '#101010',
+    backgroundColor: ds.cores.superficie,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#1e1e1e',
+    borderColor: ds.cores.borda,
     padding: 16,
     gap: 14,
   },
@@ -181,34 +182,40 @@ const styles = createThemedStyles({
     alignItems: 'center',
     gap: 8,
     flexShrink: 1,
+    minWidth: 0,
   },
   title: {
-    color: '#fff',
-    fontSize: 16,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.modal,
     fontWeight: '800',
     flexShrink: 1,
+    lineHeight: 26,
   },
   btnDasn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
     paddingHorizontal: 10,
     paddingVertical: 12,
-    minHeight: 44,
-    borderRadius: 8,
+    minHeight: ds.alvo.controle,
+    borderRadius: ds.raio.controle,
+    justifyContent: 'center',
   },
   btnDasnText: {
     color: '#111',
-    fontSize: 12,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontSize: ds.fonte.controle,
+    fontWeight: '700',
+    textTransform: 'none',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   meterContainer: {
-    backgroundColor: '#151515',
+    backgroundColor: ds.cores.elevada,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#242424',
+    borderColor: ds.cores.borda,
     padding: 12,
     gap: 8,
   },
@@ -218,17 +225,21 @@ const styles = createThemedStyles({
     alignItems: 'center',
   },
   meterTitle: {
-    color: '#d1d5db',
-    fontSize: 12,
+    color: ds.cores.textoSecundario,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '700',
+    lineHeight: 23,
+    flexShrink: 1,
   },
   meterPercent: {
     fontSize: 14,
-    fontWeight: '900',
+    fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   track: {
     height: 12,
-    backgroundColor: '#262626',
+    backgroundColor: ds.cores.interacao,
     borderRadius: 6,
     overflow: 'hidden',
     position: 'relative',
@@ -242,7 +253,7 @@ const styles = createThemedStyles({
     top: 0,
     bottom: 0,
     width: 2,
-    backgroundColor: '#0a0a0a',
+    backgroundColor: ds.cores.fundo,
   },
   markerLabelsRow: {
     flexDirection: 'row',
@@ -250,9 +261,10 @@ const styles = createThemedStyles({
     alignItems: 'center',
   },
   markerSub: {
-    color: '#6b7280',
-    fontSize: 9,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.etiqueta,
     fontWeight: '700',
+    lineHeight: 16,
   },
   statsRow: {
     flexDirection: 'row',
@@ -260,23 +272,26 @@ const styles = createThemedStyles({
   },
   statBox: {
     flex: 1,
-    backgroundColor: '#151515',
+    backgroundColor: ds.cores.elevada,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#222',
+    borderColor: ds.cores.borda,
     padding: 10,
     gap: 2,
   },
   statLabel: {
-    color: '#9ca3af',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.legenda,
     fontWeight: '700',
-    textTransform: 'uppercase',
+    textTransform: 'none',
+    lineHeight: 17,
   },
   statVal: {
-    color: '#fff',
+    color: ds.cores.texto,
     fontSize: 14,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   alertBox: {
     flexDirection: 'row',
@@ -291,12 +306,15 @@ const styles = createThemedStyles({
     gap: 2,
   },
   alertTitle: {
-    fontSize: 12,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '800',
+    lineHeight: 23,
+    flexShrink: 1,
   },
   alertMsg: {
-    color: '#d1d5db',
-    fontSize: 13,
-    lineHeight: 19,
+    color: ds.cores.textoSecundario,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
 });

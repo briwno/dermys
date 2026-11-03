@@ -1,3 +1,4 @@
+import { ds } from '@/theme/design-system';
 import { AlertCircle, CheckCircle2, ShieldCheck, Sparkles, X } from 'lucide-react-native';
 import React from 'react';
 import {
@@ -56,14 +57,14 @@ export function AftercareModal({ visivel, onClose, artistaNome }: AftercareModal
               </View>
             </View>
             <Pressable style={styles.closeBtn} onPress={onClose}>
-              <X size={18} color={tc('#9ca3af')} />
+              <X size={18} color={tc(ds.cores.textoSuave)} />
             </Pressable>
           </View>
 
           {/* Conteúdo */}
           <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
             <View style={styles.introBox}>
-              <Sparkles size={16} color={tc('#f3c21a')} />
+              <Sparkles size={16} color={tc(ds.cores.destaque)} />
               <Text style={styles.introText}>
                 Sua tatuagem foi feita com materiais 100% esterilizados por {artistaNome || 'seu artista'}.
                 Agora, o resultado final depende dos seus cuidados diários!
@@ -110,11 +111,11 @@ const styles = createThemedStyles({
   },
   container: {
     maxHeight: '88%',
-    backgroundColor: '#0a0a0a',
+    backgroundColor: ds.cores.fundo,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     borderWidth: 1,
-    borderColor: '#222',
+    borderColor: ds.cores.borda,
     paddingTop: 18,
     paddingBottom: 24,
   },
@@ -125,12 +126,14 @@ const styles = createThemedStyles({
     paddingHorizontal: 20,
     paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#1a1a1a',
+    borderBottomColor: ds.cores.borda,
   },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    flexShrink: 1,
+    minWidth: 0,
   },
   iconWrap: {
     width: 38,
@@ -143,23 +146,28 @@ const styles = createThemedStyles({
     alignItems: 'center',
   },
   title: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '900',
+    color: ds.cores.texto,
+    fontSize: ds.fonte.modal,
+    fontWeight: '700',
+    lineHeight: 26,
+    flexShrink: 1,
   },
   subtitle: {
     color: '#10b981',
-    fontSize: 11,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '800',
     letterSpacing: 0.5,
+    lineHeight: 23,
+    flexShrink: 1,
   },
   closeBtn: {
-    width: 32,
-    height: 32,
+    width: ds.alvo.compacto,
+    height: ds.alvo.compacto,
     borderRadius: 16,
-    backgroundColor: '#161616',
+    backgroundColor: ds.cores.elevada,
     justifyContent: 'center',
     alignItems: 'center',
+    minHeight: ds.alvo.compacto,
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -170,24 +178,25 @@ const styles = createThemedStyles({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: '#121212',
+    backgroundColor: ds.cores.superficie,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#222',
+    borderColor: ds.cores.borda,
     padding: 12,
   },
   introText: {
-    color: '#d1d5db',
-    fontSize: 12,
+    color: ds.cores.textoSecundario,
+    fontSize: ds.fonte.corpo,
     flex: 1,
-    lineHeight: 17,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   stepCard: {
-    backgroundColor: '#121212',
-    borderRadius: 14,
+    backgroundColor: ds.cores.superficie,
+    borderRadius: ds.raio.cartao,
     borderWidth: 1,
-    borderColor: '#1d1d1d',
-    padding: 14,
+    borderColor: ds.cores.borda,
+    padding: ds.espaco.padrao,
     gap: 6,
   },
   stepHeader: {
@@ -196,15 +205,18 @@ const styles = createThemedStyles({
     gap: 8,
   },
   stepTitle: {
-    color: '#fff',
-    fontSize: 13,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.modal,
     fontWeight: '800',
+    lineHeight: 26,
+    flexShrink: 1,
   },
   stepDesc: {
-    color: '#9ca3af',
-    fontSize: 12,
-    lineHeight: 18,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
     paddingLeft: 24,
+    flexShrink: 1,
   },
   alertBox: {
     flexDirection: 'row',
@@ -218,10 +230,11 @@ const styles = createThemedStyles({
   },
   alertText: {
     color: '#f59e0b',
-    fontSize: 11,
+    fontSize: ds.fonte.corpo,
     flex: 1,
-    lineHeight: 16,
+    lineHeight: 20,
     fontWeight: '600',
+    flexShrink: 1,
   },
   footer: {
     paddingHorizontal: 20,
@@ -229,16 +242,20 @@ const styles = createThemedStyles({
   },
   doneBtn: {
     height: 48,
-    borderRadius: 12,
+    borderRadius: ds.raio.controle,
     backgroundColor: '#10b981',
     justifyContent: 'center',
     alignItems: 'center',
+    minHeight: ds.alvo.controle,
   },
   doneBtnText: {
     color: '#000',
-    fontSize: 12,
-    fontWeight: '900',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    fontSize: ds.fonte.controle,
+    fontWeight: '700',
+    textTransform: 'none',
+    letterSpacing: 0,
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
 });

@@ -1,3 +1,4 @@
+import { ds } from '@/theme/design-system';
 import { FiscalService } from '@/services/fiscal/fiscal-service';
 import type {
   AmbienteFiscal,
@@ -149,7 +150,7 @@ export function ConfigFiscalModal({
           <View style={styles.header}>
             <View style={styles.headerLeft}>
               <View style={styles.iconWrap}>
-                <FileCheck2 size={20} color={tc('#f3c21a')} />
+                <FileCheck2 size={20} color={tc(ds.cores.destaque)} />
               </View>
               <View>
                 <Text style={styles.title}>Configurações Fiscais</Text>
@@ -157,7 +158,7 @@ export function ConfigFiscalModal({
               </View>
             </View>
             <Pressable style={styles.closeBtn} onPress={onClose}>
-              <X size={18} color={tc('#9ca3af')} />
+              <X size={18} color={tc(ds.cores.textoSuave)} />
             </Pressable>
           </View>
 
@@ -227,7 +228,7 @@ export function ConfigFiscalModal({
                   value={cpfCnpj}
                   onChangeText={setCpfCnpj}
                   placeholder={tipoPessoa === 'PJ' ? '00.000.000/0001-00' : '000.000.000-00'}
-                  placeholderTextColor={tc('#666')}
+                  placeholderTextColor={tc(ds.cores.textoSuave)}
                   style={styles.input}
                 />
               </View>
@@ -240,7 +241,7 @@ export function ConfigFiscalModal({
                   value={razaoSocial}
                   onChangeText={setRazaoSocial}
                   placeholder="Nome registrado na Receita Federal"
-                  placeholderTextColor={tc('#666')}
+                  placeholderTextColor={tc(ds.cores.textoSuave)}
                   style={styles.input}
                 />
               </View>
@@ -252,7 +253,7 @@ export function ConfigFiscalModal({
                     value={nomeFantasia}
                     onChangeText={setNomeFantasia}
                     placeholder="Nome do estúdio / marca"
-                    placeholderTextColor={tc('#666')}
+                    placeholderTextColor={tc(ds.cores.textoSuave)}
                     style={styles.input}
                   />
                 </View>
@@ -265,7 +266,7 @@ export function ConfigFiscalModal({
                     value={inscricaoMunicipal}
                     onChangeText={setInscricaoMunicipal}
                     placeholder="Ex: 12345678"
-                    placeholderTextColor={tc('#666')}
+                    placeholderTextColor={tc(ds.cores.textoSuave)}
                     style={styles.input}
                   />
                 </View>
@@ -277,7 +278,7 @@ export function ConfigFiscalModal({
                     onChangeText={setAliquotaIss}
                     keyboardType="numeric"
                     placeholder="0.0"
-                    placeholderTextColor={tc('#666')}
+                    placeholderTextColor={tc(ds.cores.textoSuave)}
                     style={styles.input}
                   />
                 </View>
@@ -290,7 +291,7 @@ export function ConfigFiscalModal({
                     value={cnae}
                     onChangeText={setCnae}
                     placeholder="9609-2/06"
-                    placeholderTextColor={tc('#666')}
+                    placeholderTextColor={tc(ds.cores.textoSuave)}
                     style={styles.input}
                   />
                   <Text style={styles.inputTip}>9609-2/06: Tatuagem e Piercing</Text>
@@ -302,7 +303,7 @@ export function ConfigFiscalModal({
                     value={codigoTributacao}
                     onChangeText={setCodigoTributacao}
                     placeholder="06.01"
-                    placeholderTextColor={tc('#666')}
+                    placeholderTextColor={tc(ds.cores.textoSuave)}
                     style={styles.input}
                   />
                   <Text style={styles.inputTip}>Item 06.01 da Lei Comp. 116</Text>
@@ -345,7 +346,7 @@ export function ConfigFiscalModal({
                       onChangeText={setApiKey}
                       secureTextEntry
                       placeholder="Insira sua chave de API secreta"
-                      placeholderTextColor={tc('#666')}
+                      placeholderTextColor={tc(ds.cores.textoSuave)}
                       style={styles.input}
                     />
                   </View>
@@ -375,7 +376,7 @@ export function ConfigFiscalModal({
               {/* Certificado Digital A1 */}
               <View style={styles.certBox}>
                 <View style={styles.certHeader}>
-                  <KeyRound size={16} color={tc('#f3c21a')} />
+                  <KeyRound size={16} color={tc(ds.cores.destaque)} />
                   <Text style={styles.certTitle}>Certificado Digital A1 (.pfx)</Text>
                 </View>
                 <Text style={styles.certDesc}>
@@ -410,8 +411,8 @@ export function ConfigFiscalModal({
                 <Switch
                   value={emissaoAutomatica}
                   onValueChange={setEmissaoAutomatica}
-                  trackColor={{ false: tc('#333'), true: tc('#f3c21a') }}
-                  thumbColor={emissaoAutomatica ? tc('#111') : tc('#888')}
+                  trackColor={{ false: tc('#333'), true: tc(ds.cores.destaque) }}
+                  thumbColor={emissaoAutomatica ? tc('#111') : tc(ds.cores.textoSuave)}
                 />
               </View>
             </View>
@@ -453,11 +454,11 @@ const styles = createThemedStyles({
   },
   container: {
     maxHeight: '92%',
-    backgroundColor: '#0a0a0a',
+    backgroundColor: ds.cores.fundo,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     borderWidth: 1,
-    borderColor: '#222',
+    borderColor: ds.cores.borda,
     paddingTop: 18,
     paddingBottom: 24,
   },
@@ -468,12 +469,14 @@ const styles = createThemedStyles({
     paddingHorizontal: 20,
     paddingBottom: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#1a1a1a',
+    borderBottomColor: ds.cores.borda,
   },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    flexShrink: 1,
+    minWidth: 0,
   },
   iconWrap: {
     width: 38,
@@ -486,21 +489,26 @@ const styles = createThemedStyles({
     alignItems: 'center',
   },
   title: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '900',
+    color: ds.cores.texto,
+    fontSize: ds.fonte.modal,
+    fontWeight: '700',
+    lineHeight: 26,
+    flexShrink: 1,
   },
   sub: {
-    color: '#888',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   closeBtn: {
-    width: 32,
-    height: 32,
+    width: ds.alvo.compacto,
+    height: ds.alvo.compacto,
     borderRadius: 16,
-    backgroundColor: '#161616',
+    backgroundColor: ds.cores.elevada,
     justifyContent: 'center',
     alignItems: 'center',
+    minHeight: ds.alvo.compacto,
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -508,19 +516,21 @@ const styles = createThemedStyles({
     gap: 14,
   },
   sectionCard: {
-    backgroundColor: '#121212',
-    borderRadius: 14,
+    backgroundColor: ds.cores.superficie,
+    borderRadius: ds.raio.cartao,
     borderWidth: 1,
-    borderColor: '#1d1d1d',
-    padding: 14,
+    borderColor: ds.cores.borda,
+    padding: ds.espaco.padrao,
     gap: 10,
   },
   sectionTitle: {
-    color: '#f3c21a',
-    fontSize: 11,
-    fontWeight: '900',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.secao,
+    fontWeight: '700',
+    textTransform: 'none',
+    letterSpacing: 0,
+    lineHeight: 26,
+    flexShrink: 1,
   },
   radioRow: {
     flexDirection: 'row',
@@ -532,20 +542,22 @@ const styles = createThemedStyles({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#252525',
-    backgroundColor: '#161616',
+    backgroundColor: ds.cores.elevada,
     alignItems: 'center',
   },
   radioActive: {
     backgroundColor: 'rgba(243, 194, 26, 0.15)',
-    borderColor: '#f3c21a',
+    borderColor: ds.cores.destaque,
   },
   radioText: {
-    color: '#888',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
     fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   radioTextActive: {
-    color: '#f3c21a',
+    color: ds.cores.destaque,
     fontWeight: '800',
   },
   pillsRow: {
@@ -560,17 +572,18 @@ const styles = createThemedStyles({
     borderWidth: 1,
   },
   pillActive: {
-    backgroundColor: '#f3c21a',
-    borderColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
+    borderColor: ds.cores.destaque,
   },
   pillIdle: {
-    backgroundColor: '#181818',
-    borderColor: '#282828',
+    backgroundColor: ds.cores.elevada,
+    borderColor: ds.cores.borda,
   },
   pillText: {
-    color: '#888',
-    fontSize: 10,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.etiqueta,
     fontWeight: '800',
+    lineHeight: 16,
   },
   pillTextActive: {
     color: '#111',
@@ -579,24 +592,29 @@ const styles = createThemedStyles({
     gap: 4,
   },
   inputLabel: {
-    color: '#9ca3af',
-    fontSize: 10,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.legenda,
     fontWeight: '700',
-    textTransform: 'uppercase',
+    textTransform: 'none',
+    lineHeight: 17,
   },
   input: {
-    minHeight: 44,
-    backgroundColor: '#161616',
+    minHeight: ds.alvo.controle,
+    backgroundColor: ds.cores.elevada,
     borderWidth: 1,
-    borderColor: '#282828',
-    borderRadius: 10,
+    borderColor: ds.cores.borda,
+    borderRadius: ds.raio.campo,
     paddingHorizontal: 12,
-    color: '#fff',
-    fontSize: 13,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.campo,
+    lineHeight: 23,
+    flexShrink: 1,
   },
   inputTip: {
-    color: '#666',
-    fontSize: 10,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   rowInputs: {
     flexDirection: 'row',
@@ -613,26 +631,28 @@ const styles = createThemedStyles({
     borderWidth: 1,
   },
   provPillActive: {
-    backgroundColor: '#f3c21a',
-    borderColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
+    borderColor: ds.cores.destaque,
   },
   provPillIdle: {
-    backgroundColor: '#181818',
-    borderColor: '#282828',
+    backgroundColor: ds.cores.elevada,
+    borderColor: ds.cores.borda,
   },
   provText: {
-    color: '#888',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   provTextActive: {
     color: '#111',
   },
   certBox: {
-    backgroundColor: '#161616',
+    backgroundColor: ds.cores.elevada,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#242424',
+    borderColor: ds.cores.borda,
     padding: 12,
     gap: 6,
     marginTop: 4,
@@ -643,19 +663,22 @@ const styles = createThemedStyles({
     gap: 6,
   },
   certTitle: {
-    color: '#fff',
-    fontSize: 12,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '800',
+    lineHeight: 23,
+    flexShrink: 1,
   },
   certDesc: {
-    color: '#888',
-    fontSize: 10,
-    lineHeight: 14,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   certUploadBtn: {
-    minHeight: 38,
-    backgroundColor: '#f3c21a',
-    borderRadius: 8,
+    minHeight: ds.alvo.controle,
+    backgroundColor: ds.cores.destaque,
+    borderRadius: ds.raio.controle,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
@@ -664,8 +687,11 @@ const styles = createThemedStyles({
   },
   certUploadBtnText: {
     color: '#111',
-    fontSize: 11,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   certSuccess: {
     flexDirection: 'row',
@@ -675,8 +701,10 @@ const styles = createThemedStyles({
   },
   certSuccessText: {
     color: '#10b981',
-    fontSize: 11,
+    fontSize: ds.fonte.corpo,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   switchRow: {
     flexDirection: 'row',
@@ -685,14 +713,17 @@ const styles = createThemedStyles({
     gap: 10,
   },
   switchTitle: {
-    color: '#fff',
-    fontSize: 12,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '800',
+    lineHeight: 23,
+    flexShrink: 1,
   },
   switchDesc: {
-    color: '#888',
-    fontSize: 10,
-    lineHeight: 14,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   footer: {
     flexDirection: 'row',
@@ -702,24 +733,27 @@ const styles = createThemedStyles({
   },
   cancelBtn: {
     flex: 0.8,
-    minHeight: 46,
-    borderRadius: 12,
-    backgroundColor: '#1b1b1b',
+    minHeight: ds.alvo.controle,
+    borderRadius: ds.raio.controle,
+    backgroundColor: ds.cores.elevada,
     borderWidth: 1,
-    borderColor: '#2d2d2d',
+    borderColor: ds.cores.borda,
     justifyContent: 'center',
     alignItems: 'center',
   },
   cancelBtnText: {
-    color: '#888',
-    fontSize: 12,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   saveBtn: {
     flex: 1.2,
-    minHeight: 46,
-    borderRadius: 12,
-    backgroundColor: '#f3c21a',
+    minHeight: ds.alvo.controle,
+    borderRadius: ds.raio.controle,
+    backgroundColor: ds.cores.destaque,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
@@ -727,8 +761,11 @@ const styles = createThemedStyles({
   },
   saveBtnText: {
     color: '#111',
-    fontSize: 12,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontSize: ds.fonte.controle,
+    fontWeight: '700',
+    textTransform: 'none',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
 });

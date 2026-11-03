@@ -1,4 +1,5 @@
-import { supabase } from '@/services/supabase';
+import { ds } from '@/theme/design-system';
+import { supabase } from '@/services/data-client';
 import type { PerfilUsuario } from '@/types/auth';
 import { Calendar, Clock, DollarSign, FileCheck2, FileText, ShieldCheck, TrendingUp, Users } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
@@ -94,8 +95,8 @@ export function ArtistaDashboardTab({ perfil }: PropsDashboardTab) {
   const KPI = [
     { label: 'Faturamento Líquido', value: `R$ ${faturamentoMes.toFixed(2)}`, icon: TrendingUp, color: tc('#10b981') },
     { label: 'Sinais em Custódia (MP)', value: `R$ ${sinalCustodiaTotal.toFixed(2)}`, icon: ShieldCheck, color: tc('#3b82f6') },
-    { label: 'Agendamentos Ativos', value: String(totalAgendamentos), icon: Calendar, color: tc('#f3c21a') },
-    { label: 'Status Fiscal (MEI)', value: 'Regular', icon: FileCheck2, color: tc('#f3c21a') },
+    { label: 'Agendamentos Ativos', value: String(totalAgendamentos), icon: Calendar, color: tc(ds.cores.destaque) },
+    { label: 'Status Fiscal (MEI)', value: 'Regular', icon: FileCheck2, color: tc(ds.cores.destaque) },
   ];
 
   return (
@@ -134,18 +135,18 @@ export function ArtistaDashboardTab({ perfil }: PropsDashboardTab) {
         <Text style={styles.sectionTitle}>Próximos atendimentos</Text>
         <View style={styles.listWrap}>
           {carregando ? (
-            <ActivityIndicator color={tc('#f3c21a')} style={{ marginVertical: 10 }} />
+            <ActivityIndicator color={tc(ds.cores.destaque)} style={{ marginVertical: 10 }} />
           ) : atendimentos.length === 0 ? (
             <Text style={styles.emptyText}>Nenhum atendimento agendado no momento.</Text>
           ) : (
             atendimentos.map((item) => (
               <View key={item.id} style={styles.itemRow}>
-                <View>
+                <View style={{ flex: 1, minWidth: 0 }}>
                   <Text style={styles.clientText}>{item.cliente}</Text>
                   <Text style={styles.itemStyle}>{item.estilo}</Text>
                 </View>
                 <View style={styles.timeRow}>
-                  <Clock size={12} color={tc('#f3c21a')} />
+                  <Clock size={12} color={tc(ds.cores.destaque)} />
                   <Text style={styles.slotText}>{item.horario}</Text>
                 </View>
               </View>
@@ -159,7 +160,7 @@ export function ArtistaDashboardTab({ perfil }: PropsDashboardTab) {
 
 const styles = createThemedStyles({
   container: {
-    gap: 14,
+    gap: ds.espaco.padrao,
   },
   kpiGrid: {
     flexDirection: 'row',
@@ -167,11 +168,13 @@ const styles = createThemedStyles({
     gap: 10,
   },
   kpiCard: {
-    width: '48.5%',
-    borderRadius: 14,
+    flexBasis: '46%',
+    flexGrow: 1,
+    minWidth: 130,
+    borderRadius: ds.raio.cartao,
     borderWidth: 1,
-    borderColor: '#1d1d1d',
-    backgroundColor: '#101010',
+    borderColor: ds.cores.borda,
+    backgroundColor: ds.cores.superficie,
     paddingVertical: 14,
     paddingHorizontal: 12,
     gap: 8,
@@ -182,21 +185,25 @@ const styles = createThemedStyles({
     alignItems: 'center',
   },
   kpiLabel: {
-    color: '#9ca3af',
-    fontSize: 9.5,
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.legenda,
+    textTransform: 'none',
+    letterSpacing: 0,
     fontWeight: '700',
+    lineHeight: 17,
+    flexShrink: 1,
   },
   kpiValue: {
-    color: '#fff',
+    color: ds.cores.texto,
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: '700',
+    lineHeight: 26,
+    flexShrink: 1,
   },
   protectionBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#101010',
+    backgroundColor: ds.cores.superficie,
     borderRadius: 14,
     borderWidth: 1,
     borderColor: 'rgba(16, 185, 129, 0.25)',
@@ -216,29 +223,34 @@ const styles = createThemedStyles({
     gap: 2,
   },
   protectionTitle: {
-    color: '#fff',
-    fontSize: 12,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '800',
+    lineHeight: 23,
+    flexShrink: 1,
   },
   protectionText: {
-    color: '#9ca3af',
-    fontSize: 10.5,
-    lineHeight: 14,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   section: {
-    borderRadius: 14,
+    borderRadius: ds.raio.cartao,
     borderWidth: 1,
-    borderColor: '#1d1d1d',
-    backgroundColor: '#101010',
-    padding: 12,
+    borderColor: ds.cores.borda,
+    backgroundColor: ds.cores.superficie,
+    padding: ds.espaco.padrao,
     gap: 10,
   },
   sectionTitle: {
-    color: '#fff',
-    fontSize: 14,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.secao,
     fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    textTransform: 'none',
+    letterSpacing: 0,
+    lineHeight: 26,
+    flexShrink: 1,
   },
   listWrap: {
     gap: 8,
@@ -246,22 +258,28 @@ const styles = createThemedStyles({
   itemRow: {
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#2a2a2a',
-    backgroundColor: '#171717',
+    borderColor: ds.cores.borda,
+    backgroundColor: ds.cores.elevada,
     paddingVertical: 10,
     paddingHorizontal: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 10,
+    flexWrap: 'wrap',
   },
   clientText: {
-    color: '#fff',
-    fontSize: 13,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.corpo,
     fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   itemStyle: {
-    color: '#9ca3af',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   timeRow: {
     flexDirection: 'row',
@@ -269,14 +287,18 @@ const styles = createThemedStyles({
     gap: 4,
   },
   slotText: {
-    color: '#f3c21a',
+    color: ds.cores.destaque,
     fontWeight: '800',
-    fontSize: 12,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   emptyText: {
-    color: '#6b7280',
-    fontSize: 12,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
     textAlign: 'center',
     paddingVertical: 10,
+    lineHeight: 20,
+    flexShrink: 1,
   },
 });

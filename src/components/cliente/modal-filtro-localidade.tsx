@@ -1,3 +1,4 @@
+import { ds } from '@/theme/design-system';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
@@ -133,7 +134,7 @@ export function ModalFiltroLocalidade({
               </Text>
             </View>
             <Pressable style={styles.closeBtn} onPress={onClose}>
-              <X size={18} color={tc('#9ca3af')} />
+              <X size={18} color={tc(ds.cores.textoSuave)} />
             </Pressable>
           </View>
 
@@ -141,12 +142,12 @@ export function ModalFiltroLocalidade({
             {/* Linha de Busca & Botão GPS */}
             <View style={styles.searchRow}>
               <View style={styles.searchWrap}>
-                <Search size={15} color={tc('#71717a')} style={styles.searchIcon} />
+                <Search size={15} color={tc(ds.cores.textoSuave)} style={styles.searchIcon} />
                 <TextInput
                   value={buscaCidade}
                   onChangeText={setBuscaCidade}
                   placeholder="Buscar cidade..."
-                  placeholderTextColor={tc('#71717a')}
+                  placeholderTextColor={tc(ds.cores.textoSuave)}
                   style={styles.searchInput}
                 />
               </View>
@@ -246,27 +247,32 @@ const styles = createThemedStyles({
     borderBottomColor: '#181820',
   },
   title: {
-    color: '#ffffff',
-    fontSize: 15,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.modal,
     fontWeight: '800',
     letterSpacing: -0.2,
+    lineHeight: 26,
+    flexShrink: 1,
   },
   subtitle: {
-    color: '#71717a',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.subtitulo,
     marginTop: 2,
+    lineHeight: 23,
+    flexShrink: 1,
   },
   selectedCityHighlight: {
-    color: '#f3c21a',
+    color: ds.cores.destaque,
     fontWeight: '700',
   },
   closeBtn: {
-    width: 30,
-    height: 30,
+    width: ds.alvo.compacto,
+    height: ds.alvo.compacto,
     borderRadius: 15,
     backgroundColor: '#181820',
     justifyContent: 'center',
     alignItems: 'center',
+    minHeight: ds.alvo.compacto,
   },
   contentScroll: {
     paddingHorizontal: 16,
@@ -291,29 +297,37 @@ const styles = createThemedStyles({
     backgroundColor: '#14141a',
     borderWidth: 1,
     borderColor: '#22222a',
-    borderRadius: 10,
-    color: '#ffffff',
-    fontSize: 13,
+    borderRadius: ds.raio.campo,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.campo,
     paddingLeft: 34,
     paddingRight: 10,
-    height: 38,
+    height: ds.alvo.controle,
+    lineHeight: 23,
+    flexShrink: 1,
+    minHeight: ds.alvo.controle,
   },
   gpsQuickBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    backgroundColor: '#f3c21a',
-    borderRadius: 10,
+    backgroundColor: ds.cores.destaque,
+    borderRadius: ds.raio.controle,
     paddingHorizontal: 12,
-    height: 38,
+    height: ds.alvo.compacto,
+    minHeight: ds.alvo.controle,
+    justifyContent: 'center',
   },
   gpsQuickBtnLoading: {
     opacity: 0.6,
   },
   gpsQuickBtnText: {
     color: '#000000',
-    fontSize: 11,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   chipsRow: {
     flexDirection: 'row',
@@ -333,13 +347,15 @@ const styles = createThemedStyles({
     borderRadius: 8,
   },
   cityChipActive: {
-    backgroundColor: '#f3c21a',
-    borderColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
+    borderColor: ds.cores.destaque,
   },
   cityChipText: {
-    color: '#a1a1aa',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
     fontWeight: '600',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   cityChipTextActive: {
     color: '#000000',
@@ -350,9 +366,10 @@ const styles = createThemedStyles({
     marginBottom: 8,
   },
   sectionLabel: {
-    color: '#ffffff',
-    fontSize: 12,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.legenda,
     fontWeight: '700',
+    lineHeight: 17,
   },
   radiusRow: {
     flexDirection: 'row',
@@ -369,13 +386,14 @@ const styles = createThemedStyles({
     justifyContent: 'center',
   },
   radiusPillActive: {
-    backgroundColor: '#f3c21a',
-    borderColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
+    borderColor: ds.cores.destaque,
   },
   radiusPillText: {
-    color: '#a1a1aa',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.etiqueta,
     fontWeight: '700',
+    lineHeight: 16,
   },
   radiusPillTextActive: {
     color: '#000000',
@@ -386,15 +404,19 @@ const styles = createThemedStyles({
     paddingTop: 12,
   },
   applyBtn: {
-    backgroundColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
     paddingVertical: 12,
-    borderRadius: 12,
+    borderRadius: ds.raio.controle,
     alignItems: 'center',
     justifyContent: 'center',
+    minHeight: ds.alvo.controle,
   },
   applyBtnText: {
     color: '#000000',
-    fontSize: 13,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
 });

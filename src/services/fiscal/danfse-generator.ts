@@ -1,4 +1,5 @@
-// Gerador oficial e universal de DANFSe v1.0 e NFS-e para Dermys
+import { demoAtiva } from '@/services/apresentacao-store';
+// Representação visual dos documentos emitidos ou simulados no Dermys.
 
 export interface DadosDanfseCompleto {
   chaveAcesso: string;
@@ -242,6 +243,7 @@ export function gerarHtmlDanfseCompleto(dados: DadosDanfseCompleto): string {
   </style>
 </head>
 <body>
+  ${demoAtiva() ? '<div style="padding:12px;background:#fff3cd;text-align:center;font-weight:bold">DEMONSTRAÇÃO ACADÊMICA · SEM VALIDADE FISCAL</div>' : ''}
   <div class="danfse-container">
     <!-- CABEÇALHO -->
     <table class="header-table">

@@ -11,7 +11,7 @@ const client = { rpc: async (nome, args) => {
 const source = ts.transpileModule(fs.readFileSync(path.join(__dirname, '../src/services/debug-service.ts'), 'utf8'), {
   compilerOptions: { module: ts.ModuleKind.CommonJS, esModuleInterop: true },
 }).outputText;
-new Function('require', 'module', 'exports', source)((id) => id === './supabase' ? { supabase: client } : {}, target, target.exports);
+new Function('require', 'module', 'exports', source)((id) => id === './data-client' ? { supabase: client } : id === './apresentacao-store' ? { demoAtiva: () => false } : {}, target, target.exports);
 const debug = target.exports;
 async function run() {
   assert.equal(debug.CENARIOS_DEBUG.length, 18);

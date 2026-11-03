@@ -1,5 +1,6 @@
 import React, { useEffect, useId, type ReactNode } from 'react';
-import { Modal, type ModalProps } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, type ModalProps } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useModalHost } from './app-modal-context';
 
 export interface AppModalProps extends Omit<ModalProps, 'visible'> {
@@ -22,7 +23,7 @@ export function AppModal({
   const id = useId();
 
   useEffect(() => {
-    if (modalHost) {
+    if (modalHost && Platform.OS === 'web') {
       if (isVisible) {
         modalHost.showModal(id, children);
       } else {
@@ -33,14 +34,14 @@ export function AppModal({
 
   useEffect(() => {
     return () => {
-      if (modalHost) {
+      if (modalHost && Platform.OS === 'web') {
         modalHost.hideModal(id);
       }
     };
   }, [modalHost, id]);
 
   // Se o ModalHostProvider estiver disponível, ele cuida da renderização no topo da tela
-  if (modalHost) {
+  if (modalHost && Platform.OS === 'web') {
     return null;
   }
 
@@ -55,7 +56,7 @@ export function AppModal({
       onRequestClose={onRequestClose}
       {...rest}
     >
-      {children}
+      <SafeAreaView style={{ flex: 1 }}><KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>{children}</KeyboardAvoidingView></SafeAreaView>
     </Modal>
   );
 }

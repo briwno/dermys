@@ -1,7 +1,11 @@
+import { avisar } from '@/services/feedback';
+import { demoAtiva } from '@/services/apresentacao-store';
+import { copiarTexto } from '@/services/documentos-mobile';
+import { ds } from '@/theme/design-system';
 import { AppModal } from '@/components/ui/app-modal';
 import { ChatService } from '@/services/chat-service';
-import { criarCobrancaSinal } from '@/services/mercadopago';
-import { supabase } from '@/services/supabase';
+import { confirmarSinalSimulado, criarCobrancaSinal } from '@/services/mercadopago';
+import { supabase } from '@/services/data-client';
 import type { CartaoArtista } from '@/telas/cliente/inicio-tab';
 import type { ItemPortfolio } from '@/types/artista-detalhado';
 import type { CardBriefingPayload } from '@/types/chat';
@@ -297,7 +301,7 @@ export function ModalReservaCliente({
    */
   const escolherFotoGaleria = async () => {
     if (referenciasUrls.length >= 3) {
-      alert('Você pode enviar no máximo 3 fotos de referência.');
+      avisar('Você pode enviar no máximo 3 fotos de referência.');
       return;
     }
 
@@ -331,7 +335,7 @@ export function ModalReservaCliente({
     try {
       const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!perm.granted) {
-        alert('Precisamos de permissão para acessar suas fotos.');
+        avisar('Precisamos de permissão para acessar suas fotos.');
         setUpandoFoto(false);
         return;
       }
@@ -388,7 +392,7 @@ export function ModalReservaCliente({
     try {
       const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!perm.granted) {
-        alert('Precisamos de permissão para acessar suas fotos.');
+        avisar('Precisamos de permissão para acessar suas fotos.');
         setUpandoFoto(false);
         return;
       }
@@ -417,7 +421,7 @@ export function ModalReservaCliente({
   const adicionarUrlCustomizada = () => {
     if (!inputCustomUrl.trim()) return;
     if (referenciasUrls.length >= 3) {
-      alert('Você pode selecionar no máximo 3 referências.');
+      avisar('Você pode selecionar no máximo 3 referências.');
       return;
     }
     setReferenciasUrls([...referenciasUrls, inputCustomUrl.trim()]);
@@ -442,7 +446,7 @@ export function ModalReservaCliente({
             data: { session },
           } = await supabase.auth.getSession();
           if (session?.user?.id) {
-            clienteId = session.user.id;
+            clienteId = (perfilAtual?.id || perfilAtual?.uid || session?.user?.id!);
           }
         } catch {
           // silencioso
@@ -459,21 +463,20 @@ export function ModalReservaCliente({
           : descricaoArte ||
             `[Projeto Exclusivo] Tatuagem ${artista.estilo} (${localCorpo}, ~${tamanhoNumericoCm}cm)`;
 
-      // 1. Salva agendamento inicial com status 'PENDENTE' (ou gera ID de fallback)
-      let bookingId: string = `REQ-${Date.now().toString().slice(-6)}`;
-      try {
+      // Uma reserva precisa existir antes de ser referenciada no chat.
         const { data: agendamentoCriado, error: errAgendamento } = await supabase
           .from('agendamentos')
           .insert({
             cliente_id: clienteId,
             artista_id: artista.id,
+            data_horario: dataSelecionada.toISOString(),
             estilo: artista.estilo,
             descricao: descricaoFinal,
             local_corpo: localCorpo,
             tamanho_cm: `${tamanhoNumericoCm} cm (${tamanhoCm})`,
             tipo_sessao: tipoSessao,
             referencias_urls: referenciasUrls,
-            status: 'PENDENTE',
+            status: 'pendente',
             sinal_pago: false,
             valor_total: valorTotalEstimado,
             valor_sinal: valorSinalCalculado,
@@ -481,12 +484,8 @@ export function ModalReservaCliente({
           .select('id')
           .single();
 
-        if (!errAgendamento && agendamentoCriado?.id) {
-          bookingId = agendamentoCriado.id;
-        }
-      } catch (errAg) {
-        console.warn('Registro agendamento fallback:', errAg);
-      }
+        if (errAgendamento || !agendamentoCriado?.id) throw new Error('Não foi possível registrar a reserva. Confira a conexão e tente novamente.');
+        const bookingId = agendamentoCriado.id;
 
       // 2. Dispara card de Briefing no chat
       const payloadBriefing: CardBriefingPayload = {
@@ -518,10 +517,7 @@ export function ModalReservaCliente({
       }
     } catch (err) {
       console.warn('Erro ao enviar briefing:', err);
-      onClose();
-      if (onRedirecionarChat && artista?.id) {
-        onRedirecionarChat(artista.id);
-      }
+      avisar(err instanceof Error ? err.message : 'Não foi possível enviar o pedido.');
     } finally {
       setCarregando(false);
     }
@@ -541,7 +537,7 @@ export function ModalReservaCliente({
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      if (!session?.user) return;
+      if (!session?.user && !demoAtiva()) return;
 
       const turnoObj = TURNOS.find((t) => t.id === turnoSelecionado) || TURNOS[1];
       const dataHorarioCombinada = new Date(dataSelecionada);
@@ -558,7 +554,7 @@ export function ModalReservaCliente({
       const { data: agendamentoCriado, error: errAgendamento } = await supabase
         .from('agendamentos')
         .insert({
-          cliente_id: session.user.id,
+          cliente_id: (perfilAtual?.id || perfilAtual?.uid || session?.user?.id!),
           artista_id: artista.id,
           data_horario: dataHorarioCombinada.toISOString(),
           estilo: artista.estilo,
@@ -570,7 +566,7 @@ export function ModalReservaCliente({
           referencias_urls: referenciasUrls,
           valor_sinal: valorSinalCalculado,
           valor_total: valorTotalEstimado,
-          status: 'awaiting_deposit',
+          status: 'pendente',
           sinal_pago: false,
         })
         .select('id')
@@ -584,7 +580,7 @@ export function ModalReservaCliente({
       const cobranca = await criarCobrancaSinal({
         agendamentoId: agendamentoCriado.id,
         artistaId: artista.id,
-        clienteId: session.user.id,
+        clienteId: (perfilAtual?.id || perfilAtual?.uid || session?.user?.id!),
         valorSinal: valorSinalCalculado,
         artistaNome: artista.nomeArtista,
         cidade: artista.cidade,
@@ -609,10 +605,13 @@ export function ModalReservaCliente({
         data: { session },
       } = await supabase.auth.getSession();
 
-      if (session?.user && artista) {
+      if ((session?.user || demoAtiva()) && artista && cobrancaPix) {
+        const { data: reserva, error } = await supabase.from('agendamentos').select('id').eq('mercado_pago_id', cobrancaPix.paymentId).single();
+        if (error || !reserva?.id) throw new Error('Reserva não encontrada. Gere o sinal novamente.');
+        await confirmarSinalSimulado(reserva.id);
         const turnoObj = TURNOS.find((t) => t.id === turnoSelecionado) || TURNOS[1];
-        await ChatService.enviarConfirmacaoSinal(session.user.id, artista.id, {
-          agendamentoId: protocoloReserva,
+        await ChatService.enviarConfirmacaoSinal((perfilAtual?.id || perfilAtual?.uid || session?.user?.id!), artista.id, {
+          agendamentoId: reserva.id,
           valorSinal: valorSinalCalculado,
           dataHorarioFormatada: `${dataSelecionada.toLocaleDateString('pt-BR')} às ${turnoObj.horarioInicio}`,
           turnoNome: turnoObj.nome,
@@ -621,17 +620,17 @@ export function ModalReservaCliente({
       }
 
       setEtapa(4);
-    } catch {
-      setEtapa(4);
+    } catch (e) {
+      avisar(e instanceof Error ? e.message : 'Não foi possível confirmar o sinal.');
     } finally {
       setCarregando(false);
     }
   };
 
-  const copiarChavePix = () => {
+  const copiarChavePix = async () => {
     if (!cobrancaPix?.qrCodePayload) return;
-    setPixCopiado(true);
-    setTimeout(() => setPixCopiado(false), 2500);
+    try { await copiarTexto(cobrancaPix.qrCodePayload); setPixCopiado(true); setTimeout(() => setPixCopiado(false), 2500); }
+    catch { avisar('Não foi possível copiar o código.'); }
   };
 
   const voltarEtapa = () => {
@@ -659,7 +658,7 @@ export function ModalReservaCliente({
           {/* Header com Navegação e Indicador de Progresso */}
           <View style={styles.header}>
             <Pressable style={styles.backBtn} onPress={voltarEtapa}>
-              <ChevronLeft size={20} color={tc('#fff')} />
+              <ChevronLeft size={20} color={tc(ds.cores.texto)} />
             </Pressable>
 
             <View style={styles.progressWrap}>
@@ -683,7 +682,7 @@ export function ModalReservaCliente({
             </View>
 
             <Pressable style={styles.closeBtn} onPress={onClose}>
-              <X size={18} color={tc('#888')} />
+              <X size={18} color={tc(ds.cores.textoSuave)} />
             </Pressable>
           </View>
 
@@ -699,7 +698,7 @@ export function ModalReservaCliente({
                   <Text style={styles.stepTitle}>Briefing do Projeto</Text>
                   <Text style={styles.stepSub}>
                     Envie referências, medidas e detalhes para{' '}
-                    <Text style={{ color: tc('#f3c21a'), fontWeight: '800' }}>
+                    <Text style={{ color: tc(ds.cores.destaque), fontWeight: '800' }}>
                       {artista.nomeArtista}
                     </Text>{' '}
                     avaliar e formalizar a proposta de orçamento
@@ -717,7 +716,7 @@ export function ModalReservaCliente({
                   >
                     <Sparkles
                       size={16}
-                      color={tipoSessao === 'flash' ? tc('#111') : tc('#f3c21a')}
+                      color={tipoSessao === 'flash' ? tc('#111') : tc(ds.cores.destaque)}
                     />
                     <View>
                       <Text
@@ -750,7 +749,7 @@ export function ModalReservaCliente({
                   >
                     <Layers
                       size={16}
-                      color={tipoSessao === 'exclusivo' ? tc('#111') : tc('#f3c21a')}
+                      color={tipoSessao === 'exclusivo' ? tc('#111') : tc(ds.cores.destaque)}
                     />
                     <View>
                       <Text
@@ -782,7 +781,7 @@ export function ModalReservaCliente({
                     </View>
 
                     {carregandoFlashes ? (
-                      <ActivityIndicator color={tc('#f3c21a')} style={{ marginVertical: 20 }} />
+                      <ActivityIndicator color={tc(ds.cores.destaque)} style={{ marginVertical: 20 }} />
                     ) : flashesArtista.length === 0 ? (
                       <View style={styles.emptyBox}>
                         <Text style={styles.emptyText}>Nenhum flash cadastrado no momento.</Text>
@@ -860,7 +859,7 @@ export function ModalReservaCliente({
                                 style={styles.btnRemovePhoto}
                                 onPress={() => removerFoto(slotIndex)}
                               >
-                                <X size={12} color={tc('#fff')} />
+                                <X size={12} color={tc(ds.cores.texto)} />
                               </Pressable>
                             </View>
                           );
@@ -874,11 +873,11 @@ export function ModalReservaCliente({
                             disabled={upandoFoto}
                           >
                             {upandoFoto ? (
-                              <ActivityIndicator color={tc('#f3c21a')} size="small" />
+                              <ActivityIndicator color={tc(ds.cores.destaque)} size="small" />
                             ) : (
                               <>
                                 <View style={styles.uploadIconWrap}>
-                                  <Camera size={16} color={tc('#f3c21a')} />
+                                  <Camera size={16} color={tc(ds.cores.destaque)} />
                                 </View>
                                 <Text style={styles.uploadSlotTitle}>+ Foto {slotIndex + 1}</Text>
                                 <Text style={styles.uploadSlotSub}>Galeria</Text>
@@ -908,7 +907,7 @@ export function ModalReservaCliente({
                         style={styles.btnToggleUrlLink}
                         onPress={() => setMostrarInputUrl(!mostrarInputUrl)}
                       >
-                        <Plus size={14} color={tc('#f3c21a')} />
+                        <Plus size={14} color={tc(ds.cores.destaque)} />
                         <Text style={styles.btnToggleUrlLinkText}>Link da Web</Text>
                       </Pressable>
                     </View>
@@ -919,7 +918,7 @@ export function ModalReservaCliente({
                           value={inputCustomUrl}
                           onChangeText={setInputCustomUrl}
                           placeholder="Cole o link da foto (Pinterest, Instagram, URL)..."
-                          placeholderTextColor={tc('#666')}
+                          placeholderTextColor={tc(ds.cores.textoSuave)}
                           style={styles.customUrlInput}
                         />
                         <Pressable
@@ -998,7 +997,7 @@ export function ModalReservaCliente({
                           onPress={escolherFotoRegiaoCorpo}
                           disabled={upandoFoto}
                         >
-                          <Camera size={16} color={tc('#f3c21a')} />
+                          <Camera size={16} color={tc(ds.cores.destaque)} />
                           <Text style={styles.anatomyUploadBtnText}>
                             Tirar ou Escolher Foto do {localCorpo}
                           </Text>
@@ -1053,7 +1052,7 @@ export function ModalReservaCliente({
                         value={descricaoArte}
                         onChangeText={setDescricaoArte}
                         placeholder="Ex: Quero um ramo floral com sombreamento suave e traços finos no antebraço direito..."
-                        placeholderTextColor={tc('#666')}
+                        placeholderTextColor={tc(ds.cores.textoSuave)}
                         multiline
                         numberOfLines={3}
                         style={styles.textArea}
@@ -1221,7 +1220,7 @@ export function ModalReservaCliente({
                               isSelected && styles.shiftIconWrapActive,
                             ]}
                           >
-                            <Icone size={20} color={isSelected ? tc('#111') : tc('#f3c21a')} />
+                            <Icone size={20} color={isSelected ? tc('#111') : tc(ds.cores.destaque)} />
                           </View>
                           <View style={{ flex: 1 }}>
                             <View style={styles.shiftTitleRow}>
@@ -1262,7 +1261,7 @@ export function ModalReservaCliente({
 
                 {/* Resumo da Data e Turno */}
                 <View style={styles.summaryBar}>
-                  <CalendarIcon size={14} color={tc('#f3c21a')} />
+                  <CalendarIcon size={14} color={tc(ds.cores.destaque)} />
                   <Text style={styles.summaryBarText}>
                     {dataSelecionada.toLocaleDateString('pt-BR', {
                       day: '2-digit',
@@ -1288,7 +1287,7 @@ export function ModalReservaCliente({
                 {/* Temporizador de Reserva (Hold de 30min) */}
                 <View style={styles.holdBanner}>
                   <View style={styles.holdBannerLeft}>
-                    <Clock size={16} color={tc('#f3c21a')} />
+                    <Clock size={16} color={tc(ds.cores.destaque)} />
                     <View>
                       <Text style={styles.holdBannerTitle}>Temporizador de Reserva</Text>
                       <Text style={styles.holdBannerSub}>
@@ -1342,7 +1341,7 @@ export function ModalReservaCliente({
 
                     <View style={styles.qrCodeWrapper}>
                       <View style={styles.qrMock}>
-                        <QrCode size={110} color={tc('#f3c21a')} />
+                        <QrCode size={110} color={tc(ds.cores.destaque)} />
                         <Text style={styles.qrMockLabel}>PAGAMENTO PROTEGIDO</Text>
                       </View>
                     </View>
@@ -1386,7 +1385,7 @@ export function ModalReservaCliente({
                     <>
                       <CheckCircle2 size={18} color={tc('#111')} />
                       <Text style={styles.btnConfirmDepositText}>
-                        Confirmar Pagamento do Sinal
+                        Simular aprovação do sinal
                       </Text>
                     </>
                   )}
@@ -1398,12 +1397,12 @@ export function ModalReservaCliente({
             {etapa === 4 && (
               <View style={[styles.stepContainer, { alignItems: 'center', paddingVertical: 14 }]}>
                 <View style={styles.successIconWrap}>
-                  <CheckCircle2 size={54} color={tc('#f3c21a')} />
+                  <CheckCircle2 size={54} color={tc(ds.cores.destaque)} />
                 </View>
 
                 <Text style={styles.successTitle}>Sessão Confirmada!</Text>
                 <Text style={styles.successSub}>
-                  Sua vaga com <Text style={{ color: tc('#fff'), fontWeight: '800' }}>{artista.nomeArtista}</Text> foi travada com sucesso com o sinal de R$ {valorSinalCalculado}.
+                  Sua vaga com <Text style={{ color: tc(ds.cores.texto), fontWeight: '800' }}>{artista.nomeArtista}</Text> foi travada com sucesso com o sinal de R$ {valorSinalCalculado}.
                 </Text>
 
                 <View style={styles.protocolCard}>
@@ -1432,11 +1431,11 @@ export function ModalReservaCliente({
 
                 <View style={styles.anamneseCallout}>
                   <View style={styles.anamneseCalloutHeader}>
-                    <FileHeart size={18} color={tc('#f3c21a')} />
+                    <FileHeart size={18} color={tc(ds.cores.destaque)} />
                     <Text style={styles.anamneseCalloutTitle}>Fase 5: Ficha de Saúde (Anamnese)</Text>
                   </View>
                   <Text style={styles.anamneseCalloutText}>
-                    Por exigência sanitária e biossegurança, complete e assine sua <Text style={{ color: tc('#f3c21a'), fontWeight: '700' }}>Ficha de Anamnese</Text> na aba <Text style={{ color: tc('#fff'), fontWeight: '700' }}>Meus Agendamentos</Text> ou no Chat antes da sessão.
+                    Por exigência sanitária e biossegurança, complete e assine sua <Text style={{ color: tc(ds.cores.destaque), fontWeight: '700' }}>Ficha de Anamnese</Text> na aba <Text style={{ color: tc(ds.cores.texto), fontWeight: '700' }}>Meus Agendamentos</Text> ou no Chat antes da sessão.
                   </Text>
                 </View>
 
@@ -1493,11 +1492,11 @@ const styles = createThemedStyles({
   },
   container: {
     maxHeight: '94%',
-    backgroundColor: '#0c0c0e',
+    backgroundColor: ds.cores.superficie,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     borderWidth: 1,
-    borderColor: '#222',
+    borderColor: ds.cores.borda,
     paddingTop: 14,
     paddingBottom: 20,
   },
@@ -1511,12 +1510,13 @@ const styles = createThemedStyles({
     borderBottomColor: '#1a1a1f',
   },
   backBtn: {
-    width: 34,
-    height: 34,
+    width: ds.alvo.compacto,
+    height: ds.alvo.compacto,
     borderRadius: 10,
     backgroundColor: '#18181e',
     justifyContent: 'center',
     alignItems: 'center',
+    minHeight: ds.alvo.compacto,
   },
   progressWrap: {
     alignItems: 'center',
@@ -1532,7 +1532,7 @@ const styles = createThemedStyles({
   },
   pillActive: {
     width: 26,
-    backgroundColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
   },
   pillDone: {
     width: 14,
@@ -1543,19 +1543,22 @@ const styles = createThemedStyles({
     backgroundColor: '#262630',
   },
   progressText: {
-    fontSize: 10,
+    fontSize: ds.fonte.corpo,
     fontWeight: '800',
-    color: '#888',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    color: ds.cores.textoSuave,
+    textTransform: 'none',
+    letterSpacing: 0,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   closeBtn: {
-    width: 34,
-    height: 34,
+    width: ds.alvo.compacto,
+    height: ds.alvo.compacto,
     borderRadius: 10,
     backgroundColor: '#18181e',
     justifyContent: 'center',
     alignItems: 'center',
+    minHeight: ds.alvo.compacto,
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -1569,15 +1572,18 @@ const styles = createThemedStyles({
     marginBottom: 2,
   },
   stepTitle: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: '900',
+    color: ds.cores.texto,
+    fontSize: ds.fonte.modal,
+    fontWeight: '700',
     letterSpacing: -0.5,
+    lineHeight: 26,
+    flexShrink: 1,
   },
   stepSub: {
-    color: '#9ca3af',
-    fontSize: 12,
-    lineHeight: 18,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   categoryToggleRow: {
     flexDirection: 'row',
@@ -1587,31 +1593,37 @@ const styles = createThemedStyles({
   categoryBtn: {
     flex: 1,
     padding: 12,
-    borderRadius: 14,
+    borderRadius: ds.raio.controle,
     borderWidth: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
+    minHeight: ds.alvo.controle,
+    justifyContent: 'center',
   },
   categoryBtnActive: {
-    backgroundColor: '#f3c21a',
-    borderColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
+    borderColor: ds.cores.destaque,
   },
   categoryBtnIdle: {
-    backgroundColor: '#121216',
+    backgroundColor: ds.cores.superficie,
     borderColor: '#24242e',
   },
   categoryBtnTitle: {
-    color: '#fff',
-    fontSize: 13,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '800',
+    lineHeight: 23,
+    flexShrink: 1,
   },
   categoryBtnTitleActive: {
     color: '#111',
   },
   categoryBtnSub: {
-    color: '#888',
-    fontSize: 10,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   categoryBtnSubActive: {
     color: '#333',
@@ -1624,22 +1636,24 @@ const styles = createThemedStyles({
     marginTop: 6,
   },
   sectionLabel: {
-    color: '#9ca3af',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.legenda,
     fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
+    textTransform: 'none',
+    letterSpacing: 0,
+    lineHeight: 17,
   },
   badgeInfo: {
     backgroundColor: '#1b1b22',
-    color: '#f3c21a',
-    fontSize: 9,
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.etiqueta,
     fontWeight: '800',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
     borderWidth: 1,
     borderColor: '#33333f',
+    lineHeight: 16,
   },
   flashSection: {
     gap: 10,
@@ -1650,13 +1664,13 @@ const styles = createThemedStyles({
   },
   flashCard: {
     width: 140,
-    borderRadius: 14,
+    borderRadius: ds.raio.cartao,
     borderWidth: 1,
     overflow: 'hidden',
     position: 'relative',
   },
   flashCardActive: {
-    borderColor: '#f3c21a',
+    borderColor: ds.cores.destaque,
     backgroundColor: '#18181f',
   },
   flashCardIdle: {
@@ -1675,7 +1689,7 @@ const styles = createThemedStyles({
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1684,9 +1698,11 @@ const styles = createThemedStyles({
     gap: 3,
   },
   flashTitle: {
-    color: '#fff',
-    fontSize: 11,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '800',
+    lineHeight: 23,
+    flexShrink: 1,
   },
   flashMeta: {
     flexDirection: 'row',
@@ -1694,23 +1710,28 @@ const styles = createThemedStyles({
     alignItems: 'center',
   },
   flashPrice: {
-    color: '#f3c21a',
-    fontSize: 12,
-    fontWeight: '900',
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.corpo,
+    fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   flashDuration: {
-    color: '#888',
-    fontSize: 9,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.legenda,
+    lineHeight: 17,
   },
   emptyBox: {
     padding: 20,
     borderRadius: 12,
-    backgroundColor: '#121216',
+    backgroundColor: ds.cores.superficie,
     alignItems: 'center',
   },
   emptyText: {
-    color: '#666',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   tagsRow: {
     gap: 8,
@@ -1723,17 +1744,18 @@ const styles = createThemedStyles({
     borderWidth: 1,
   },
   tagPillActive: {
-    backgroundColor: '#f3c21a',
-    borderColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
+    borderColor: ds.cores.destaque,
   },
   tagPillIdle: {
-    backgroundColor: '#121216',
+    backgroundColor: ds.cores.superficie,
     borderColor: '#22222b',
   },
   tagPillText: {
-    color: '#888',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.etiqueta,
     fontWeight: '700',
+    lineHeight: 16,
   },
   tagPillTextActive: {
     color: '#111',
@@ -1769,20 +1791,24 @@ const styles = createThemedStyles({
     alignItems: 'center',
   },
   uploadSlotTitle: {
-    color: '#fff',
-    fontSize: 11,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '800',
+    lineHeight: 23,
+    flexShrink: 1,
   },
   uploadSlotSub: {
-    color: '#888',
-    fontSize: 9,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   uploadSlotFilled: {
     flex: 1,
     height: 100,
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: '#f3c21a',
+    borderColor: ds.cores.destaque,
     overflow: 'hidden',
     position: 'relative',
     backgroundColor: '#000',
@@ -1801,9 +1827,10 @@ const styles = createThemedStyles({
     borderRadius: 6,
   },
   slotBadgeText: {
-    color: '#f3c21a',
-    fontSize: 9,
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.etiqueta,
     fontWeight: '800',
+    lineHeight: 16,
   },
   btnRemovePhoto: {
     position: 'absolute',
@@ -1823,19 +1850,23 @@ const styles = createThemedStyles({
   },
   btnUploadPrincipal: {
     flex: 2,
-    backgroundColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
     paddingVertical: 10,
     paddingHorizontal: 12,
-    borderRadius: 10,
+    borderRadius: ds.raio.controle,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 6,
+    minHeight: ds.alvo.controle,
   },
   btnUploadPrincipalText: {
     color: '#111',
-    fontSize: 11,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   btnToggleUrlLink: {
     flex: 1,
@@ -1844,16 +1875,20 @@ const styles = createThemedStyles({
     borderColor: '#2e2e3e',
     paddingVertical: 10,
     paddingHorizontal: 8,
-    borderRadius: 10,
+    borderRadius: ds.raio.controle,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 4,
+    minHeight: ds.alvo.controle,
   },
   btnToggleUrlLinkText: {
-    color: '#f3c21a',
-    fontSize: 11,
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.controle,
     fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   customUrlInputWrap: {
     flexDirection: 'row',
@@ -1863,25 +1898,29 @@ const styles = createThemedStyles({
   },
   customUrlInput: {
     flex: 1,
-    backgroundColor: '#121216',
-    borderRadius: 10,
+    backgroundColor: ds.cores.superficie,
+    borderRadius: ds.raio.campo,
     borderWidth: 1,
     borderColor: '#2c2c38',
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    color: '#fff',
-    fontSize: 12,
+    paddingVertical: 12,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.campo,
+    lineHeight: 23,
+    flexShrink: 1,
+    minHeight: ds.alvo.controle,
   },
   customUrlConfirmBtn: {
-    backgroundColor: '#f3c21a',
-    width: 36,
-    height: 36,
+    backgroundColor: ds.cores.destaque,
+    width: ds.alvo.compacto,
+    height: ds.alvo.compacto,
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
+    minHeight: ds.alvo.compacto,
   },
   anatomyPhotoBox: {
-    backgroundColor: '#121217',
+    backgroundColor: ds.cores.superficie,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#22222d',
@@ -1895,14 +1934,18 @@ const styles = createThemedStyles({
     alignItems: 'center',
   },
   anatomyPhotoTitle: {
-    color: '#fff',
-    fontSize: 12,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '800',
+    lineHeight: 23,
+    flexShrink: 1,
   },
   anatomyPhotoSub: {
-    color: '#888',
-    fontSize: 10,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
     marginTop: 2,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   btnRemoverFotoCorpo: {
     padding: 6,
@@ -1913,7 +1956,7 @@ const styles = createThemedStyles({
     overflow: 'hidden',
     position: 'relative',
     borderWidth: 1,
-    borderColor: '#f3c21a',
+    borderColor: ds.cores.destaque,
   },
   anatomyPreviewImg: {
     width: '100%',
@@ -1929,29 +1972,34 @@ const styles = createThemedStyles({
     borderRadius: 6,
   },
   anatomyBadgeText: {
-    color: '#f3c21a',
-    fontSize: 10,
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.etiqueta,
     fontWeight: '800',
+    lineHeight: 16,
   },
   anatomyUploadBtn: {
     backgroundColor: '#181822',
     borderWidth: 1,
     borderStyle: 'dashed',
     borderColor: '#383848',
-    borderRadius: 10,
+    borderRadius: ds.raio.controle,
     paddingVertical: 12,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
+    minHeight: ds.alvo.controle,
   },
   anatomyUploadBtnText: {
-    color: '#f3c21a',
-    fontSize: 11,
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.controle,
     fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   cmHighlightBadge: {
-    backgroundColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
@@ -1961,8 +2009,9 @@ const styles = createThemedStyles({
   },
   cmHighlightBadgeText: {
     color: '#111',
-    fontSize: 10,
-    fontWeight: '900',
+    fontSize: ds.fonte.etiqueta,
+    fontWeight: '700',
+    lineHeight: 16,
   },
   sizeGrid: {
     gap: 6,
@@ -1970,21 +2019,27 @@ const styles = createThemedStyles({
   sizeBtn: {
     paddingVertical: 9,
     paddingHorizontal: 12,
-    borderRadius: 10,
+    borderRadius: ds.raio.controle,
     borderWidth: 1,
+    minHeight: ds.alvo.controle,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   sizeBtnActive: {
-    backgroundColor: '#f3c21a',
-    borderColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
+    borderColor: ds.cores.destaque,
   },
   sizeBtnIdle: {
-    backgroundColor: '#121216',
+    backgroundColor: ds.cores.superficie,
     borderColor: '#22222b',
   },
   sizeBtnText: {
-    color: '#9ca3af',
-    fontSize: 12,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.controle,
     fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   sizeBtnTextActive: {
     color: '#111',
@@ -1994,19 +2049,23 @@ const styles = createThemedStyles({
     gap: 6,
   },
   inputLabel: {
-    color: '#9ca3af',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.legenda,
     fontWeight: '700',
+    lineHeight: 17,
   },
   textArea: {
-    backgroundColor: '#121216',
-    borderRadius: 12,
+    backgroundColor: ds.cores.superficie,
+    borderRadius: ds.raio.campo,
     borderWidth: 1,
     borderColor: '#22222b',
     padding: 12,
-    color: '#fff',
-    fontSize: 12,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.campo,
     textAlignVertical: 'top',
+    lineHeight: 23,
+    flexShrink: 1,
+    minHeight: ds.alvo.controle,
   },
   dispList: {
     gap: 6,
@@ -2021,10 +2080,10 @@ const styles = createThemedStyles({
   },
   dispItemActive: {
     backgroundColor: '#191812',
-    borderColor: '#f3c21a',
+    borderColor: ds.cores.destaque,
   },
   dispItemIdle: {
-    backgroundColor: '#121216',
+    backgroundColor: ds.cores.superficie,
     borderColor: '#202028',
   },
   radioCircle: {
@@ -2037,20 +2096,22 @@ const styles = createThemedStyles({
     alignItems: 'center',
   },
   radioCircleActive: {
-    borderColor: '#f3c21a',
+    borderColor: ds.cores.destaque,
   },
   radioDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
   },
   dispItemText: {
     color: '#aaa',
-    fontSize: 11,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   dispItemTextActive: {
-    color: '#fff',
+    color: ds.cores.texto,
     fontWeight: '700',
   },
   briefingSubmitBlock: {
@@ -2058,28 +2119,37 @@ const styles = createThemedStyles({
     marginTop: 10,
   },
   btnEnviarBriefingChat: {
-    backgroundColor: '#f3c21a',
-    borderRadius: 14,
+    backgroundColor: ds.cores.destaque,
+    borderRadius: ds.raio.controle,
     paddingVertical: 14,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
+    minHeight: ds.alvo.controle,
   },
   btnEnviarBriefingChatText: {
     color: '#111',
-    fontSize: 13,
-    fontWeight: '900',
+    fontSize: ds.fonte.controle,
+    fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   btnAvancarDiretoTurno: {
     alignItems: 'center',
     paddingVertical: 6,
+    minHeight: ds.alvo.controle,
+    justifyContent: 'center',
   },
   btnAvancarDiretoTurnoText: {
-    color: '#888',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.controle,
     fontWeight: '600',
     textDecorationLine: 'underline',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   daysRow: {
     gap: 8,
@@ -2088,34 +2158,38 @@ const styles = createThemedStyles({
   dayCard: {
     width: 66,
     height: 78,
-    borderRadius: 14,
+    borderRadius: ds.raio.cartao,
     borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
     gap: 2,
   },
   dayCardActive: {
-    backgroundColor: '#f3c21a',
-    borderColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
+    borderColor: ds.cores.destaque,
   },
   dayCardIdle: {
     backgroundColor: '#131318',
     borderColor: '#22222b',
   },
   dayWeekText: {
-    fontSize: 9,
+    fontSize: ds.fonte.etiqueta,
     fontWeight: '800',
-    color: '#6b7280',
+    color: ds.cores.textoSuave,
+    lineHeight: 16,
   },
   dayNumText: {
     fontSize: 18,
-    fontWeight: '900',
-    color: '#fff',
+    fontWeight: '700',
+    color: ds.cores.texto,
+    lineHeight: 26,
+    flexShrink: 1,
   },
   dayMonthText: {
-    fontSize: 8,
+    fontSize: ds.fonte.etiqueta,
     fontWeight: '700',
-    color: '#6b7280',
+    color: ds.cores.textoSuave,
+    lineHeight: 16,
   },
   dayTextActive: {
     color: '#111',
@@ -2124,16 +2198,16 @@ const styles = createThemedStyles({
     gap: 8,
   },
   shiftCard: {
-    borderRadius: 14,
+    borderRadius: ds.raio.cartao,
     borderWidth: 1,
-    padding: 12,
+    padding: ds.espaco.padrao,
   },
   shiftCardActive: {
     backgroundColor: '#181820',
-    borderColor: '#f3c21a',
+    borderColor: ds.cores.destaque,
   },
   shiftCardIdle: {
-    backgroundColor: '#121216',
+    backgroundColor: ds.cores.superficie,
     borderColor: '#22222b',
   },
   shiftCardLeft: {
@@ -2150,7 +2224,7 @@ const styles = createThemedStyles({
     alignItems: 'center',
   },
   shiftIconWrapActive: {
-    backgroundColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
   },
   shiftTitleRow: {
     flexDirection: 'row',
@@ -2158,12 +2232,14 @@ const styles = createThemedStyles({
     alignItems: 'center',
   },
   shiftTitle: {
-    color: '#fff',
-    fontSize: 13,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '800',
+    lineHeight: 23,
+    flexShrink: 1,
   },
   shiftTitleActive: {
-    color: '#f3c21a',
+    color: ds.cores.destaque,
   },
   shiftBadge: {
     backgroundColor: '#1c1c24',
@@ -2172,26 +2248,31 @@ const styles = createThemedStyles({
     borderRadius: 6,
   },
   shiftBadgeActive: {
-    backgroundColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
   },
   shiftBadgeText: {
-    color: '#9ca3af',
-    fontSize: 9,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.etiqueta,
     fontWeight: '800',
+    lineHeight: 16,
   },
   shiftBadgeTextActive: {
     color: '#111',
   },
   shiftHours: {
-    color: '#f3c21a',
-    fontSize: 11,
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.corpo,
     fontWeight: '700',
     marginTop: 2,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   shiftSub: {
-    color: '#888',
-    fontSize: 10,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
     marginTop: 1,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   summaryBar: {
     backgroundColor: '#15151c',
@@ -2204,10 +2285,12 @@ const styles = createThemedStyles({
     gap: 8,
   },
   summaryBarText: {
-    color: '#fff',
-    fontSize: 11,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.corpo,
     fontWeight: '700',
     textTransform: 'capitalize',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   holdBanner: {
     backgroundColor: '#18150c',
@@ -2226,40 +2309,47 @@ const styles = createThemedStyles({
     flex: 1,
   },
   holdBannerTitle: {
-    color: '#f3c21a',
-    fontSize: 12,
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '800',
+    lineHeight: 23,
+    flexShrink: 1,
   },
   holdBannerSub: {
     color: '#aaa',
-    fontSize: 10,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   holdTimerBadge: {
-    backgroundColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
   },
   holdTimerBadgeText: {
     color: '#111',
-    fontSize: 13,
-    fontWeight: '900',
+    fontSize: ds.fonte.etiqueta,
+    fontWeight: '700',
     fontVariant: ['tabular-nums'],
+    lineHeight: 16,
   },
   financialCard: {
-    backgroundColor: '#121216',
-    borderRadius: 14,
+    backgroundColor: ds.cores.superficie,
+    borderRadius: ds.raio.cartao,
     borderWidth: 1,
     borderColor: '#22222b',
-    padding: 14,
+    padding: ds.espaco.padrao,
     gap: 8,
   },
   finCardHeader: {
-    color: '#888',
-    fontSize: 10,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   finRow: {
     flexDirection: 'row',
@@ -2278,31 +2368,41 @@ const styles = createThemedStyles({
   },
   finLabel: {
     color: '#aaa',
-    fontSize: 12,
+    fontSize: ds.fonte.legenda,
+    lineHeight: 17,
   },
   finLabelHighlight: {
-    color: '#f3c21a',
-    fontSize: 12,
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.legenda,
     fontWeight: '800',
+    lineHeight: 17,
   },
   finSubHighlight: {
-    color: '#888',
-    fontSize: 9,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   finValTotal: {
-    color: '#fff',
-    fontSize: 13,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.corpo,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   finValHighlight: {
-    color: '#f3c21a',
+    color: ds.cores.destaque,
     fontSize: 16,
-    fontWeight: '900',
+    fontWeight: '700',
+    lineHeight: 23,
+    flexShrink: 1,
   },
   finValRestante: {
     color: '#10b981',
-    fontSize: 13,
+    fontSize: ds.fonte.corpo,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   finDivider: {
     height: 1,
@@ -2325,8 +2425,10 @@ const styles = createThemedStyles({
   },
   pixHeaderText: {
     color: '#009ee3',
-    fontSize: 12,
+    fontSize: ds.fonte.corpo,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   qrCodeWrapper: {
     padding: 10,
@@ -2340,25 +2442,30 @@ const styles = createThemedStyles({
     gap: 6,
   },
   qrMockLabel: {
-    color: '#666',
-    fontSize: 8,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.legenda,
     fontWeight: '800',
-    letterSpacing: 1,
+    letterSpacing: 0,
+    lineHeight: 17,
   },
   copyPixBtn: {
-    backgroundColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
     width: '100%',
     paddingVertical: 12,
-    borderRadius: 12,
+    borderRadius: ds.raio.controle,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
+    minHeight: ds.alvo.controle,
   },
   copyPixBtnText: {
     color: '#111',
-    fontSize: 12,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   copyPixBtnTextDone: {
     color: '#10b981',
@@ -2369,23 +2476,29 @@ const styles = createThemedStyles({
     gap: 6,
   },
   safeNoticeText: {
-    color: '#888',
-    fontSize: 10,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   btnConfirmDeposit: {
     backgroundColor: '#10b981',
-    borderRadius: 14,
+    borderRadius: ds.raio.controle,
     paddingVertical: 14,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
+    minHeight: ds.alvo.controle,
   },
   btnConfirmDepositText: {
     color: '#111',
-    fontSize: 13,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontSize: ds.fonte.controle,
+    fontWeight: '700',
+    textTransform: 'none',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   successIconWrap: {
     width: 80,
@@ -2393,45 +2506,51 @@ const styles = createThemedStyles({
     borderRadius: 40,
     backgroundColor: '#18170c',
     borderWidth: 2,
-    borderColor: '#f3c21a',
+    borderColor: ds.cores.destaque,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
   },
   successTitle: {
-    color: '#fff',
+    color: ds.cores.texto,
     fontSize: 22,
-    fontWeight: '900',
+    fontWeight: '700',
     letterSpacing: -0.5,
+    lineHeight: 26,
+    flexShrink: 1,
   },
   successSub: {
-    color: '#9ca3af',
-    fontSize: 12,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.corpo,
     textAlign: 'center',
-    lineHeight: 18,
+    lineHeight: 20,
     paddingHorizontal: 10,
+    flexShrink: 1,
   },
   protocolCard: {
     width: '100%',
-    backgroundColor: '#121217',
-    borderRadius: 14,
+    backgroundColor: ds.cores.superficie,
+    borderRadius: ds.raio.cartao,
     borderWidth: 1,
-    borderColor: '#242430',
-    padding: 14,
+    borderColor: ds.cores.borda,
+    padding: ds.espaco.padrao,
     gap: 6,
     marginTop: 10,
   },
   protocolLabel: {
-    color: '#888',
-    fontSize: 10,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.legenda,
     fontWeight: '800',
-    textTransform: 'uppercase',
+    textTransform: 'none',
+    lineHeight: 17,
   },
   protocolCode: {
-    color: '#f3c21a',
+    color: ds.cores.destaque,
     fontSize: 16,
-    fontWeight: '900',
+    fontWeight: '700',
     letterSpacing: 1,
+    lineHeight: 23,
+    flexShrink: 1,
   },
   protocolDivider: {
     height: 1,
@@ -2444,13 +2563,16 @@ const styles = createThemedStyles({
     alignItems: 'center',
   },
   protocolKey: {
-    color: '#888',
-    fontSize: 11,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.legenda,
+    lineHeight: 17,
   },
   protocolVal: {
-    color: '#fff',
-    fontSize: 11,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.corpo,
     fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1,
   },
   anamneseCallout: {
     width: '100%',
@@ -2468,28 +2590,36 @@ const styles = createThemedStyles({
     gap: 8,
   },
   anamneseCalloutTitle: {
-    color: '#f3c21a',
-    fontSize: 13,
+    color: ds.cores.destaque,
+    fontSize: ds.fonte.subtitulo,
     fontWeight: '800',
+    lineHeight: 23,
+    flexShrink: 1,
   },
   anamneseCalloutText: {
     color: '#bbb',
-    fontSize: 11,
-    lineHeight: 17,
+    fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1,
   },
   btnFinishAll: {
     width: '100%',
-    backgroundColor: '#f3c21a',
-    borderRadius: 14,
+    backgroundColor: ds.cores.destaque,
+    borderRadius: ds.raio.controle,
     paddingVertical: 14,
     alignItems: 'center',
     marginTop: 14,
+    minHeight: ds.alvo.controle,
+    justifyContent: 'center',
   },
   btnFinishAllText: {
     color: '#111',
-    fontSize: 13,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontSize: ds.fonte.controle,
+    fontWeight: '700',
+    textTransform: 'none',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
   footer: {
     flexDirection: 'row',
@@ -2504,27 +2634,35 @@ const styles = createThemedStyles({
     gap: 1,
   },
   footerPriceLabel: {
-    color: '#888',
-    fontSize: 10,
+    color: ds.cores.textoSuave,
+    fontSize: ds.fonte.legenda,
     fontWeight: '700',
+    lineHeight: 17,
   },
   footerPriceVal: {
-    color: '#fff',
+    color: ds.cores.texto,
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: '700',
+    lineHeight: 26,
+    flexShrink: 1,
   },
   btnNext: {
-    backgroundColor: '#f3c21a',
+    backgroundColor: ds.cores.destaque,
     paddingVertical: 12,
     paddingHorizontal: 18,
-    borderRadius: 12,
+    borderRadius: ds.raio.controle,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    minHeight: ds.alvo.controle,
+    justifyContent: 'center',
   },
   btnNextText: {
     color: '#111',
-    fontSize: 13,
+    fontSize: ds.fonte.controle,
     fontWeight: '800',
+    lineHeight: 20,
+    flexShrink: 1,
+    textAlign: 'center',
   },
 });

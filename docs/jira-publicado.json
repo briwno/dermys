@@ -1,0 +1,410 @@
+{
+  "project": "SCRUM",
+  "board": "https://dermyss.atlassian.net/jira/software/projects/SCRUM/boards/1",
+  "confluenceAlterado": false,
+  "items": [
+    {
+      "key": "SCRUM-1",
+      "title": "Configurar a base Expo Router e TypeScript do Dermys",
+      "status": "Concluído",
+      "parent": "SCRUM-2",
+      "hasStory": true,
+      "commits": [
+        "https://github.com/briwno/dermys/commit/a67e77069e7d13e40e4028e2d43bee82dc2fa634"
+      ]
+    },
+    {
+      "key": "SCRUM-2",
+      "title": "EPIC 1: Infraestrutura, autenticação e execução multiplataforma",
+      "status": "Concluído",
+      "hasStory": true,
+      "commits": [
+        "https://github.com/briwno/dermys/commit/a67e77069e7d13e40e4028e2d43bee82dc2fa634",
+        "https://github.com/briwno/dermys/commit/dd27ef32e88fd87db4c867d52cc14e7fe6e8ecbb"
+      ]
+    },
+    {
+      "key": "SCRUM-3",
+      "title": "Ampliar a análise comparativa de plataformas de tatuagem",
+      "status": "A fazer",
+      "parent": "SCRUM-24",
+      "hasStory": true,
+      "commits": []
+    },
+    {
+      "key": "SCRUM-4",
+      "title": "EPIC 2: Experiência, descoberta e gestão de perfis",
+      "status": "Concluído",
+      "hasStory": true,
+      "commits": [
+        "https://github.com/briwno/dermys/commit/90ad9d8261c4f9af62d4d8281435ac7a3a8f356f",
+        "https://github.com/briwno/dermys/commit/594f86b5c8a7ffefc08f9621e831c9a778a4b0f8",
+        "https://github.com/briwno/dermys/commit/2864c4b8ba4e5c8f6d88882d0461867a4b4acbe1"
+      ]
+    },
+    {
+      "key": "SCRUM-5",
+      "title": "EPIC 3: Regras de negócio e requisitos do MVP",
+      "status": "Concluído",
+      "hasStory": true,
+      "commits": []
+    },
+    {
+      "key": "SCRUM-6",
+      "title": "Mapear requisitos funcionais e não funcionais do Dermys",
+      "status": "Concluído",
+      "parent": "SCRUM-5",
+      "hasStory": true,
+      "commits": []
+    },
+    {
+      "key": "SCRUM-7",
+      "title": "Definir o modelo de atuação e a proposta de valor do MVP",
+      "status": "Concluído",
+      "parent": "SCRUM-5",
+      "hasStory": true,
+      "commits": []
+    },
+    {
+      "key": "SCRUM-8",
+      "title": "Documentar os protótipos de telas e as jornadas de UX",
+      "status": "Concluído",
+      "parent": "SCRUM-4",
+      "hasStory": true,
+      "commits": []
+    },
+    {
+      "key": "SCRUM-9",
+      "title": "EPIC 4: Agendamento, briefing, chat e anamnese",
+      "status": "Concluído",
+      "hasStory": true,
+      "commits": [
+        "https://github.com/briwno/dermys/commit/f6b7c1f9bf6e1dd945766dd764f03bcfa2f27777",
+        "https://github.com/briwno/dermys/commit/594f86b5c8a7ffefc08f9621e831c9a778a4b0f8"
+      ]
+    },
+    {
+      "key": "SCRUM-10",
+      "title": "EPIC 5: Financeiro, DRE e documentos demonstrativos",
+      "status": "Concluído",
+      "hasStory": true,
+      "commits": [
+        "https://github.com/briwno/dermys/commit/7bd855b00e6e3c61a10ced7d51a80237a314c2a5",
+        "https://github.com/briwno/dermys/commit/6790885b53c63b59bd300a6a748470986e343b39"
+      ]
+    },
+    {
+      "key": "SCRUM-11",
+      "title": "Configurar Supabase Auth, PostgreSQL e armazenamento",
+      "status": "Concluído",
+      "parent": "SCRUM-2",
+      "hasStory": true,
+      "commits": [
+        "https://github.com/briwno/dermys/commit/dd27ef32e88fd87db4c867d52cc14e7fe6e8ecbb"
+      ]
+    },
+    {
+      "key": "SCRUM-12",
+      "title": "Cadastrar e autenticar clientes e tatuadores",
+      "status": "Concluído",
+      "parent": "SCRUM-4",
+      "hasStory": true,
+      "commits": [
+        "https://github.com/briwno/dermys/commit/dd27ef32e88fd87db4c867d52cc14e7fe6e8ecbb"
+      ]
+    },
+    {
+      "key": "SCRUM-13",
+      "title": "Exibir o dashboard e os indicadores do tatuador",
+      "status": "Concluído",
+      "parent": "SCRUM-4",
+      "hasStory": true,
+      "commits": [
+        "https://github.com/briwno/dermys/commit/90ad9d8261c4f9af62d4d8281435ac7a3a8f356f"
+      ]
+    },
+    {
+      "key": "SCRUM-14",
+      "title": "Explorar artistas, obras e perfis pelo cliente",
+      "status": "Concluído",
+      "parent": "SCRUM-4",
+      "hasStory": true,
+      "commits": [
+        "https://github.com/briwno/dermys/commit/90ad9d8261c4f9af62d4d8281435ac7a3a8f356f",
+        "https://github.com/briwno/dermys/commit/2864c4b8ba4e5c8f6d88882d0461867a4b4acbe1",
+        "https://github.com/briwno/dermys/commit/6790885b53c63b59bd300a6a748470986e343b39"
+      ]
+    },
+    {
+      "key": "SCRUM-15",
+      "title": "Gerenciar dados do tatuador e obras do portfólio",
+      "status": "Concluído",
+      "parent": "SCRUM-4",
+      "hasStory": true,
+      "commits": [
+        "https://github.com/briwno/dermys/commit/594f86b5c8a7ffefc08f9621e831c9a778a4b0f8"
+      ]
+    },
+    {
+      "key": "SCRUM-16",
+      "title": "Conversar e negociar o atendimento em tempo real",
+      "status": "Concluído",
+      "parent": "SCRUM-9",
+      "hasStory": true,
+      "commits": [
+        "https://github.com/briwno/dermys/commit/f6b7c1f9bf6e1dd945766dd764f03bcfa2f27777"
+      ]
+    },
+    {
+      "key": "SCRUM-17",
+      "title": "Acompanhar finanças e documentos no painel fiscal",
+      "status": "Concluído",
+      "parent": "SCRUM-10",
+      "hasStory": true,
+      "commits": [
+        "https://github.com/briwno/dermys/commit/7bd855b00e6e3c61a10ced7d51a80237a314c2a5",
+        "https://github.com/briwno/dermys/commit/6790885b53c63b59bd300a6a748470986e343b39"
+      ]
+    },
+    {
+      "key": "SCRUM-18",
+      "title": "Preparar versão funcional para demonstração acadêmica",
+      "status": "Concluído",
+      "parent": "SCRUM-2",
+      "hasStory": true,
+      "commits": [
+        "https://github.com/briwno/dermys/commit/f6b7c1f9bf6e1dd945766dd764f03bcfa2f27777"
+      ]
+    },
+    {
+      "key": "SCRUM-19",
+      "title": "Filtrar artistas por localidade, distância e ordenação",
+      "status": "Concluído",
+      "parent": "SCRUM-4",
+      "hasStory": true,
+      "commits": [
+        "https://github.com/briwno/dermys/commit/594f86b5c8a7ffefc08f9621e831c9a778a4b0f8"
+      ]
+    },
+    {
+      "key": "SCRUM-20",
+      "title": "Solicitar e gerenciar o agendamento de uma sessão",
+      "status": "Concluído",
+      "parent": "SCRUM-9",
+      "hasStory": true,
+      "commits": [
+        "https://github.com/briwno/dermys/commit/f6b7c1f9bf6e1dd945766dd764f03bcfa2f27777",
+        "https://github.com/briwno/dermys/commit/594f86b5c8a7ffefc08f9621e831c9a778a4b0f8"
+      ]
+    },
+    {
+      "key": "SCRUM-21",
+      "title": "Enviar briefing com referências e detalhes da tatuagem",
+      "status": "Concluído",
+      "parent": "SCRUM-9",
+      "hasStory": true,
+      "commits": [
+        "https://github.com/briwno/dermys/commit/f6b7c1f9bf6e1dd945766dd764f03bcfa2f27777"
+      ]
+    },
+    {
+      "key": "SCRUM-22",
+      "title": "Executar testes automatizados e exportações web/iOS",
+      "status": "Concluído",
+      "parent": "SCRUM-2",
+      "hasStory": true,
+      "commits": [
+        "https://github.com/briwno/dermys/commit/6790885b53c63b59bd300a6a748470986e343b39",
+        "https://github.com/briwno/dermys/commit/c27853ba9feb5b79a469b362e0861e8f969b6825"
+      ]
+    },
+    {
+      "key": "SCRUM-23",
+      "title": "EPIC 6: Ambiente de testes e demonstração acadêmica",
+      "status": "Concluído",
+      "hasStory": true,
+      "commits": [
+        "https://github.com/briwno/dermys/commit/c27853ba9feb5b79a469b362e0861e8f969b6825"
+      ]
+    },
+    {
+      "key": "SCRUM-24",
+      "title": "EPIC 7: Melhorias futuras e validação da apresentação",
+      "status": "A fazer",
+      "hasStory": true,
+      "commits": []
+    },
+    {
+      "key": "SCRUM-25",
+      "title": "Preservar o perfil de teste durante a renovação da sessão",
+      "status": "Concluído",
+      "parent": "SCRUM-2",
+      "hasStory": true,
+      "commits": [
+        "https://github.com/briwno/dermys/commit/6790885b53c63b59bd300a6a748470986e343b39"
+      ]
+    },
+    {
+      "key": "SCRUM-26",
+      "title": "Compactar a descoberta e recolher o cabeçalho durante a rolagem",
+      "status": "Concluído",
+      "parent": "SCRUM-4",
+      "hasStory": true,
+      "commits": []
+    },
+    {
+      "key": "SCRUM-27",
+      "title": "Guardar artistas salvos por perfil",
+      "status": "Concluído",
+      "parent": "SCRUM-4",
+      "hasStory": true,
+      "commits": []
+    },
+    {
+      "key": "SCRUM-28",
+      "title": "Vincular ficha de anamnese ao atendimento",
+      "status": "Concluído",
+      "parent": "SCRUM-9",
+      "hasStory": true,
+      "commits": [
+        "https://github.com/briwno/dermys/commit/f6b7c1f9bf6e1dd945766dd764f03bcfa2f27777"
+      ]
+    },
+    {
+      "key": "SCRUM-29",
+      "title": "Demonstrar sinal em custódia e quitação simulada",
+      "status": "Concluído",
+      "parent": "SCRUM-10",
+      "hasStory": true,
+      "commits": [
+        "https://github.com/briwno/dermys/commit/7bd855b00e6e3c61a10ced7d51a80237a314c2a5"
+      ]
+    },
+    {
+      "key": "SCRUM-30",
+      "title": "Consolidar receitas e despesas na DRE gerencial",
+      "status": "Concluído",
+      "parent": "SCRUM-10",
+      "hasStory": true,
+      "commits": [
+        "https://github.com/briwno/dermys/commit/6790885b53c63b59bd300a6a748470986e343b39"
+      ]
+    },
+    {
+      "key": "SCRUM-31",
+      "title": "Preparar e restaurar o cenário de apresentação",
+      "status": "Concluído",
+      "parent": "SCRUM-23",
+      "hasStory": true,
+      "commits": []
+    },
+    {
+      "key": "SCRUM-32",
+      "title": "Disponibilizar ferramentas de teste no computador e no celular",
+      "status": "Concluído",
+      "parent": "SCRUM-23",
+      "hasStory": true,
+      "commits": [
+        "https://github.com/briwno/dermys/commit/c27853ba9feb5b79a469b362e0861e8f969b6825"
+      ]
+    },
+    {
+      "key": "SCRUM-33",
+      "title": "Compatibilizar o projeto com Expo Go SDK 58",
+      "status": "Concluído",
+      "parent": "SCRUM-2",
+      "hasStory": true,
+      "commits": []
+    },
+    {
+      "key": "SCRUM-34",
+      "title": "Homologar a experiência no iPhone físico",
+      "status": "Em andamento",
+      "parent": "SCRUM-24",
+      "hasStory": true,
+      "commits": []
+    },
+    {
+      "key": "SCRUM-35",
+      "title": "Ensaiar a jornada completa que será apresentada à banca",
+      "status": "A fazer",
+      "parent": "SCRUM-24",
+      "hasStory": true,
+      "commits": []
+    },
+    {
+      "key": "SCRUM-36",
+      "title": "Montar três slides para apoiar o vídeo de apresentação",
+      "status": "A fazer",
+      "parent": "SCRUM-24",
+      "hasStory": true,
+      "commits": []
+    },
+    {
+      "key": "SCRUM-37",
+      "title": "Produzir vídeo de contingência de aproximadamente cinco minutos",
+      "status": "A fazer",
+      "parent": "SCRUM-24",
+      "hasStory": true,
+      "commits": []
+    },
+    {
+      "key": "SCRUM-38",
+      "title": "Padronizar a identidade visual e as transições do aplicativo",
+      "status": "Concluído",
+      "parent": "SCRUM-4",
+      "hasStory": true,
+      "commits": []
+    },
+    {
+      "key": "SCRUM-39",
+      "title": "Disponibilizar orientações de cuidado após a sessão",
+      "status": "Concluído",
+      "parent": "SCRUM-9",
+      "hasStory": true,
+      "commits": [
+        "https://github.com/briwno/dermys/commit/594f86b5c8a7ffefc08f9621e831c9a778a4b0f8"
+      ]
+    },
+    {
+      "key": "SCRUM-40",
+      "title": "Notificar eventos da jornada de demonstração local",
+      "status": "Concluído",
+      "parent": "SCRUM-23",
+      "hasStory": true,
+      "commits": []
+    },
+    {
+      "key": "SCRUM-41",
+      "title": "Versionar e publicar as melhorias locais recentes",
+      "status": "A fazer",
+      "parent": "SCRUM-24",
+      "hasStory": true,
+      "commits": []
+    },
+    {
+      "key": "SCRUM-42",
+      "title": "Integrar pagamentos reais quando o lançamento for autorizado",
+      "status": "A fazer",
+      "parent": "SCRUM-24",
+      "hasStory": true,
+      "commits": []
+    },
+    {
+      "key": "SCRUM-43",
+      "title": "Homologar emissão fiscal real para uma versão de produção",
+      "status": "A fazer",
+      "parent": "SCRUM-24",
+      "hasStory": true,
+      "commits": []
+    },
+    {
+      "key": "SCRUM-44",
+      "title": "Revisar isolamento e privacidade antes de operar com dados reais",
+      "status": "A fazer",
+      "parent": "SCRUM-24",
+      "hasStory": true,
+      "commits": []
+    }
+  ]
+}

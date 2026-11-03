@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { supabase } from '@/services/supabase';
+import { supabase } from '@/services/data-client';
 import { selecionarPersonaTeste, obterRevisaoPersona } from '@/services/persona-teste';
 import { normalizarPerfil, type PerfilUsuario } from '@/types/auth';
 import { MODELOS_DISPOSITIVOS, PERSONAS_TESTE, type ModeloDispositivo, type PersonaTeste } from './types';

@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { supabase } from './supabase';
+import { supabase } from './data-client';
+import { demoAtiva, gerarCenarioLocal, listarLotesLocais, removerLoteLocal } from './apresentacao-store';
 import type { PerfilUsuario } from '@/types/auth';
 
 export const CENARIOS_DEBUG = [
@@ -74,6 +75,7 @@ function erroLegivel(error: { code?: string; message: string }) {
 
 export class DebugService {
   static async gerarCenario(pedido: PedidoDebug): Promise<ResultadoDebug> {
+    if (demoAtiva()) return gerarCenarioLocal(pedido);
     const { data, error } = await supabase.rpc('debug_gerar_cenario', {
       p_artista_id: pedido.artistaId, p_cliente_id: pedido.clienteId, p_cenario: pedido.cenario,
       p_data: pedido.data, p_valor: pedido.valor, p_quantidade: pedido.quantidade, p_request_id: pedido.requestId,
@@ -83,11 +85,13 @@ export class DebugService {
     return data as ResultadoDebug;
   }
   static async listarLotes(perfilId: string): Promise<LoteDebug[]> {
+    if (demoAtiva()) return listarLotesLocais(perfilId);
     const { data, error } = await supabase.rpc('debug_listar_lotes', { p_perfil_id: perfilId });
     if (error) throw erroLegivel(error);
     return data || [];
   }
   static async removerLote(loteId: string) {
+    if (demoAtiva()) return removerLoteLocal(loteId);
     const { data, error } = await supabase.rpc('debug_remover_lote', { p_lote_id: loteId });
     if (error) throw erroLegivel(error);
     if (!data) throw new Error('O lote não foi removido.');

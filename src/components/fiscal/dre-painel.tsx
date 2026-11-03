@@ -1,3 +1,4 @@
+import { ds } from '@/theme/design-system';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, ScrollView, Share, Text, TextInput, View } from 'react-native';
 import { ChevronLeft, ChevronRight, Download, Plus, RefreshCw } from 'lucide-react-native';
@@ -101,20 +102,20 @@ export function DrePainel({ artistaId }: { artistaId: string }) {
   const mover = (delta: number) => setPeriodo(new Date(ano + (anual ? delta : 0), mes - 1 + (anual ? 0 : delta), 1));
 
   return <View style={s.container}>
-    <View style={s.row}><View style={s.flex}><Text style={s.eyebrow}>SEU ESTÚDIO EM NÚMEROS</Text><Text style={s.titulo}>Demonstrativo de resultado</Text></View><Pressable accessibilityLabel="Atualizar DRE" disabled={carregando || salvando || form} onPress={carregar} style={s.icone}><RefreshCw size={18} color={tc('#f3c21a')} /></Pressable></View>
+    <View style={s.row}><View style={s.flex}><Text style={s.eyebrow}>SEU ESTÚDIO EM NÚMEROS</Text><Text style={s.titulo}>Demonstrativo de resultado</Text></View><Pressable accessibilityLabel="Atualizar DRE" disabled={carregando || salvando || form} onPress={carregar} style={s.icone}><RefreshCw size={18} color={tc(ds.cores.destaque)} /></Pressable></View>
     <View style={s.seletor}>{[false, true].map((opcao) => <Pressable key={String(opcao)} disabled={form || salvando} onPress={() => setAnual(opcao)} style={[s.opcao, anual === opcao && s.ativo]}><Text style={anual === opcao ? s.textoAtivo : s.texto}>{opcao ? 'Ano completo' : 'Mensal'}</Text></Pressable>)}</View>
-    <View style={s.row}><Pressable accessibilityLabel="Período anterior" disabled={form || salvando} style={s.icone} onPress={() => mover(-1)}><ChevronLeft size={20} color={tc('#ddd')} /></Pressable><Text style={s.periodo}>{tituloPeriodo}</Text><Pressable accessibilityLabel="Próximo período" disabled={form || salvando} style={s.icone} onPress={() => mover(1)}><ChevronRight size={20} color={tc('#ddd')} /></Pressable></View>
+    <View style={s.row}><Pressable accessibilityLabel="Período anterior" disabled={form || salvando} style={s.icone} onPress={() => mover(-1)}><ChevronLeft size={20} color={tc(ds.cores.textoSecundario)} /></Pressable><Text style={s.periodo}>{tituloPeriodo}</Text><Pressable accessibilityLabel="Próximo período" disabled={form || salvando} style={s.icone} onPress={() => mover(1)}><ChevronRight size={20} color={tc(ds.cores.textoSecundario)} /></Pressable></View>
     {aviso ? <Text accessibilityLiveRegion="polite" style={s.ajuda}>{aviso}</Text> : null}
-    {carregando ? <ActivityIndicator color={tc('#f3c21a')} /> : erro ? <><Text accessibilityRole="alert" style={s.erro}>{erro}</Text><Pressable onPress={carregar} style={s.botao}><Text style={s.botaoTexto}>Tentar novamente</Text></Pressable></> : <>
+    {carregando ? <ActivityIndicator color={tc(ds.cores.destaque)} /> : erro ? <><Text accessibilityRole="alert" style={s.erro}>{erro}</Text><Pressable onPress={carregar} style={s.botao}><Text style={s.botaoTexto}>Tentar novamente</Text></Pressable></> : <>
       <View style={s.resultado}><Text style={s.ajuda}>{dre.liquido < 0 ? 'Prejuízo no período' : 'Resultado líquido do período'}</Text><Text style={[s.total, dre.liquido < 0 && s.erro]}>{moeda(dre.liquido)}</Text><Text style={s.ajuda}>{moeda(dre.liquido - calcularDre(anterior).liquido)} de diferença em relação ao {anual ? 'ano' : 'mês'} anterior</Text></View>
-      <View style={s.acoes}><Pressable disabled={salvando || form} style={[s.botao, s.ativo]} onPress={() => abrir()}><Plus size={16} color={tc('#111')} /><Text style={s.textoAtivo}>Novo lançamento</Text></Pressable><Pressable disabled={salvando} style={s.botao} onPress={exportar}><Download size={16} color={tc('#ddd')} /><Text style={s.texto}>Exportar CSV</Text></Pressable></View>
+      <View style={s.acoes}><Pressable disabled={salvando || form} style={[s.botao, s.ativo]} onPress={() => abrir()}><Plus size={16} color={tc('#111')} /><Text style={s.textoAtivo}>Novo lançamento</Text></Pressable><Pressable disabled={salvando} style={s.botao} onPress={exportar}><Download size={16} color={tc(ds.cores.textoSecundario)} /><Text style={s.texto}>Exportar CSV</Text></Pressable></View>
       {form && <View style={s.formulario}>
         <Text style={s.subtitulo}>{edicaoId ? 'Editar lançamento' : 'Adicionar lançamento'}</Text>
         <Text style={s.ajuda}>Registre apenas valores que ainda não estão nas fontes automáticas. Informe tributos conforme sua apuração.</Text>
         <Text style={s.texto}>Categoria</Text><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.acoes}>{camposDre.map(([campo, label]) => <Pressable key={campo} accessibilityState={{ selected: categoria === campo }} disabled={salvando} onPress={() => setCategoria(campo)} style={[s.botao, categoria === campo && s.ativo]}><Text style={categoria === campo ? s.textoAtivo : s.texto}>{label}</Text></Pressable>)}</ScrollView>
-        <Text style={s.texto}>Descrição</Text><TextInput accessibilityLabel="Descrição do lançamento" editable={!salvando} value={descricao} onChangeText={setDescricao} maxLength={240} placeholder="Ex.: materiais para a sessão" placeholderTextColor={tc('#999')} style={s.input} />
-        <Text style={s.texto}>Valor em reais</Text><TextInput accessibilityLabel="Valor do lançamento" editable={!salvando} keyboardType="decimal-pad" value={valor} onChangeText={setValor} placeholder="0,00" placeholderTextColor={tc('#999')} style={s.input} />
-        <Text style={s.texto}>Data de competência (AAAA-MM-DD)</Text><TextInput accessibilityLabel="Data de competência" editable={!salvando} value={data} onChangeText={setData} maxLength={10} placeholder="2026-10-27" placeholderTextColor={tc('#999')} style={s.input} />
+        <Text style={s.texto}>Descrição</Text><TextInput accessibilityLabel="Descrição do lançamento" editable={!salvando} value={descricao} onChangeText={setDescricao} maxLength={240} placeholder="Ex.: materiais para a sessão" placeholderTextColor={tc(ds.cores.textoSuave)} style={s.input} />
+        <Text style={s.texto}>Valor em reais</Text><TextInput accessibilityLabel="Valor do lançamento" editable={!salvando} keyboardType="decimal-pad" value={valor} onChangeText={setValor} placeholder="0,00" placeholderTextColor={tc(ds.cores.textoSuave)} style={s.input} />
+        <Text style={s.texto}>Data de competência (AAAA-MM-DD)</Text><TextInput accessibilityLabel="Data de competência" editable={!salvando} value={data} onChangeText={setData} maxLength={10} placeholder="2026-10-27" placeholderTextColor={tc(ds.cores.textoSuave)} style={s.input} />
         {erroForm ? <Text accessibilityRole="alert" style={s.erro}>{erroForm}</Text> : null}
         <View style={s.acoes}><Pressable disabled={salvando} onPress={salvar} style={[s.botao, s.ativo]}><Text style={s.textoAtivo}>{salvando ? 'Salvando…' : 'Salvar lançamento'}</Text></Pressable><Pressable disabled={salvando} onPress={() => setForm(false)} style={s.botao}><Text style={s.texto}>Cancelar</Text></Pressable></View>
       </View>}
@@ -133,34 +134,54 @@ export function DrePainel({ artistaId }: { artistaId: string }) {
 }
 
 const s = createThemedStyles({
-  container: { backgroundColor: '#111113', padding: 16, borderRadius: 20, borderWidth: 1, borderColor: '#29292d', gap: 18 },
+  container: { backgroundColor: ds.cores.superficie, padding: 16, borderRadius: 20, borderWidth: 1, borderColor: '#29292d', gap: 18 },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' },
   flex: { flex: 1, minWidth: 130 },
-  eyebrow: { color: '#f3c21a', fontSize: 10, fontWeight: '800', letterSpacing: 1.2, marginBottom: 6 },
-  titulo: { color: '#fff', fontSize: 21, fontWeight: '700', lineHeight: 27 },
-  subtitulo: { color: '#f4f4f5', fontSize: 15, fontWeight: '700' },
-  ajuda: { color: '#a1a1aa', fontSize: 12, lineHeight: 18 },
-  texto: { color: '#e4e4e7', fontSize: 13, lineHeight: 19 },
+  eyebrow: { color: ds.cores.destaque, fontSize: ds.fonte.marca, fontWeight: '800', letterSpacing: 1.2, marginBottom: 6,
+    lineHeight: 15, },
+  titulo: { color: ds.cores.texto, fontSize: ds.fonte.modal, fontWeight: '700', lineHeight: 26,
+    flexShrink: 1, },
+  subtitulo: { color: ds.cores.texto, fontSize: 15, fontWeight: '700',
+    lineHeight: 22,
+    flexShrink: 1, },
+  ajuda: { color: ds.cores.textoSuave, fontSize: ds.fonte.corpo, lineHeight: 20,
+    flexShrink: 1, },
+  texto: { color: ds.cores.textoSecundario, fontSize: ds.fonte.corpo, lineHeight: 20,
+    flexShrink: 1, },
   seletor: { flexDirection: 'row', backgroundColor: '#1c1c20', padding: 4, borderRadius: 12 },
   opcao: { flex: 1, padding: 10, alignItems: 'center', borderRadius: 9 },
-  ativo: { backgroundColor: '#f3c21a' },
-  textoAtivo: { color: '#111', fontSize: 13, fontWeight: '700' },
-  periodo: { color: '#fff', fontSize: 16, fontWeight: '700', textTransform: 'capitalize', flexShrink: 1, textAlign: 'center' },
+  ativo: { backgroundColor: ds.cores.destaque },
+  textoAtivo: { color: '#111', fontSize: ds.fonte.corpo, fontWeight: '700',
+    lineHeight: 20,
+    flexShrink: 1, },
+  periodo: { color: ds.cores.texto, fontSize: 16, fontWeight: '700', textTransform: 'capitalize', flexShrink: 1, textAlign: 'center',
+    lineHeight: 23, },
   icone: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
   resultado: { backgroundColor: '#202016', padding: 16, borderRadius: 14, gap: 7 },
-  total: { color: '#f3c21a', fontSize: 30, fontWeight: '800', letterSpacing: -0.8 },
+  total: { color: ds.cores.destaque, fontSize: 30, fontWeight: '800', letterSpacing: -0.8,
+    lineHeight: 36,
+    flexShrink: 1, },
   acoes: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   botao: { padding: 12, borderRadius: 10, backgroundColor: '#252529', alignItems: 'center', justifyContent: 'center', minHeight: 44, flexDirection: 'row', gap: 8 },
-  botaoTexto: { color: '#f3c21a', fontWeight: '700', fontSize: 13 },
+  botaoTexto: { color: ds.cores.destaque, fontWeight: '700', fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1, },
   formulario: { gap: 12, borderWidth: 1, borderColor: '#45454b', padding: 12, borderRadius: 12 },
-  input: { color: '#fff', borderColor: '#55555f', borderWidth: 1, borderRadius: 8, padding: 12, fontSize: 16 },
+  input: { color: ds.cores.texto, borderColor: '#55555f', borderWidth: 1, borderRadius: ds.raio.campo, padding: 12, fontSize: ds.fonte.campo,
+    lineHeight: 23,
+    flexShrink: 1,
+    minHeight: ds.alvo.controle, },
   linha: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: 10, paddingVertical: 12, paddingHorizontal: 10, borderBottomColor: '#29292d', borderBottomWidth: 1 },
-  destaque: { backgroundColor: '#202023', borderRadius: 8 },
-  linhaFinal: { borderColor: '#f3c21a', borderWidth: 1, marginTop: 8 },
-  label: { color: '#d4d4d8', fontSize: 13, lineHeight: 19, flexGrow: 1, flexShrink: 1, flexBasis: 155 },
-  valor: { color: '#f4f4f5', fontSize: 13, textAlign: 'right', lineHeight: 19 },
-  negrito: { color: '#f4f4f5', fontWeight: '700', fontSize: 13 },
-  erro: { color: '#f87171', fontSize: 13, lineHeight: 19 },
-  margem: { flex: 1, minWidth: 80, backgroundColor: '#202023', padding: 10, borderRadius: 10, gap: 5 },
-  movimento: { borderTopWidth: 1, borderTopColor: '#303036', paddingTop: 12, gap: 7 },
+  destaque: { backgroundColor: ds.cores.interacao, borderRadius: 8 },
+  linhaFinal: { borderColor: ds.cores.destaque, borderWidth: 1, marginTop: 8 },
+  label: { color: ds.cores.textoSecundario, fontSize: ds.fonte.legenda, lineHeight: 17, flexGrow: 1, flexShrink: 1, flexBasis: 155 },
+  valor: { color: ds.cores.texto, fontSize: ds.fonte.corpo, textAlign: 'right', lineHeight: 20,
+    flexShrink: 1, },
+  negrito: { color: ds.cores.texto, fontWeight: '700', fontSize: ds.fonte.corpo,
+    lineHeight: 20,
+    flexShrink: 1, },
+  erro: { color: '#f87171', fontSize: ds.fonte.corpo, lineHeight: 20,
+    flexShrink: 1, },
+  margem: { flex: 1, minWidth: 80, backgroundColor: ds.cores.interacao, padding: 10, borderRadius: 10, gap: 5 },
+  movimento: { borderTopWidth: 1, borderTopColor: ds.cores.borda, paddingTop: 12, gap: 7 },
 });

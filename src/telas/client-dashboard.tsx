@@ -1,14 +1,15 @@
 import type { BottomNavTab } from '@/components/bottom-nav';
 import { AnimatedScreenTransition } from '@/components/ui/animated-screen-transition';
+import { CabecalhoTela } from '@/components/ui/cabecalho-tela';
 import { ClienteAgendamentosTab } from '@/telas/cliente/agendamentos-tab';
 import { ClienteInicioTab } from '@/telas/cliente/inicio-tab';
 import { ClienteMensagensTab } from '@/telas/cliente/mensagens-tab';
 import { ClientePerfilTab } from '@/telas/cliente/perfil-tab';
+import { createThemedStyles, tc } from '@/theme';
+import { ds } from '@/theme/design-system';
 import type { PerfilUsuario } from '@/types/auth';
 import { LogOut } from 'lucide-react-native';
-import React from 'react';
-import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { createThemedStyles, tc } from '@/theme';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 
 interface PropsDashboardCliente {
   perfil: PerfilUsuario;
@@ -30,11 +31,11 @@ export function DashboardCliente({
   const getTabTitle = () => {
     switch (activeTab) {
       case 'bookings':
-        return 'Seus Agendamentos';
+        return 'Seus agendamentos';
       case 'chat':
         return 'Mensagens & Chat';
       case 'profile':
-        return 'Seu Perfil';
+        return 'Seu perfil';
       case 'home':
       default:
         return 'Descubra artistas';
@@ -43,11 +44,11 @@ export function DashboardCliente({
 
   if (activeTab === 'chat') {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <View style={styles.safeArea}>
         <AnimatedScreenTransition screenKey="chat" style={styles.chatWrapper}>
           <ClienteMensagensTab perfil={perfil} contatoInicialId={chatContatoId} />
         </AnimatedScreenTransition>
-      </SafeAreaView>
+      </View>
     );
   }
 
@@ -55,10 +56,10 @@ export function DashboardCliente({
     <View style={styles.header}>
       <View style={{ flex: 1, paddingRight: 8 }}>
         <Text style={[styles.hiText, activeTab === 'home' && styles.marca]}>{activeTab === 'home' ? 'DERMYS / EXPLORE' : `Olá, ${perfil.nomeExibicao || 'Cliente'}`}</Text>
-        {activeTab === 'home' ? <Text style={styles.manifesto}>Arte na pele.<Text style={styles.manifestoDestaque}>{'\n'}Histórias pra levar.</Text></Text> : <Text style={styles.title}>{getTabTitle()}</Text>}
+        {activeTab === 'home' ? <Text style={styles.manifesto}>Descobrir.</Text> : <Text style={styles.title}>{getTabTitle()}</Text>}
       </View>
       <Pressable style={styles.logoutButton} onPress={onLogout} accessibilityRole="button" accessibilityLabel="Sair da conta">
-        <LogOut size={17} color={tc('#a1a1aa')} />
+        <LogOut size={17} color={tc(ds.cores.textoSuave)} />
       </Pressable>
     </View>
   );
@@ -66,23 +67,22 @@ export function DashboardCliente({
   // Aba Início: feed paginado estilo Reels precisa de altura fixa (sem ScrollView externo)
   if (activeTab === 'home') {
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <View style={styles.safeArea}>
         <AnimatedScreenTransition screenKey={activeTab} style={styles.screenWrapper}>
           <View style={styles.homeContent}>
-            {header}
-            <ClienteInicioTab onNavegarAba={onNavegarAba} perfil={perfil} />
+            <ClienteInicioTab cabecalho={header} onNavegarAba={onNavegarAba} perfil={perfil} />
           </View>
         </AnimatedScreenTransition>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.safeArea}>
       <AnimatedScreenTransition screenKey={activeTab} style={styles.screenWrapper}>
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           {/* Header */}
-          {header}
+          <CabecalhoTela contexto="DERMYS / SUA CONTA" titulo={getTabTitle()} subtitulo={perfil.nomeExibicao || 'Cliente'} onSair={onLogout} />
 
           {/* Conteúdo Dinâmico por Aba */}
           {activeTab === 'bookings' && <ClienteAgendamentosTab perfil={perfil} />}
@@ -91,17 +91,18 @@ export function DashboardCliente({
           )}
         </ScrollView>
       </AnimatedScreenTransition>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = createThemedStyles({
-  marca: { color: '#f3c21a', fontSize: 10, fontWeight: '900', letterSpacing: 2.4, marginBottom: 8 },
-  manifesto: { color: '#f4f4f5', fontSize: 29, lineHeight: 31, fontWeight: '900', letterSpacing: -1.2 },
-  manifestoDestaque: { color: '#f3c21a', fontStyle: 'italic' },
+  marca: { color: ds.cores.destaque, fontSize: ds.fonte.marca, fontWeight: '700', letterSpacing: 2.4, marginBottom: 8,
+    lineHeight: 15, },
+  manifesto: { color: ds.cores.texto, fontSize: 25, lineHeight: 27, fontWeight: '900', letterSpacing: -0.9 },
+  manifestoDestaque: { color: ds.cores.destaque, fontStyle: 'italic' },
   safeArea: {
     flex: 1,
-    backgroundColor: '#050505',
+    backgroundColor: ds.cores.fundo,
   },
   screenWrapper: {
     flex: 1,
@@ -110,9 +111,9 @@ const styles = createThemedStyles({
     flex: 1,
   },
   content: {
-    paddingHorizontal: 18,
-    paddingVertical: 12,
-    gap: 14,
+    paddingHorizontal: ds.espaco.padrao,
+    paddingVertical: ds.espaco.padrao,
+    gap: ds.espaco.secao,
     paddingBottom: 28,
   },
   homeContent: {
@@ -129,23 +130,26 @@ const styles = createThemedStyles({
   },
   hiText: {
     color: '#8a8a8a',
-    fontSize: 9,
+    fontSize: ds.fonte.marca,
     textTransform: 'uppercase',
     letterSpacing: 2,
     fontWeight: '600',
+    lineHeight: 15,
   },
   title: {
-    color: '#f4f4f5',
-    fontSize: 26,
+    color: ds.cores.texto,
+    fontSize: ds.fonte.modal,
     fontWeight: '700',
     letterSpacing: -1,
+    lineHeight: 26,
+    flexShrink: 1,
   },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     borderWidth: 1,
-    borderColor: '#2a2a2a',
+    borderColor: ds.cores.borda,
     borderRadius: 22,
     width: 44,
     height: 44,
@@ -153,10 +157,12 @@ const styles = createThemedStyles({
     backgroundColor: '#101012',
   },
   logoutText: {
-    color: '#fff',
-    fontSize: 10,
-    textTransform: 'uppercase',
+    color: ds.cores.texto,
+    fontSize: ds.fonte.corpo,
+    textTransform: 'none',
     fontWeight: '800',
-    letterSpacing: 1.1,
+    letterSpacing: 0,
+    lineHeight: 20,
+    flexShrink: 1,
   },
 });

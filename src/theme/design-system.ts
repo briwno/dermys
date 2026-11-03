@@ -1,0 +1,30 @@
+/** Base visual Dermys. Cores escuras são convertidas por createThemedStyles/tc. */
+export const ds = {
+  cores: {
+    fundo: '#08080a',
+    superficie: '#111113',
+    elevada: '#1b1b20',
+    interacao: '#252529',
+    borda: '#303036',
+    texto: '#f4f4f5',
+    textoSecundario: '#d4d4dc',
+    textoSuave: '#a6a6b2',
+    destaque: '#f3c21a',
+    sobreDestaque: '#111111',
+  },
+  fonte: {
+    titulo: 28,
+    modal: 22,
+    secao: 18,
+    subtitulo: 16,
+    corpo: 14,
+    controle: 14,
+    campo: 16,
+    legenda: 12,
+    etiqueta: 11,
+    marca: 10,
+  },
+  raio: { cartao: 20, modal: 24, campo: 12, controle: 12, etiqueta: 8 },
+  espaco: { pequeno: 8, medio: 12, padrao: 16, secao: 20, amplo: 24 },
+  alvo: { controle: 48, compacto: 44 },
+} as const;
