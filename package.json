@@ -46,7 +46,7 @@
     "celular": "expo start --go --lan",
     "celular:tunnel": "expo start --go --tunnel",
     "typecheck": "tsc --noEmit",
-    "test": "node scripts/test-dre.cjs && node scripts/test-persona-dre-service.cjs && node scripts/test-debug-service.cjs && node scripts/test-apresentacao.cjs",
+    "test": "node scripts/test-dre.cjs && node scripts/test-persona-dre-service.cjs && node scripts/test-debug-service.cjs && node scripts/test-apresentacao.cjs && node scripts/test-chat-fluxo.cjs && node scripts/test-sessao-cadastro.cjs",
     "build": "npx expo export -p web",
     "build:web": "npx expo export -p web",
     "reset-project": "node ./scripts/reset-project.js",

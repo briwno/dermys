@@ -1,4 +1,5 @@
 import type { BottomNavTab } from '@/components/bottom-nav';
+import { Logo } from '@/components/logo';
 import { AnimatedScreenTransition } from '@/components/ui/animated-screen-transition';
 import { CabecalhoTela } from '@/components/ui/cabecalho-tela';
 import { ClienteAgendamentosTab } from '@/telas/cliente/agendamentos-tab';
@@ -54,6 +55,7 @@ export function DashboardCliente({
 
   const header = (
     <View style={styles.header}>
+      {activeTab === 'home' && <Logo size={44} />}
       <View style={{ flex: 1, paddingRight: 8 }}>
         <Text style={[styles.hiText, activeTab === 'home' && styles.marca]}>{activeTab === 'home' ? 'DERMYS / EXPLORE' : `Olá, ${perfil.nomeExibicao || 'Cliente'}`}</Text>
         {activeTab === 'home' ? <Text style={styles.manifesto}>Descobrir.</Text> : <Text style={styles.title}>{getTabTitle()}</Text>}

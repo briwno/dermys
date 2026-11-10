@@ -1,7 +1,8 @@
 import { ds } from '@/theme/design-system';
-import { Logo } from '@/components/logo';
+import { Letreiro, Logo } from '@/components/logo';
 import { AUTH_REDIRECT_URL, iniciarLoginGoogle } from '@/services/auth-oauth';
 import { supabase } from '@/services/data-client';
+import { autenticarAposCadastro } from '@/services/sessao-cadastro';
 import { createThemedStyles, tc } from '@/theme';
 import {
   normalizarPerfil,
@@ -370,6 +371,13 @@ export function TelaAutenticacao({
         if (!data.user) throw new Error('Usuário não retornado no cadastro.');
 
         const perfilSalvo = await salvarPerfilNoBanco(data.user.id, emailFormatado);
+        const autenticado = await autenticarAposCadastro(supabase.auth, data.session, emailFormatado, formulario.senha);
+        if (!autenticado) {
+          setModo('login');
+          setEtapa('login');
+          setErro('Cadastro salvo, mas o login ainda não foi concluído. Confirme o e-mail para entrar; contas de demonstração podem ser confirmadas pelo responsável pelo projeto.');
+          return;
+        }
         
         // Verifica se ainda faltam campos
         const status = verificarStatusPerfil(perfilSalvo, tipoPerfil);
@@ -450,10 +458,10 @@ export function TelaAutenticacao({
   const renderBoasVindas = () => (
     <View style={styles.sectionCenter}>
       <View style={styles.brandWrap}>
-        <Logo size={200} color={tc(ds.cores.destaque)} />
+        <Logo size={160} />
 
         <View style={styles.brandTextWrap}>
-          <Text style={styles.brandTitle}>DERMYS</Text>
+          <Letreiro width={250} dark={tc('#FFFFFF') !== '#FFFFFF'} />
           <Text style={styles.brandSubTitle}>ARTE INCONTESTÁVEL</Text>
         </View>
       </View>

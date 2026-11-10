@@ -1,5 +1,6 @@
 import { supabase } from '@/services/data-client';
 import { demoAtiva } from '@/services/apresentacao-store';
+import { erroFinanceiro } from './erro-financeiro';
 import type {
   DadosCobrancaMercadoPago,
   MetodoPagamento,
@@ -183,7 +184,7 @@ export async function criarCobrancaSinal(params: {
     if (erroAgendamento) throw erroAgendamento;
   } catch (err) {
     console.warn('[MercadoPago] Erro ao gravar transacao:', err);
-    throw new Error('Não foi possível registrar o sinal. Confira a conexão e tente novamente.');
+    throw erroFinanceiro(err, 'Não foi possível registrar o sinal. Tente novamente em instantes.');
   }
 
   return {

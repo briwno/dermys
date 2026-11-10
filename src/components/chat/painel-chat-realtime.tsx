@@ -4,6 +4,8 @@ import { PERSONAS_TESTE } from '@/components/debug/types';
 import { DanfseDocumentoModal } from '@/components/fiscal/danfse-documento-modal';
 import { AppModal } from '@/components/ui/app-modal';
 import { ChatService } from '@/services/chat-service';
+import { obterFluxoAtendimento } from '@/services/chat-fluxo';
+import { VisualizadorReferencias } from './visualizador-referencias';
 import { FiscalService } from '@/services/fiscal/fiscal-service';
 import { confirmarSinalSimulado, criarCobrancaFinal, criarCobrancaSinal } from '@/services/mercadopago';
 import { copiarTexto } from '@/services/documentos-mobile';
@@ -143,6 +145,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
   const [modalReciboAberto, setModalReciboAberto] = useState(false);
   const [reciboAtivo, setReciboAtivo] = useState<ReciboFiscal | null>(null);
   const [modalAftercareAberto, setModalAftercareAberto] = useState(false);
+  const [referenciasAbertas, setReferenciasAbertas] = useState<{ imagens: string[]; indiceInicial: number } | null>(null);
 
   const flatListRef = useRef<FlatList>(null);
 
@@ -271,6 +274,9 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
   }, [modalReservaAberto, etapaReserva, segundosRestantesHold]);
 
   const abrirConversa = async (conversa: ConversaResumo) => {
+    setReferenciasAbertas(null);
+    setModalPropostaAberto(false);
+    setMensagens([]);
     setConversaAtiva(conversa);
     setCarregandoMensagens(true);
     try {
@@ -502,21 +508,9 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
   };
 
   // Análise do Estado do Fluxo de Atendimento
-  const ultimoBriefing = [...mensagens].reverse().find((m) => m.tipo_mensagem === 'briefing');
-  const ultimaProposta = [...mensagens].reverse().find((m) => m.tipo_mensagem === 'quote');
-  const ultimoSinal = [...mensagens].reverse().find((m) => m.tipo_mensagem === 'deposit_confirmed');
-  const ultimaAnamnese = [...mensagens].reverse().find((m) => m.tipo_mensagem === 'anamnese_card');
-  const ultimaSessaoConcluida = [...mensagens].reverse().find((m) => m.tipo_mensagem === 'session_completed');
-
-  const temAnamneseAssinada = mensagens.some(
-    (m) =>
-      m.conteudo?.includes('Ficha de Anamnese & Saúde assinada') ||
-      m.conteudo?.includes('Ficha de Saúde assinada')
-  );
-
-  // A opção de enviar proposta só deve aparecer quando há briefing E ainda não houve proposta / sinal / conclusão
-  const podeEnviarProposta =
-    isArtista && Boolean(ultimoBriefing) && !ultimaProposta && !ultimoSinal && !ultimaSessaoConcluida;
+  const { agendamentoId: atendimentoAtualId, ultimoBriefing, ultimaProposta, ultimoSinal,
+    ultimaSessaoConcluida, temAnamneseAssinada, podePropor } = obterFluxoAtendimento(mensagens);
+  const podeEnviarProposta = isArtista && podePropor;
 
   // A sessão está pronta para confirmação de atendimento quando o sinal/reserva estiver travada e ainda não foi concluída
   const sessaoProntaParaFinalizar = Boolean(ultimoSinal && !ultimaSessaoConcluida);
@@ -925,14 +919,17 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                     {/* Miniaturas de Referências & Anatomia */}
                     {b.referenciasUrls && b.referenciasUrls.length > 0 && (
                       <View style={styles.briefingImagesSection}>
-                        <Text style={styles.cardSectionLabel}>Fotos de Referência:</Text>
+                        <Text style={styles.cardSectionLabel}>Fotos de Referência · toque para ampliar</Text>
                         <ScrollView
                           horizontal
                           showsHorizontalScrollIndicator={false}
                           contentContainerStyle={styles.briefingThumbRow}
                         >
                           {b.referenciasUrls.map((url, i) => (
-                            <Image key={i} source={{ uri: url }} style={styles.briefingThumb} />
+                            <Pressable key={`${url}:${i}`} accessibilityRole="button" accessibilityLabel={`Ampliar foto de referência ${i + 1}`}
+                              onPress={() => setReferenciasAbertas({ imagens: b.referenciasUrls, indiceInicial: i })}>
+                              <Image source={{ uri: url }} style={styles.briefingThumb} />
+                            </Pressable>
                           ))}
                         </ScrollView>
                       </View>
@@ -942,10 +939,10 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                     {b.fotoLocalCorpoUrl && (
                       <View style={styles.anatomyThumbBox}>
                         <Text style={styles.cardSectionLabel}>Foto da Região do Corpo:</Text>
-                        <Image
-                          source={{ uri: b.fotoLocalCorpoUrl }}
-                          style={styles.anatomyThumbImg}
-                        />
+                        <Pressable accessibilityRole="button" accessibilityLabel="Ampliar foto da região do corpo"
+                          onPress={() => setReferenciasAbertas({ imagens: [b.fotoLocalCorpoUrl!], indiceInicial: 0 })}>
+                          <Image source={{ uri: b.fotoLocalCorpoUrl }} style={styles.anatomyThumbImg} />
+                        </Pressable>
                       </View>
                     )}
 
@@ -983,7 +980,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                     )}
 
                     {/* Ação do Tatuador: Responder com Proposta */}
-                    {podeEnviarProposta && !isMe && (
+                    {podeEnviarProposta && item.id === ultimoBriefing?.id && !isMe && (
                       <Pressable
                         style={styles.btnCardActionPrimary}
                         onPress={() => setModalPropostaAberto(true)}
@@ -1002,6 +999,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
             // 2. CARD DE PROPOSTA / QUOTE (Fase 3 & 4)
             if (item.tipo_mensagem === 'quote' && item.card_payload) {
               const q = item.card_payload as CardQuotePayload;
+              const sinalDaProposta = mensagens.some(m => m.tipo_mensagem === 'deposit_confirmed' && m.card_payload?.agendamentoId === q.agendamentoId);
               return (
                 <View key={item.id} style={styles.cardContainerWrapper}>
                   {mostrarData && (
@@ -1025,7 +1023,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                       </View>
                       <View style={styles.statusBadgeGreen}>
                         <Text style={styles.statusBadgeGreenText}>
-                          {ultimoSinal ? 'Proposta Aceita' : 'Fase 3 • Orçamento'}
+                          {sinalDaProposta ? 'Proposta Aceita' : 'Fase 3 • Orçamento'}
                         </Text>
                       </View>
                     </View>
@@ -1060,7 +1058,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
                     )}
 
                     {/* BOTÃO EM DESTAQUE PARA O CLIENTE: [ Escolher Data & Reservar ] */}
-                    {!isArtista && !ultimoSinal && (
+                    {!isArtista && !sinalDaProposta && q.agendamentoId === atendimentoAtualId && (
                       <Pressable
                         style={styles.btnBookFromQuote}
                         onPress={() => handleAbrirReservaQuote(q)}
@@ -1114,7 +1112,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
             // 4. CARD DE FICHA DE ANAMNESE (Fase 5)
             if (item.tipo_mensagem === 'anamnese_card' && item.card_payload) {
               const a = item.card_payload as CardAnamnesePayload;
-              const assinada = temAnamneseAssinada || a.statusFicha === 'assinada';
+              const assinada = (a.agendamentoId === atendimentoAtualId && temAnamneseAssinada) || a.statusFicha === 'assinada';
 
               return (
                 <View key={item.id} style={styles.cardContainerWrapper}>
@@ -1967,6 +1965,7 @@ export function PainelChatRealtime({ perfilAtual, contatoInicialId }: PainelChat
         artistaNome={isArtista ? perfilAtual.nome_exibicao : conversaAtiva?.nome}
         onClose={() => setModalAftercareAberto(false)}
       />
+      {referenciasAbertas && <VisualizadorReferencias {...referenciasAbertas} onClose={() => setReferenciasAbertas(null)} />}
     </KeyboardAvoidingView>
   );
 }

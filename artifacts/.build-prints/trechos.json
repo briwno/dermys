@@ -1,0 +1,3854 @@
+[
+  {
+    "id": "01-login-google",
+    "title": "Entrada com Google",
+    "kicker": "AUTH / GOOGLE",
+    "file": "src/services/auth-oauth.ts",
+    "lines": [
+      {
+        "n": 57,
+        "text": "const { data, error } = await supabase.auth.signInWithOAuth({",
+        "tokens": [
+          {
+            "text": "const",
+            "color": "#c4a7ff"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "{",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "data",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "error",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "}",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "=",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "await",
+            "color": "#c4a7ff"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "supabase",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ".",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "auth",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ".",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "signInWithOAuth",
+            "color": "#88d6ee"
+          },
+          {
+            "text": "(",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "{",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": true
+      },
+      {
+        "n": 58,
+        "text": "  provider: 'google',",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "provider",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "'google'",
+            "color": "#b9df91"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 59,
+        "text": "  options: {",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "options",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "{",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 60,
+        "text": "    redirectTo,",
+        "tokens": [
+          {
+            "text": "    ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "redirectTo",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 61,
+        "text": "    skipBrowserRedirect: Platform.OS !== 'web',",
+        "tokens": [
+          {
+            "text": "    ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "skipBrowserRedirect",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "Platform",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ".",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "OS",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "!==",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "'web'",
+            "color": "#b9df91"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 62,
+        "text": "    queryParams: { access_type: 'offline', prompt: 'consent' },",
+        "tokens": [
+          {
+            "text": "    ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "queryParams",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "{",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "access_type",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "'offline'",
+            "color": "#b9df91"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "prompt",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "'consent'",
+            "color": "#b9df91"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "}",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": true
+      },
+      {
+        "n": 63,
+        "text": "  },",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "}",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 64,
+        "text": "});",
+        "tokens": [
+          {
+            "text": "}",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": ")",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": ";",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      }
+    ]
+  },
+  {
+    "id": "02-briefing",
+    "title": "A ideia vira um pedido",
+    "kicker": "CLIENTE / BRIEFING",
+    "file": "src/telas/cliente/modal-reserva.tsx",
+    "lines": [
+      {
+        "n": 491,
+        "text": "const payloadBriefing: CardBriefingPayload = {",
+        "tokens": [
+          {
+            "text": "const",
+            "color": "#c4a7ff"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "payloadBriefing",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "CardBriefingPayload",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "=",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "{",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 492,
+        "text": "  agendamentoId: bookingId,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "agendamentoId",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "bookingId",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": true
+      },
+      {
+        "n": 493,
+        "text": "  referenciasUrls,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "referenciasUrls",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 494,
+        "text": "  fotoLocalCorpoUrl: fotoLocalCorpo || undefined,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "fotoLocalCorpoUrl",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "fotoLocalCorpo",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "||",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "undefined",
+            "color": "#c4a7ff"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 495,
+        "text": "  localCorpo,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "localCorpo",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 496,
+        "text": "  tamanhoCm: `${tamanhoNumericoCm} cm`,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "tamanhoCm",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "`${",
+            "color": "#b9df91"
+          },
+          {
+            "text": "tamanhoNumericoCm",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "}",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "cm",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "`,",
+            "color": "#b9df91"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 497,
+        "text": "  tamanhoNumericoCm,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "tamanhoNumericoCm",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 498,
+        "text": "  descricao: descricaoFinal,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "descricao",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "descricaoFinal",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 499,
+        "text": "  disponibilidadePreferencial: disponibilidade,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "disponibilidadePreferencial",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "disponibilidade",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": null,
+        "text": "// …",
+        "tokens": [
+          {
+            "text": "// …",
+            "color": "#768391"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 506,
+        "text": "  valorEstimadoBase: valorTotalEstimado,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "valorEstimadoBase",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "valorTotalEstimado",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 507,
+        "text": "};",
+        "tokens": [
+          {
+            "text": "}",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": ";",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 508,
+        "text": "",
+        "tokens": [],
+        "highlight": false
+      },
+      {
+        "n": 509,
+        "text": "await ChatService.enviarBriefing(clienteId, artista.id, payloadBriefing);",
+        "tokens": [
+          {
+            "text": "await",
+            "color": "#c4a7ff"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "ChatService",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ".",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "enviarBriefing",
+            "color": "#88d6ee"
+          },
+          {
+            "text": "(",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "clienteId",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "artista",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ".",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "id",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "payloadBriefing",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ")",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": ";",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": true
+      }
+    ]
+  },
+  {
+    "id": "03-proposta",
+    "title": "O artista envia a proposta",
+    "kicker": "ARTISTA / ORÇAMENTO",
+    "file": "src/components/chat/painel-chat-realtime.tsx",
+    "lines": [
+      {
+        "n": 349,
+        "text": "const payloadQuote: CardQuotePayload = {",
+        "tokens": [
+          {
+            "text": "const",
+            "color": "#c4a7ff"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "payloadQuote",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "CardQuotePayload",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "=",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "{",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 350,
+        "text": "  agendamentoId: ultimoBriefing?.card_payload?.agendamentoId || `REQ-${Date.now().toString().slice(-6)}`,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "agendamentoId",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "ultimoBriefing",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "?.",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "card_payload",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "?.",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "agendamentoId",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "||",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "`REQ-${",
+            "color": "#b9df91"
+          },
+          {
+            "text": "Date",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ".",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "now",
+            "color": "#88d6ee"
+          },
+          {
+            "text": "(",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": ")",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": ".",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "toString",
+            "color": "#88d6ee"
+          },
+          {
+            "text": "(",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": ")",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": ".",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "slice",
+            "color": "#88d6ee"
+          },
+          {
+            "text": "(",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "-",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "6",
+            "color": "#f7ba7e"
+          },
+          {
+            "text": ")",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "}",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "`,",
+            "color": "#b9df91"
+          }
+        ],
+        "highlight": true
+      },
+      {
+        "n": 351,
+        "text": "  valorTotal,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "valorTotal",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 352,
+        "text": "  duracaoEstimada: duracaoSelecionada,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "duracaoEstimada",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "duracaoSelecionada",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 353,
+        "text": "  valorSinal,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "valorSinal",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 354,
+        "text": "  observacoes: observacoesProposta.trim() || undefined,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "observacoes",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "observacoesProposta",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ".",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "trim",
+            "color": "#88d6ee"
+          },
+          {
+            "text": "(",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": ")",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "||",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "undefined",
+            "color": "#c4a7ff"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 355,
+        "text": "  statusProposta: 'pendente',",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "statusProposta",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "'pendente'",
+            "color": "#b9df91"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 356,
+        "text": "};",
+        "tokens": [
+          {
+            "text": "}",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": ";",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 357,
+        "text": "",
+        "tokens": [],
+        "highlight": false
+      },
+      {
+        "n": 358,
+        "text": "const msg = await ChatService.enviarProposta(",
+        "tokens": [
+          {
+            "text": "const",
+            "color": "#c4a7ff"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "msg",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "=",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "await",
+            "color": "#c4a7ff"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "ChatService",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ".",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "enviarProposta",
+            "color": "#88d6ee"
+          },
+          {
+            "text": "(",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": true
+      },
+      {
+        "n": 359,
+        "text": "  usuarioId,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "usuarioId",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 360,
+        "text": "  conversaAtiva.contato_id,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "conversaAtiva",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ".",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "contato_id",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 361,
+        "text": "  payloadQuote",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "payloadQuote",
+            "color": "#d5d9e5"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 362,
+        "text": ");",
+        "tokens": [
+          {
+            "text": ")",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": ";",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      }
+    ]
+  },
+  {
+    "id": "04-sinal",
+    "title": "Registro do sinal da reserva",
+    "kicker": "FINANCEIRO / SINAL SIMULADO",
+    "file": "src/services/mercadopago.ts",
+    "lines": [
+      {
+        "n": 157,
+        "text": "const { error } = await supabase.from('transacoes_financeiras').insert({",
+        "tokens": [
+          {
+            "text": "const",
+            "color": "#c4a7ff"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "{",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "error",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "}",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "=",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "await",
+            "color": "#c4a7ff"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "supabase",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ".",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "from",
+            "color": "#c4a7ff"
+          },
+          {
+            "text": "(",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "'transacoes_financeiras'",
+            "color": "#b9df91"
+          },
+          {
+            "text": ")",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": ".",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "insert",
+            "color": "#88d6ee"
+          },
+          {
+            "text": "(",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "{",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 158,
+        "text": "  agendamento_id: params.agendamentoId,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "agendamento_id",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "params",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ".",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "agendamentoId",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": true
+      },
+      {
+        "n": 159,
+        "text": "  artista_id: params.artistaId,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "artista_id",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "params",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ".",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "artistaId",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 160,
+        "text": "  cliente_id: params.clienteId,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "cliente_id",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "params",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ".",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "clienteId",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 161,
+        "text": "  tipo: 'SINAL',",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "tipo",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "'SINAL'",
+            "color": "#b9df91"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 162,
+        "text": "  valor_bruto: params.valorSinal,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "valor_bruto",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "params",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ".",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "valorSinal",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 163,
+        "text": "  taxa_mercado_pago: taxaTotal,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "taxa_mercado_pago",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "taxaTotal",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 164,
+        "text": "  valor_liquido: valorLiquido,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "valor_liquido",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "valorLiquido",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 165,
+        "text": "  status: 'PENDENTE',",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "status",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "'PENDENTE'",
+            "color": "#b9df91"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": true
+      },
+      {
+        "n": 166,
+        "text": "  forma_pagamento: 'pix',",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "forma_pagamento",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "'pix'",
+            "color": "#b9df91"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 167,
+        "text": "  mercado_pago_payment_id: paymentId,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "mercado_pago_payment_id",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "paymentId",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 168,
+        "text": "  descricao: `Sinal de agendamento reservado via Mercado Pago PIX`,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "descricao",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "`Sinal de agendamento reservado via Mercado Pago PIX`",
+            "color": "#b9df91"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 169,
+        "text": "  imposto_estimado: impostoEstimado,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "imposto_estimado",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "impostoEstimado",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 170,
+        "text": "});",
+        "tokens": [
+          {
+            "text": "}",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": ")",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": ";",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 171,
+        "text": "",
+        "tokens": [],
+        "highlight": false
+      }
+    ]
+  },
+  {
+    "id": "05-anamnese",
+    "title": "A ficha acompanha a sessão",
+    "kicker": "CLIENTE / ANAMNESE",
+    "file": "src/telas/cliente/agendamentos-tab.tsx",
+    "lines": [
+      {
+        "n": 241,
+        "text": "await supabase.from('fichas_anamnese').insert({",
+        "tokens": [
+          {
+            "text": "await",
+            "color": "#c4a7ff"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "supabase",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ".",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "from",
+            "color": "#c4a7ff"
+          },
+          {
+            "text": "(",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "'fichas_anamnese'",
+            "color": "#b9df91"
+          },
+          {
+            "text": ")",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": ".",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "insert",
+            "color": "#88d6ee"
+          },
+          {
+            "text": "(",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "{",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 242,
+        "text": "  agendamento_id: agendamentoParaAnamnese.id,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "agendamento_id",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "agendamentoParaAnamnese",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ".",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "id",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": true
+      },
+      {
+        "n": 243,
+        "text": "  cliente_id: perfil?.id || perfil?.uid || session?.user?.id,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "cliente_id",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "perfil",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "?.",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "id",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "||",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "perfil",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "?.",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "uid",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "||",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "session",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "?.",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "user",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "?.",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "id",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 244,
+        "text": "  artista_id: agendamentoParaAnamnese.artistaId,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "artista_id",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "agendamentoParaAnamnese",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ".",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "artistaId",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 245,
+        "text": "  alergias: alergiasTexto,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "alergias",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "alergiasTexto",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 246,
+        "text": "  doencas_cronicas: condicoesTexto,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "doencas_cronicas",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "condicoesTexto",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 247,
+        "text": "  medicamentos: usaAnticoagulante ? 'Anticoagulante relatado' : 'Nenhum',",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "medicamentos",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "usaAnticoagulante",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "?",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "'Anticoagulante relatado'",
+            "color": "#b9df91"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "'Nenhum'",
+            "color": "#b9df91"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 248,
+        "text": "  observacoes,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "observacoes",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 249,
+        "text": "  assinado: true,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "assinado",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "true",
+            "color": "#c4a7ff"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": true
+      },
+      {
+        "n": 250,
+        "text": "  tem_alerta_saude: temAlerta,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "tem_alerta_saude",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "temAlerta",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 251,
+        "text": "  data_assinatura: new Date().toISOString(),",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "data_assinatura",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "new",
+            "color": "#c4a7ff"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "Date",
+            "color": "#88d6ee"
+          },
+          {
+            "text": "(",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": ")",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": ".",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "toISOString",
+            "color": "#88d6ee"
+          },
+          {
+            "text": "(",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": ")",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 252,
+        "text": "});",
+        "tokens": [
+          {
+            "text": "}",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": ")",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": ";",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      }
+    ]
+  },
+  {
+    "id": "06-conclusao",
+    "title": "Pagamento e sessão concluída",
+    "kicker": "ARTISTA / CONCLUSÃO",
+    "file": "src/telas/artista/agenda-tab.tsx",
+    "lines": [
+      {
+        "n": 292,
+        "text": "const cobranca = await criarCobrancaFinal({",
+        "tokens": [
+          {
+            "text": "const",
+            "color": "#c4a7ff"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "cobranca",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "=",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "await",
+            "color": "#c4a7ff"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "criarCobrancaFinal",
+            "color": "#88d6ee"
+          },
+          {
+            "text": "(",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "{",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 293,
+        "text": "  agendamentoId: itemFinalizando.id,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "agendamentoId",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "itemFinalizando",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ".",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "id",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 294,
+        "text": "  artistaId: artistaId,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "artistaId",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "artistaId",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 295,
+        "text": "  clienteId: itemFinalizando.clienteId,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "clienteId",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "itemFinalizando",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ".",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "clienteId",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 296,
+        "text": "  valorFinal: precoFinal,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "valorFinal",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "precoFinal",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 297,
+        "text": "  valorSinalJaPago: itemFinalizando.valorSinal,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "valorSinalJaPago",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "itemFinalizando",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ".",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "valorSinal",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": true
+      },
+      {
+        "n": 298,
+        "text": "  metodo: metodoPagamentoFinal,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "metodo",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "metodoPagamentoFinal",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 299,
+        "text": "  artistaNome: perfil.nomeExibicao || perfil.nome_exibicao || 'Tatuador Dermys',",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "artistaNome",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "perfil",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ".",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "nomeExibicao",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "||",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "perfil",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ".",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "nome_exibicao",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "||",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "'Tatuador Dermys'",
+            "color": "#b9df91"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 300,
+        "text": "});",
+        "tokens": [
+          {
+            "text": "}",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": ")",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": ";",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": null,
+        "text": "// …",
+        "tokens": [
+          {
+            "text": "// …",
+            "color": "#768391"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 307,
+        "text": "await atualizarStatus(itemFinalizando.id, 'concluido', {",
+        "tokens": [
+          {
+            "text": "await",
+            "color": "#c4a7ff"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "atualizarStatus",
+            "color": "#88d6ee"
+          },
+          {
+            "text": "(",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "itemFinalizando",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ".",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "id",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "'concluido'",
+            "color": "#b9df91"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "{",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": true
+      },
+      {
+        "n": 308,
+        "text": "  valor_final: precoFinal,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "valor_final",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "precoFinal",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 309,
+        "text": "  concluido_em: new Date().toISOString(),",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "concluido_em",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "new",
+            "color": "#c4a7ff"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "Date",
+            "color": "#88d6ee"
+          },
+          {
+            "text": "(",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": ")",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": ".",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "toISOString",
+            "color": "#88d6ee"
+          },
+          {
+            "text": "(",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": ")",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 310,
+        "text": "});",
+        "tokens": [
+          {
+            "text": "}",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": ")",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": ";",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      }
+    ]
+  },
+  {
+    "id": "07-dre",
+    "title": "Receitas e despesas formam o resultado",
+    "kicker": "ESTÚDIO / DRE",
+    "file": "src/services/dre.ts",
+    "lines": [
+      {
+        "n": 30,
+        "text": "const receitaLiquida = v.receitaBruta - v.deducoes;",
+        "tokens": [
+          {
+            "text": "const",
+            "color": "#c4a7ff"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "receitaLiquida",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "=",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "v",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ".",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "receitaBruta",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "-",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "v",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ".",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "deducoes",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ";",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": true
+      },
+      {
+        "n": 31,
+        "text": "const lucroBruto = receitaLiquida - v.custos;",
+        "tokens": [
+          {
+            "text": "const",
+            "color": "#c4a7ff"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "lucroBruto",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "=",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "receitaLiquida",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "-",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "v",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ".",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "custos",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ";",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 32,
+        "text": "const operacional = lucroBruto - v.vendas - v.administrativas - v.depreciacao;",
+        "tokens": [
+          {
+            "text": "const",
+            "color": "#c4a7ff"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "operacional",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "=",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "lucroBruto",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "-",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "v",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ".",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "vendas",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "-",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "v",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ".",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "administrativas",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "-",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "v",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ".",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "depreciacao",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ";",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 33,
+        "text": "const antesTributos = operacional + v.receitasFinanceiras - v.despesasFinanceiras;",
+        "tokens": [
+          {
+            "text": "const",
+            "color": "#c4a7ff"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "antesTributos",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "=",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "operacional",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "+",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "v",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ".",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "receitasFinanceiras",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "-",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "v",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ".",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "despesasFinanceiras",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ";",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 34,
+        "text": "const liquido = antesTributos - v.tributosLucro;",
+        "tokens": [
+          {
+            "text": "const",
+            "color": "#c4a7ff"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "liquido",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "=",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "antesTributos",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "-",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "v",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ".",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "tributosLucro",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ";",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": true
+      },
+      {
+        "n": 35,
+        "text": "const margem = (valor: number) => receitaLiquida > 0 ? valor / receitaLiquida * 100 : null;",
+        "tokens": [
+          {
+            "text": "const",
+            "color": "#c4a7ff"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "margem",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "=",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "(",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "valor",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "number",
+            "color": "#c4a7ff"
+          },
+          {
+            "text": ")",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "=>",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "receitaLiquida",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ">",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "0",
+            "color": "#f7ba7e"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "?",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "valor",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "/",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "receitaLiquida",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "*",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "100",
+            "color": "#f7ba7e"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "null",
+            "color": "#c4a7ff"
+          },
+          {
+            "text": ";",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 36,
+        "text": "return {",
+        "tokens": [
+          {
+            "text": "return",
+            "color": "#c4a7ff"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "{",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 37,
+        "text": "  receitaLiquida: receitaLiquida / 100,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "receitaLiquida",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "receitaLiquida",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "/",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "100",
+            "color": "#f7ba7e"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 38,
+        "text": "  lucroBruto: lucroBruto / 100,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "lucroBruto",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "lucroBruto",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "/",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "100",
+            "color": "#f7ba7e"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 39,
+        "text": "  operacional: operacional / 100,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "operacional",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "operacional",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "/",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "100",
+            "color": "#f7ba7e"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 40,
+        "text": "  antesTributos: antesTributos / 100,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "antesTributos",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "antesTributos",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "/",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "100",
+            "color": "#f7ba7e"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 41,
+        "text": "  liquido: liquido / 100,",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "liquido",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "liquido",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "/",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "100",
+            "color": "#f7ba7e"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 42,
+        "text": "  margemBruta: margem(lucroBruto),",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "margemBruta",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "margem",
+            "color": "#88d6ee"
+          },
+          {
+            "text": "(",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "lucroBruto",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ")",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 43,
+        "text": "  margemOperacional: margem(operacional),",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "margemOperacional",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "margem",
+            "color": "#88d6ee"
+          },
+          {
+            "text": "(",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "operacional",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ")",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 44,
+        "text": "  margemLiquida: margem(liquido),",
+        "tokens": [
+          {
+            "text": "  ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "margemLiquida",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ":",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": " ",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": "margem",
+            "color": "#88d6ee"
+          },
+          {
+            "text": "(",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": "liquido",
+            "color": "#d5d9e5"
+          },
+          {
+            "text": ")",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": ",",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      },
+      {
+        "n": 45,
+        "text": "};",
+        "tokens": [
+          {
+            "text": "}",
+            "color": "#8d9ab0"
+          },
+          {
+            "text": ";",
+            "color": "#8d9ab0"
+          }
+        ],
+        "highlight": false
+      }
+    ]
+  }
+]
